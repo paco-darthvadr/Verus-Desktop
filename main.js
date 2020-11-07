@@ -271,6 +271,7 @@ function createAppCloseWindow() {
 		frame: false,
 		icon: agamaIcon,
 		show: false,
+		contextIsolation: true
 	});
 
 	appCloseWindow.setResizable(false);
@@ -341,6 +342,7 @@ function createAppCloseWindow() {
 					height: closeAppAfterLoading ? 1 : 850,
 					icon: agamaIcon,
 					show: false,
+					contextIsolation: true
 				});
 
 				mainWindow.loadURL(appConfig.general.main.dev || process.argv.indexOf('devmode') > -1 ? 'http://127.0.0.1:3000' : `file://${__dirname}/gui/Verus-Desktop-GUI/react/build/index.html`);
@@ -417,6 +419,7 @@ function createAppCloseWindow() {
 					frame: false,
 					icon: agamaIcon,
 					show: false,
+					contextIsolation: true
 				});
 
 				mainWindow.setResizable(false);
@@ -555,15 +558,28 @@ function createAppCloseWindow() {
 	}
 }
 
-app.on('window-all-closed', () => {
-	// if (os.platform() !== 'win32') { ig.kill(); }
-	// in osx apps stay active in menu bar until explictly closed or quitted by CMD Q
-	// so we do not kill the app --> for the case user clicks again on the iguana icon
-	// we open just a new window and respawn iguana proc
-	/*if (process.platform !== 'darwin' || process.platform !== 'linux' || process.platform !== 'win32') {
-		app.quit()
-	}*/
-});
+app.on('web-contents-created', (event, contents) => {
+  contents.on('will-attach-webview', (event, webPreferences, params) => {
+    // Strip away preload scripts if unused or verify their location is legitimate
+    delete webPreferences.preload
+    delete webPreferences.preloadURL
+
+    // Disable Node.js integration
+    webPreferences.nodeIntegration = false
+
+    event.preventDefault()
+	})
+	
+	contents.on('will-navigate', (event, navigationUrl) => {
+		event.preventDefault()
+	})
+	
+	contents.on('new-window', async (event, navigationUrl) => {
+    // In this example, we'll ask the operating system
+    // to open this event's url in the default browser.
+    event.preventDefault()
+  })
+})
 
 // Emitted before the application starts closing its windows.
 // Calling event.preventDefault() will prevent the default behaviour, which is terminating the application.

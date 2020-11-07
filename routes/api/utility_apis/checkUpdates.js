@@ -52,7 +52,7 @@ module.exports = (api) => {
                   buttons: ["OK", "Cancel"]
                 }, (init, checked) => {
                   if (init === 0) {
-                    if (checked) shell.openExternal(version_json.repository + "releases")
+                    if (checked) shell.openExternal("https://github.com/VerusCoin/Verus-Desktop/releases")
                     else openLink()
                   }
                 })

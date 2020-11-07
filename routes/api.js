@@ -1,8 +1,5 @@
 // TODO: CLEANUP THIS FILE
-
-const electron = require('electron');
 const express = require('express');
-const app = electron.app;
 let api = express.Router();
 
 api.setconf = require('../private/setconf.js');
@@ -153,6 +150,7 @@ api = require('./api/native/idRevocation.js')(api);
 api = require('./api/native/idInformation.js')(api);
 api = require('./api/native/getCurrencies.js')(api);
 api = require('./api/native/getCurrency.js')(api);
+api = require('./api/native/getConversionPaths.js')(api);
 api = require('./api/native/currencyGraylist.js')(api);
 api = require('./api/native/idRecovery.js')(api);
 api = require('./api/native/signdata.js')(api);
@@ -255,5 +253,8 @@ api.checkCoinConfigIntegrity();
 if (api.appConfig.general.main.loadCoinsFromStorage) {
   api.loadCoinsListFromFile();
 }
+
+// Diagnostic and debugging info
+api = require('./api/diagnostics.js')(api);
 
 module.exports = api;

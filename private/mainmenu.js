@@ -7,7 +7,7 @@ const {
   pathsDaemons,
 } = require('../routes/api/pathsUtil');
 const { createFetchBoostrapWindow } = require('../routes/children/fetch-bootstrap/window');
-const { appConfig, promptUpdate } = require('../routes/api');
+const { appConfig, promptUpdate, generateDiagnosticPacket } = require('../routes/api');
 
 const template = [
   {
@@ -138,6 +138,12 @@ const template = [
         label: 'Show binary folder',
         click (item, focusedWindow) {
           shell.openItem(pathsDaemons().paths.komodocliDir);
+        }
+      },
+      {
+        label: 'Generate diagnostic packet',
+        click (item, focusedWindow) {
+          generateDiagnosticPacket(focusedWindow)
         }
       },
       {
