@@ -54,12 +54,12 @@ const appConfig = {
         pbaasChains: [],
         pbaasTestmode: true,
         enableVrsctest: false,
-        alwaysPromptUpdates: true
+        alwaysPromptUpdates: true,
+        encryptApi: false
       },
       electrum: {
         maxVinParseLimit: 120,
         cache: false,
-        proxy: false,
         socketTimeout: 10000,
         customServers: false,
         maxTxListLength: 10,
@@ -79,7 +79,6 @@ const appConfig = {
         includeEmptyChangeAddrs: false,
         nativeCacheMbLimit: 30,
         filterGenerateTransactions: true
-        //TODO: Make update intervals configurable
       }
     },
     coin: {
@@ -131,14 +130,9 @@ const appConfig = {
           type: "checkbox",
           displayName: "Notfy me about all app updates",
           info: "Enables update notifications on app start for all updates, including non-mandatory."
-        }
+        },
       },
       electrum: {
-        proxy: {
-          type: "checkbox",
-          displayName: "Use proxy server",
-          info: "Use a proxy server to connect to electrum."
-        },
         socketTimeout: {
           type: "number_input",
           displayName: "Socket Timeout",
@@ -194,21 +188,6 @@ const appConfig = {
     },
     coin: {
       native: {
-        /*includePrivateAddrs: {
-          type: 'checkbox',
-          displayName: 'Fetch private addresses',
-          info: 'Fetch private addresses when fetching addresses.',
-        },
-        includePrivateBalances: {
-          type: 'checkbox',
-          displayName: 'Fetch private balances',
-          info: 'Fetch private balances when fetching balances.',
-        },
-        includePrivateTransactions: {
-          type: 'checkbox',
-          displayName: 'Fetch private transactions',
-          info: 'Fetch private transactions when fetching transactions.',
-        },*/
         stakeGuard: {
           type: "text_input",
           displayName: "StakeGuard address",

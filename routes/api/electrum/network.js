@@ -63,7 +63,7 @@ module.exports = (api) => {
     throw new Error(`${coin} is not a valid network.`)
   }
 
-  api.get('/electrum/servers', (req, res, next) => {
+  api.setGet('/electrum/servers', (req, res, next) => {
     if (req.query.abbr) { // (?) change
       let _electrumServers = {};
 
@@ -78,7 +78,7 @@ module.exports = (api) => {
         },
       };
 
-      res.end(JSON.stringify(retObj));
+      res.send(JSON.stringify(retObj));
     } else {
       const retObj = {
         msg: 'success',
@@ -87,7 +87,7 @@ module.exports = (api) => {
         },
       };
 
-      res.end(JSON.stringify(retObj));
+      res.send(JSON.stringify(retObj));
     }
   });
 
@@ -175,23 +175,8 @@ module.exports = (api) => {
       if (api.electrumServers[network].proto === 'insight') {
         return api.insightJSCore(api.electrumServers[network]);
       } else {
-        if (api.appConfig.general.electrum.proxy) {
-          // TODO: protocol version check
-          return api.proxy(network, customElectrum);
-        } else {
-          const electrum = customElectrum ? {
-            port: customElectrum.port,
-            ip: customElectrum.ip,
-            proto: customElectrum.proto,
-          } : {
-            port: api.electrum.coinData[network] && api.electrum.coinData[network].server.port || _currentElectrumServer.port,
-            ip: api.electrum.coinData[network] && api.electrum.coinData[network].server.ip || _currentElectrumServer.ip,
-            proto: api.electrum.coinData[network] && api.electrum.coinData[network].server.proto || _currentElectrumServer.proto,
-          };
-
-          const ecl = await api.eclManager.getServer(network, customElectrum);
-          return ecl;
-        }
+        const ecl = await api.eclManager.getServer(network, customElectrum);
+        return ecl;
       }
     }
   }

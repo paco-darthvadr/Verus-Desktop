@@ -127,7 +127,7 @@ module.exports = (api) => {
   api.initConffile = (coin, confName, fallbackPort) => {
     const coinLc = coin.toLowerCase()
     return new Promise((resolve, reject) => {
-      const confFile = `${api.paths[`${coinLc}Dir`]}/${confName == null ? coin : confName}.conf`;
+      const confFile = `${api.paths[`${coinLc}DataDir`]}/${confName == null ? coin : confName}.conf`;
 
       api.log(`initializing ${coinLc} conf file for verus-desktop`, 'native.process');
       fs.access(confFile, fs.R_OK | fs.W_OK)
@@ -222,7 +222,7 @@ module.exports = (api) => {
 
   api.initCoinDir = (coinLc) => {
     return new Promise((resolve, reject) => {
-      const coinDir = api.paths[`${coinLc}Dir`];
+      const coinDir = api.paths[`${coinLc}DataDir`];
 
       api.log(`initializing ${coinLc} directory file for verus-desktop`, 'native.process');
       fs.access(coinDir, fs.R_OK | fs.W_OK)
@@ -260,7 +260,7 @@ module.exports = (api) => {
 
   api.prepareCoinPort = (coin, confName, fallbackPort) => {
     const coinLc = coin.toLowerCase()
-    const confLocation = `${api.paths[`${coinLc}Dir`]}/${
+    const confLocation = `${api.paths[`${coinLc}DataDir`]}/${
       confName ? confName : coin
     }.conf`;
     api.log(`attempting to read ${confLocation}...`, "native.process");
@@ -396,7 +396,7 @@ module.exports = (api) => {
   }
 
   /**
-   * Start a coin daemon provided that start params, the daemon name, the api token, 
+   * Start a coin daemon provided that start params, the daemon name, 
    * and optionally, the custom name of the coin data directory
    * @param {String} coin The chain ticker for the daemon to start
    * @param {String[]} acOptions Options to start the coin daemon with
@@ -434,11 +434,11 @@ module.exports = (api) => {
         acOptions.push(`-datadir=${api.appConfig.coin.native.dataDir[coin]}`)
       } else {
         // if (global.USB_MODE) {
-        //   acOptions.push(`-datadir=${api.paths[`${coin.toLowerCase()}Dir`]}`)
+        //   acOptions.push(`-datadir=${api.paths[`${coin.toLowerCase()}DataDir`]}`)
         // }
 
         // Set coin data directory into memory if it doesnt exist yet
-        if (api.paths[`${coinLc}Dir`] == null) {
+        if (api.paths[`${coinLc}DataDir`] == null) {
           api.log(`${coin} data directory not already saved in memory...`, 'native.process');
 
           if (dirNames != null) {
@@ -448,7 +448,7 @@ module.exports = (api) => {
           }
 
           api.setCoinDir(coinLc, dirNames)
-          api.log(`${coin} dir path set to ${api.paths[`${coinLc}Dir`]}...`, 'native.process');
+          api.log(`${coin} dir path set to ${api.paths[`${coinLc}DataDir`]}...`, 'native.process');
         } else api.log(`${coin} data directory retrieved...`, 'native.process');
       }
       
@@ -472,13 +472,12 @@ module.exports = (api) => {
       .then(status => {
         if (status === 'AVAILABLE') {
           api.log(`port ${port} available, starting daemon...`, 'native.process');
-          api.coindInstanceRegistry[coin] = true;
+          api.startedDaemonRegistry[coin] = true;
 
           api.spawnDaemonChild(daemon, coin, acOptions)
           resolve()
         } else {
           api.log(`port ${port} not available, assuming coin has already been started...`, 'native.process');
-          api.coindInstanceRegistry[coin] = true;
 
           resolve()
         }

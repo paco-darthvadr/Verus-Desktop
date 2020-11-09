@@ -10,9 +10,9 @@ module.exports = (api) => {
 
   api.native.coinSupplyLoadingStates = {}
 
-  api.native.get_coinsupply = (coin, token, height) => {
+  api.native.get_coinsupply = (coin, height) => {
     return new Promise((resolve, reject) => {
-      api.native.callDaemon(coin, 'coinsupply', height == null ? [] : [height.toString()], token)
+      api.native.callDaemon(coin, 'coinsupply', height == null ? [] : [height.toString()])
       .then((coinSupply) => {
         if (coinSupply.error != null) reject(new Error(coinSupply.error))
         
@@ -24,7 +24,7 @@ module.exports = (api) => {
     });
   };
 
-  api.native.get_currentsupply = (coin, token) => {
+  api.native.get_currentsupply = (coin) => {
     const loadingState = api.native.coinSupplyLoadingStates[coin]
 
     const loadSupply = (loadingState) => {
@@ -32,7 +32,7 @@ module.exports = (api) => {
       const preTs = new Date().getTime()
 
       api.native
-        .get_info(coin, token)
+        .get_info(coin)
         .then(chainInfo => {
           const { longestchain, blocks } = chainInfo;
 
@@ -48,7 +48,6 @@ module.exports = (api) => {
 
           return api.native.get_coinsupply(
             coin,
-            token,
             loadingState.loadedBlocks
           );
         })
@@ -91,7 +90,7 @@ module.exports = (api) => {
       })
     } else if (loadingState.status === 'ready') {
       return new Promise((resolve, reject) => {
-        api.native.get_coinsupply(coin, token)
+        api.native.get_coinsupply(coin)
         .then(coinSupply => {
           resolve({ ...coinSupply, loadingState, source: 'native' })
         })
@@ -114,18 +113,17 @@ module.exports = (api) => {
     })
   }
 
-  api.post('/native/get_currentsupply', (req, res, next) => {
-    const token = req.body.token;
+  api.setPost('/native/get_currentsupply', (req, res, next) => {
     const coin = req.body.chainTicker;
 
-    api.native.get_currentsupply(coin, token)
+    api.native.get_currentsupply(coin)
     .then((coinSupply) => {
       const retObj = {
         msg: 'success',
         result: coinSupply,
       };
   
-      res.end(JSON.stringify(retObj));  
+      res.send(JSON.stringify(retObj));  
     })
     .catch(error => {
       const retObj = {
@@ -133,7 +131,7 @@ module.exports = (api) => {
         result: error.message,
       };
   
-      res.end(JSON.stringify(retObj));  
+      res.send(JSON.stringify(retObj));  
     })
   });
 

@@ -1,7 +1,7 @@
 module.exports = (api) => {  
-  api.get('/electrum/get_info', (req, res, next) => {
+  api.setGet('/electrum/get_info', (req, res, next) => {
     if (!req.query.chainTicker) {
-      res.end(JSON.stringify({
+      res.send(JSON.stringify({
         msg: 'error',
         result: 'No coin passed to electrum get_info'
       }));
@@ -9,7 +9,7 @@ module.exports = (api) => {
     const coinLc = req.query.chainTicker.toLowerCase();
 
     if (!api.electrum.coinData[coinLc]) {
-      res.end(JSON.stringify({
+      res.send(JSON.stringify({
         msg: 'error',
         result: `No coin data found for ${req.query.chainTicker}`
       }));
@@ -17,7 +17,7 @@ module.exports = (api) => {
 
     const { name, txfee, server, serverList, nspv } = api.electrum.coinData[coinLc];
 
-    res.end(JSON.stringify({msg: 'success', result: nspv ? {
+    res.send(JSON.stringify({msg: 'success', result: nspv ? {
       protocol: "nSPV",
       name,
       txfee,
@@ -47,7 +47,7 @@ module.exports = (api) => {
       }
     }
     
-    res.end(JSON.stringify(retObj));  
+    res.send(JSON.stringify(retObj));  
   });
 
   return api;

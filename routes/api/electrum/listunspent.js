@@ -289,7 +289,7 @@ module.exports = (api) => {
     }
   }
 
-  api.get('/electrum/listunspent', (req, res, next) => {
+  api.setGet('/electrum/listunspent', (req, res, next) => {
     async function _getListunspent() {
       const network = req.query.network || api.validateChainTicker(req.query.coin);
       const ecl = api.electrum.coinData[network.toLowerCase()] && api.electrum.coinData[network.toLowerCase()].nspv ? {} : await api.ecl(network);
@@ -311,7 +311,7 @@ module.exports = (api) => {
             result: listunspent,
           };
 
-          res.end(JSON.stringify(retObj));
+          res.send(JSON.stringify(retObj));
         });
       } else {
         api.electrum.listunspent(ecl, req.query.address, network)
@@ -323,7 +323,7 @@ module.exports = (api) => {
             result: listunspent,
           };
 
-          res.end(JSON.stringify(retObj));
+          res.send(JSON.stringify(retObj));
         });
       }
     };

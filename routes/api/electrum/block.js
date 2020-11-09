@@ -1,7 +1,7 @@
 const Promise = require('bluebird');
 
 module.exports = (api) => {
-  api.get('/electrum/getblockinfo', (req, res, next) => {
+  api.setGet('/electrum/getblockinfo', (req, res, next) => {
     api.electrumGetBlockInfo(req.query.height, req.query.network)
     .then((json) => {
       const retObj = {
@@ -9,7 +9,7 @@ module.exports = (api) => {
         result: json,
       };
 
-      res.end(JSON.stringify(retObj));
+      res.send(JSON.stringify(retObj));
     });
   });
 
@@ -49,7 +49,7 @@ module.exports = (api) => {
     });
   }
 
-  api.get('/electrum/getcurrentblock', (req, res, next) => {
+  api.setGet('/electrum/getcurrentblock', (req, res, next) => {
     api.electrumGetCurrentBlock(req.query.network)
     .then((json) => {
       const retObj = {
@@ -57,7 +57,7 @@ module.exports = (api) => {
         result: json,
       };
 
-      res.end(JSON.stringify(retObj));
+      res.send(JSON.stringify(retObj));
     });
   });
 

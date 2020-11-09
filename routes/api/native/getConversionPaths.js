@@ -6,12 +6,12 @@ const checkFlag = require('../utils/flags');
 module.exports = (api) => {    
   // Derives possible conversion paths between source and destination currencies
   // (or all possible destinations if destination is null)
-  api.native.get_conversion_paths = (chain, api_token, src, dest = null) => {
+  api.native.get_conversion_paths = (chain, src, dest = null) => {
     return new Promise(async (resolve, reject) => {  
       try {
-        const source = await api.native.get_currency(chain, api_token, src)
+        const source = await api.native.get_currency(chain, src)
 
-        api.native.callDaemon(chain, 'getcurrencyconverters', dest === null ? [src] : [src, dest], api_token)
+        api.native.callDaemon(chain, 'getcurrencyconverters', dest === null ? [src] : [src, dest])
         .then(async (paths) => {
           let convertables = {} 
 
@@ -23,7 +23,7 @@ module.exports = (api) => {
           if (checkFlag(source.options, IS_FRACTIONAL) && dest == null) {
             for (const reserve of source.currencies) {
               if (!convertables[reserve]) {
-                convertables[reserve] = await api.native.get_currency(chain, api_token, reserve)
+                convertables[reserve] = await api.native.get_currency(chain, reserve)
               }
             }
           }
@@ -39,15 +39,14 @@ module.exports = (api) => {
     });
   };
 
-  api.post('/native/get_conversion_paths', (req, res, next) => {
-    const token = req.body.token;
+  api.setPost('/native/get_conversion_paths', (req, res, next) => {
     const coin = req.body.chainTicker;
     const src = req.body.src;
     const dest = req.body.dest;
 
-    api.native.get_conversion_paths(coin, token, src, dest)
+    api.native.get_conversion_paths(coin, src, dest)
     .then((paths) => {  
-      res.end(JSON.stringify({
+      res.send(JSON.stringify({
         msg: 'success',
         result: paths,
       }));  
@@ -58,7 +57,7 @@ module.exports = (api) => {
         result: error.message,
       };
   
-      res.end(JSON.stringify(retObj));  
+      res.send(JSON.stringify(retObj));  
     })
   });
 

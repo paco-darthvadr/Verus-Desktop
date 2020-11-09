@@ -121,84 +121,64 @@ module.exports = (api) => {
     })
   }
 
-  api.post('/eth/sendtx', (req, res, next) => {
-    const token = req.body.token;
+  api.setPost('/eth/sendtx', (req, res, next) => {
+    const { toAddress, amount, chainTicker, speed, network } = req.body
+    let txResult = {}
 
-    if (api.checkToken(token)) {
-      const { toAddress, amount, chainTicker, speed, network } = req.body
-      let txResult = {}
-
-      api.eth.txPreflight(chainTicker, toAddress, amount, speed, network)
-      .then(preflightObj => {
-        txResult = preflightObj
-        const { to, value, gasPrice, gasLimit, numberOfTokens } = txResult;
-        
-        return chainTicker === "ETH"
-          ? api.eth.connect[chainTicker].sendTransaction({
-              to,
-              value: ethers.utils.parseEther(Number(value).toPrecision(8)),
-              gasPrice: Number(gasPrice),
-              gasLimit: Number(gasLimit)
-            })
-          : new ethers.Contract(
-            erc20ContractId[chainTicker.toUpperCase()],
-            standardABI,
-            api.eth.connect[chainTicker.toUpperCase()]
-          ).transfer(to, numberOfTokens, { gasPrice });
-      })
-      .then(tx => {
-        const retObj = {
-          msg: 'success',
-          result: {
-            ...txResult,
-            txid: tx.hash
-          },
-        };
-        res.end(JSON.stringify(retObj));
-      })
-      .catch(e => {
-        const retObj = {
-          msg: 'error',
-          result: e.message,
-        };
-        res.end(JSON.stringify(retObj));
-      })
-    } else {
+    api.eth.txPreflight(chainTicker, toAddress, amount, speed, network)
+    .then(preflightObj => {
+      txResult = preflightObj
+      const { to, value, gasPrice, gasLimit, numberOfTokens } = txResult;
+      
+      return chainTicker === "ETH"
+        ? api.eth.connect[chainTicker].sendTransaction({
+            to,
+            value: ethers.utils.parseEther(Number(value).toPrecision(8)),
+            gasPrice: Number(gasPrice),
+            gasLimit: Number(gasLimit)
+          })
+        : new ethers.Contract(
+          erc20ContractId[chainTicker.toUpperCase()],
+          standardABI,
+          api.eth.connect[chainTicker.toUpperCase()]
+        ).transfer(to, numberOfTokens, { gasPrice });
+    })
+    .then(tx => {
+      const retObj = {
+        msg: 'success',
+        result: {
+          ...txResult,
+          txid: tx.hash
+        },
+      };
+      res.send(JSON.stringify(retObj));
+    })
+    .catch(e => {
       const retObj = {
         msg: 'error',
-        result: 'unauthorized access',
+        result: e.message,
       };
-      res.end(JSON.stringify(retObj));
-    }
+      res.send(JSON.stringify(retObj));
+    })
   });
 
-  api.post('/eth/tx_preflight', (req, res, next) => {
-    const token = req.body.token;
+  api.setPost('/eth/tx_preflight', (req, res, next) => {
+    const { toAddress, amount, chainTicker, speed, network } = req.body
 
-    if (api.checkToken(token)) {
-      const { toAddress, amount, chainTicker, speed, network } = req.body
-
-      api.eth.txPreflight(chainTicker, toAddress, amount, speed, network)
-      .then(preflightObj => {
-        res.end(JSON.stringify({
-          msg: 'success',
-          result: preflightObj,
-        }));
-      })
-      .catch(e => {
-        const retObj = {
-          msg: 'error',
-          result: e.message,
-        };
-        res.end(JSON.stringify(retObj));
-      })
-    } else {
+    api.eth.txPreflight(chainTicker, toAddress, amount, speed, network)
+    .then(preflightObj => {
+      res.send(JSON.stringify({
+        msg: 'success',
+        result: preflightObj,
+      }));
+    })
+    .catch(e => {
       const retObj = {
         msg: 'error',
-        result: 'unauthorized access',
+        result: e.message,
       };
-      res.end(JSON.stringify(retObj));
-    }
+      res.send(JSON.stringify(retObj));
+    })
   });
     
   return api;

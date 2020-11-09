@@ -62,9 +62,9 @@ const pathsDaemons = (api) => {
     switch (os.platform()) {
       case 'darwin':
         fixPath();
-        api.paths.komodocliDir = path.join(__dirname, '../../assets/bin/osx'),
-        api.paths.kmdDir = `${global.HOME}/Komodo`,
-        api.paths.vrscDir = `${global.HOME}/Komodo/VRSC`,
+        api.paths.assetsFolder = path.join(__dirname, '../../assets/bin/osx'),
+        api.paths.kmdDataDir = `${global.HOME}/Komodo`,
+        api.paths.vrscDataDir = `${global.HOME}/Komodo/VRSC`,
         api.paths.verusDir = `${global.HOME}/Verus`,
         api.paths.verusTestDir = `${global.HOME}/VerusTest`,
         api.paths.zcashParamsDir = `${global.HOME}/ZcashParams`,
@@ -74,9 +74,9 @@ const pathsDaemons = (api) => {
         break;
 
       case 'linux':
-        api.paths.komodocliDir = path.join(__dirname, '../../assets/bin/linux64'),
-        api.paths.kmdDir = `${global.HOME}/Komodo`,
-        api.paths.vrscDir = `${global.HOME}/Komodo/VRSC`,
+        api.paths.assetsFolder = path.join(__dirname, '../../assets/bin/linux64'),
+        api.paths.kmdDataDir = `${global.HOME}/Komodo`,
+        api.paths.vrscDataDir = `${global.HOME}/Komodo/VRSC`,
         api.paths.verusDir = `${global.HOME}/Verus`,
         api.paths.verusTestDir = `${global.HOME}/VerusTest`,
         api.paths.zcashParamsDir = `${global.HOME}/ZcashParams`,
@@ -86,12 +86,12 @@ const pathsDaemons = (api) => {
         break;
 
       case 'win32':
-        api.paths.komodocliDir = path.join(__dirname, '../../assets/bin/win64'),
-        api.paths.komodocliDir = path.normalize(api.paths.komodocliDir),
-        api.paths.kmdDir = `${global.HOME}/Komodo`,
-        api.paths.kmdDir = path.normalize(api.paths.kmdDir),
-        api.paths.vrscDir = `${global.HOME}/Komodo/VRSC`,
-        api.paths.vrscDir = path.normalize(api.paths.vrscDir),
+        api.paths.assetsFolder = path.join(__dirname, '../../assets/bin/win64'),
+        api.paths.assetsFolder = path.normalize(api.paths.assetsFolder),
+        api.paths.kmdDataDir = `${global.HOME}/Komodo`,
+        api.paths.kmdDataDir = path.normalize(api.paths.kmdDataDir),
+        api.paths.vrscDataDir = `${global.HOME}/Komodo/VRSC`,
+        api.paths.vrscDataDir = path.normalize(api.paths.vrscDataDir),
         api.paths.verusDir = `${global.HOME}/Verus`,
         api.paths.verusDir = path.normalize(api.paths.verusDir),
         api.paths.verusTestDir = `${global.HOME}/VerusTest`,
@@ -109,9 +109,9 @@ const pathsDaemons = (api) => {
     switch (os.platform()) {
       case 'darwin':
         fixPath();
-        api.paths.komodocliDir = path.join(__dirname, '../../assets/bin/osx'),
-        api.paths.kmdDir = `${global.HOME}/Library/Application Support/Komodo`,
-        api.paths.vrscDir = `${global.HOME}/Library/Application Support/Komodo/VRSC`,
+        api.paths.assetsFolder = path.join(__dirname, '../../assets/bin/osx'),
+        api.paths.kmdDataDir = `${global.HOME}/Library/Application Support/Komodo`,
+        api.paths.vrscDataDir = `${global.HOME}/Library/Application Support/Komodo/VRSC`,
         api.paths.verusDir = `${global.HOME}/Library/Application Support/Verus`,
         api.paths.verusTestDir = `${global.HOME}/Library/Application Support/VerusTest`,
         api.paths.zcashParamsDir = `${global.HOME}/Library/Application Support/ZcashParams`,
@@ -122,9 +122,9 @@ const pathsDaemons = (api) => {
         break;
 
       case 'linux':
-        api.paths.komodocliDir = path.join(__dirname, '../../assets/bin/linux64'),
-        api.paths.kmdDir = `${global.HOME}/.komodo`,
-        api.paths.vrscDir = `${global.HOME}/.komodo/VRSC`,
+        api.paths.assetsFolder = path.join(__dirname, '../../assets/bin/linux64'),
+        api.paths.kmdDataDir = `${global.HOME}/.komodo`,
+        api.paths.vrscDataDir = `${global.HOME}/.komodo/VRSC`,
         api.paths.verusDir = `${global.HOME}/.verus`,
         api.paths.verusTestDir = `${global.HOME}/.verustest`,
         api.paths.zcashParamsDir = `${global.HOME}/.zcash-params`,
@@ -135,12 +135,12 @@ const pathsDaemons = (api) => {
         break;
 
       case 'win32':
-        api.paths.komodocliDir = path.join(__dirname, '../../assets/bin/win64'),
-        api.paths.komodocliDir = path.normalize(api.paths.komodocliDir),
-        api.paths.kmdDir = `${global.HOME}/Komodo`,
-        api.paths.kmdDir = path.normalize(api.paths.kmdDir),
-        api.paths.vrscDir = `${global.HOME}/Komodo/VRSC`,
-        api.paths.vrscDir = path.normalize(api.paths.vrscDir),
+        api.paths.assetsFolder = path.join(__dirname, '../../assets/bin/win64'),
+        api.paths.assetsFolder = path.normalize(api.paths.assetsFolder),
+        api.paths.kmdDataDir = `${global.HOME}/Komodo`,
+        api.paths.kmdDataDir = path.normalize(api.paths.kmdDataDir),
+        api.paths.vrscDataDir = `${global.HOME}/Komodo/VRSC`,
+        api.paths.vrscDataDir = path.normalize(api.paths.vrscDataDir),
         api.paths.verusDir = `${global.HOME}/Verus`,
         api.paths.verusDir = path.normalize(api.paths.verusDir),
         api.paths.verusTestDir = `${global.HOME}/VerusTest`,
@@ -188,7 +188,7 @@ const setCoinDir = (api, coin, dirNames, absolute = false) => {
   else if (!api.paths) api.paths = {};
   const { darwin, linux, win32 } = dirNames
 
-  let dirName = coin + "Dir";
+  let dirName = coin.toLowerCase() + "DataDir";
   switch (os.platform()) {
     case 'darwin':
       fixPath();

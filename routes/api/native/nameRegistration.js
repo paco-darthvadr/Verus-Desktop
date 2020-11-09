@@ -1,17 +1,17 @@
 const Promise = require('bluebird');
 
 module.exports = (api) => {    
-  api.native.register_id_name = (coin, token, name, referralId) => {
+  api.native.register_id_name = (coin, name, referralId) => {
     return new Promise((resolve, reject) => {      
       let params = referralId ? [name, null, referralId] : [name, null]
       let controlAddress
 
-      api.native.callDaemon(coin, 'getnewaddress', [], token)
+      api.native.callDaemon(coin, 'getnewaddress', [])
       .then(newAddress => {
         params[1] = newAddress
         controlAddress = newAddress
 
-        return api.native.callDaemon(coin, 'registernamecommitment', params, token)
+        return api.native.callDaemon(coin, 'registernamecommitment', params)
       })
       .then(async (nameCommitmentResult) => {
         if (
@@ -47,23 +47,23 @@ module.exports = (api) => {
     });
   };
 
-  api.native.register_id_name_preflight = (coin, token, name, referralId) => {
+  api.native.register_id_name_preflight = (coin, name, referralId) => {
     return new Promise((resolve, reject) => {      
       resolve({ namereservation: { coin, name, referral: referralId } });
     });
   };
 
-  api.post('/native/register_id_name', (req, res, next) => {
-    const { token, chainTicker, name, referralId } = req.body
+  api.setPost('/native/register_id_name', (req, res, next) => {
+    const { chainTicker, name, referralId } = req.body
 
-    api.native.register_id_name(chainTicker, token, name, referralId)
+    api.native.register_id_name(chainTicker, name, referralId)
     .then((nameCommitmentResult) => {
       const retObj = {
         msg: 'success',
         result: nameCommitmentResult,
       };
   
-      res.end(JSON.stringify(retObj));  
+      res.send(JSON.stringify(retObj));  
     })
     .catch(error => {
       const retObj = {
@@ -71,21 +71,21 @@ module.exports = (api) => {
         result: error.message,
       };
   
-      res.end(JSON.stringify(retObj));  
+      res.send(JSON.stringify(retObj));  
     })
   });
 
-  api.post('/native/register_id_name_preflight', (req, res, next) => {
-    const { token, chainTicker, name, referralId } = req.body
+  api.setPost('/native/register_id_name_preflight', (req, res, next) => {
+    const { chainTicker, name, referralId } = req.body
 
-    api.native.register_id_name_preflight(chainTicker, token, name, referralId)
+    api.native.register_id_name_preflight(chainTicker, name, referralId)
     .then((preflightRes) => {
       const retObj = {
         msg: 'success',
         result: preflightRes,
       };
   
-      res.end(JSON.stringify(retObj));  
+      res.send(JSON.stringify(retObj));  
     })
     .catch(error => {
       const retObj = {
@@ -93,7 +93,7 @@ module.exports = (api) => {
         result: error.message,
       };
   
-      res.end(JSON.stringify(retObj));  
+      res.send(JSON.stringify(retObj));  
     })
   });
 
@@ -116,33 +116,24 @@ module.exports = (api) => {
     }
   };
 
-  api.post('/native/get_name_commitments', async (req, res, next) => {
-    const { token, chainTicker } = req.body
+  api.setPost('/native/get_name_commitments', async (req, res, next) => {
+    const { chainTicker } = req.body
     const coin = chainTicker
 
-    if (api.checkToken(token)) {
-      try {
-        const retObj = {
-          msg: 'success',
-          result: await api.native.get_name_commitments(coin),
-        };
-
-        res.end(JSON.stringify(retObj));
-      } catch (e) {
-        const retObj = {
-          msg: 'error',
-          result: e.message,
-        };
-
-        res.end(JSON.stringify(retObj));
-      }
-    } else {
+    try {
       const retObj = {
-        msg: 'error',
-        result: 'unauthorized access',
+        msg: 'success',
+        result: await api.native.get_name_commitments(coin),
       };
 
-      res.end(JSON.stringify(retObj));
+      res.send(JSON.stringify(retObj));
+    } catch (e) {
+      const retObj = {
+        msg: 'error',
+        result: e.message,
+      };
+
+      res.send(JSON.stringify(retObj));
     }
   });
 
@@ -174,32 +165,23 @@ module.exports = (api) => {
     }
   }
 
-  api.post('/native/delete_name_commitment', async (req, res, next) => {
-    const { token, chainTicker, name } = req.body
+  api.setPost('/native/delete_name_commitment', async (req, res, next) => {
+    const { chainTicker, name } = req.body
 
-    if (api.checkToken(token)) {
-      try {
-        const retObj = {
-          msg: 'success',
-          result: await api.native.delete_name_commitment(name, chainTicker),
-        };
-
-        res.end(JSON.stringify(retObj));
-      } catch (e) {
-        const retObj = {
-          msg: 'error',
-          result: e.message,
-        };
-
-        res.end(JSON.stringify(retObj));
-      }
-    } else {
+    try {
       const retObj = {
-        msg: 'error',
-        result: 'unauthorized access',
+        msg: 'success',
+        result: await api.native.delete_name_commitment(name, chainTicker),
       };
 
-      res.end(JSON.stringify(retObj));
+      res.send(JSON.stringify(retObj));
+    } catch (e) {
+      const retObj = {
+        msg: 'error',
+        result: e.message,
+      };
+
+      res.send(JSON.stringify(retObj));
     }
   });
 

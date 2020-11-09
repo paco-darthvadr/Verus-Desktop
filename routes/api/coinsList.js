@@ -24,43 +24,34 @@ module.exports = (api) => {
    *  type: POST
    *  params: payload
    */
-  api.post('/coinslist', (req, res, next) => {
-    if (api.checkToken(req.body.token)) {
-      const _payload = req.body.payload;
+  api.setPost('/coinslist', (req, res, next) => {
+    const _payload = req.body.payload;
 
-      if (!_payload) {
-        const retObj = {
-          msg: 'error',
-          result: 'no payload provided',
-        };
-
-        res.end(JSON.stringify(retObj));
-      } else {
-        fs.writeFile(`${api.paths.agamaDir}/shepherd/coinslist.json`, JSON.stringify(_payload), (err) => {
-          if (err) {
-            const retObj = {
-              msg: 'error',
-              result: err,
-            };
-
-            res.end(JSON.stringify(retObj));
-          } else {
-            const retObj = {
-              msg: 'success',
-              result: 'done',
-            };
-
-            res.end(JSON.stringify(retObj));
-          }
-        });
-      }
-    } else {
+    if (!_payload) {
       const retObj = {
         msg: 'error',
-        result: 'unauthorized access',
+        result: 'no payload provided',
       };
 
-      res.end(JSON.stringify(retObj));
+      res.send(JSON.stringify(retObj));
+    } else {
+      fs.writeFile(`${api.paths.agamaDir}/shepherd/coinslist.json`, JSON.stringify(_payload), (err) => {
+        if (err) {
+          const retObj = {
+            msg: 'error',
+            result: err,
+          };
+
+          res.send(JSON.stringify(retObj));
+        } else {
+          const retObj = {
+            msg: 'success',
+            result: 'done',
+          };
+
+          res.send(JSON.stringify(retObj));
+        }
+      });
     }
   });
 

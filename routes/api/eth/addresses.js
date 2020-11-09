@@ -31,7 +31,7 @@ module.exports = (api) => {
     });
   };
 
-  api.get('/eth/get_addresses', (req, res, next) => {
+  api.setGet('/eth/get_addresses', (req, res, next) => {
     const coin = req.query.chainTicker;
     const network = req.query.network
     
@@ -42,7 +42,7 @@ module.exports = (api) => {
         result: addresses,
       };
   
-      res.end(JSON.stringify(retObj));  
+      res.send(JSON.stringify(retObj));  
     })
     .catch(error => {
       const retObj = {
@@ -50,30 +50,22 @@ module.exports = (api) => {
         result: error.message,
       };
   
-      res.end(JSON.stringify(retObj));  
+      res.send(JSON.stringify(retObj));  
     })
   });
 
-  api.post('/eth/get_privkey', (req, res, next) => {
+  api.setPost('/eth/get_privkey', (req, res, next) => {
     const coin = req.body.chainTicker;
-    const token = req.body.token;
 
-    if (api.checkToken(token)) {
-      if (api.eth.wallet && api.eth.wallet.signingKey) {
-        res.end(JSON.stringify({
-          msg: 'success',
-          result: api.eth.wallet.signingKey.privateKey,
-        }));  
-      } else {
-        res.end(JSON.stringify({
-          msg: 'error',
-          result: `No privkey found for coin ${coin}`
-        }));  
-      }
+    if (api.eth.wallet && api.eth.wallet.signingKey) {
+      res.send(JSON.stringify({
+        msg: 'success',
+        result: api.eth.wallet.signingKey.privateKey,
+      }));  
     } else {
-      res.end(JSON.stringify({
+      res.send(JSON.stringify({
         msg: 'error',
-        result: 'unauthorized access'
+        result: `No privkey found for coin ${coin}`
       }));  
     }
   });

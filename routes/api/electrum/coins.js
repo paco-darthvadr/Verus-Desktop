@@ -103,86 +103,25 @@ module.exports = (api) => {
     return true;
   }
 
-  //TODO: Re-evauluate as POST or eliminate use of API token
-  /*
-  api.get('/electrum/coin/changepub', (req, res, next) => {
-    if (api.checkToken(req.query.token)) {
-      api.electrumKeys[req.query.chainTicker].pub = req.query.pub;
+  api.setPost('/electrum/coins/activate', async(req, res, next) => {
+    const { chainTicker, launchConfig } = req.body
+    const { customServers, tags, txFee, startupOptions } = launchConfig
 
-      const retObj = {
-        msg: 'success',
-        result: 'true',
-      };
+    const result = await api.addElectrumCoin(
+      chainTicker,
+      customServers || [],
+      tags,
+      txFee,
+      startupOptions && startupOptions.nspv
+    );
 
-      res.end(JSON.stringify(retObj));
-    } else {
-      const retObj = {
-        msg: 'error',
-        result: 'unauthorized access',
-      };
+    const retObj = {
+      msg: 'success',
+      result,
+    };
 
-      res.end(JSON.stringify(retObj));
-    }
-  });*/
-
-  api.post('/electrum/coins/activate', async(req, res, next) => {
-    if (api.checkToken(req.body.token)) {
-      const { chainTicker, launchConfig } = req.body
-      const { customServers, tags, txFee, startupOptions } = launchConfig
-
-      const result = await api.addElectrumCoin(
-        chainTicker,
-        customServers || [],
-        tags,
-        txFee,
-        startupOptions && startupOptions.nspv
-      );
-
-      const retObj = {
-        msg: 'success',
-        result,
-      };
-
-      res.end(JSON.stringify(retObj));
-    } else {
-      const retObj = {
-        msg: 'error',
-        result: 'unauthorized access',
-      };
-
-      res.end(JSON.stringify(retObj));
-    }
+    res.send(JSON.stringify(retObj));
   });
-
-  /*api.get('/electrum/coins', (req, res, next) => {
-    if (api.checkToken(req.query.token)) {
-      let _electrumCoins = JSON.parse(JSON.stringify(api.electrum.coinData)); // deep cloning
-
-      for (let key in _electrumCoins) {
-        if (api.electrumKeys[key]) {
-          _electrumCoins[key].pub = api.electrumKeys[key].pub;
-          _electrumCoins[key].name = key.toUpperCase();
-          _electrumCoins[key].pubHex = api.electrumKeys[key].pubHex;
-          _electrumCoins[key.toUpperCase()] = JSON.parse(JSON.stringify(_electrumCoins[key]));
-          delete _electrumCoins[key];
-        }
-      }
-
-      const retObj = {
-        msg: 'success',
-        result: _electrumCoins,
-      };
-
-      res.end(JSON.stringify(retObj));
-    } else {
-      const retObj = {
-        msg: 'error',
-        result: 'unauthorized access',
-      };
-
-      res.end(JSON.stringify(retObj));
-    }
-  });*/
 
   api.checkCoinConfigIntegrity = (coin) => {
     let _totalCoins = 0;

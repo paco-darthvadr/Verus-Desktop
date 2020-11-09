@@ -6,7 +6,7 @@ const decimals = require('agama-wallet-lib/src/eth-erc20-decimals');
 const { ETHERSCAN_API_KEY } = require('../../../keys/etherscan')
 
 module.exports = (api) => {  
-  api.get('/eth/get_transactions', (req, res, next) => {
+  api.setGet('/eth/get_transactions', (req, res, next) => {
     let address;
     const network = req.query.network || 'homestead';
     const coin = req.query.chainTicker;
@@ -14,7 +14,7 @@ module.exports = (api) => {
     try {
       address = api.eth.get_info(coin).address
     } catch (e) {
-      res.end(JSON.stringify({
+      res.send(JSON.stringify({
         msg: 'error',
         result: e.message
       })); 
@@ -23,7 +23,7 @@ module.exports = (api) => {
     if (coin && coin !== 'ETH') {
       api.eth._transactionsERC20(address, coin)
       .then((transactions) => {
-        res.end(JSON.stringify(api.eth.parseEthJson(transactions)));  
+        res.send(JSON.stringify(api.eth.parseEthJson(transactions)));  
       })
       .catch(e => {
         const retObj = {
@@ -31,12 +31,12 @@ module.exports = (api) => {
           result: e.message,
         };
     
-        res.end(JSON.stringify(retObj));  
+        res.send(JSON.stringify(retObj));  
       });
     } else {
       api.eth._transactions(address, network)
       .then((transactions) => {
-        res.end(JSON.stringify(api.eth.parseEthJson(transactions)));  
+        res.send(JSON.stringify(api.eth.parseEthJson(transactions)));  
       })
       .catch(e => {
         const retObj = {
@@ -44,7 +44,7 @@ module.exports = (api) => {
           result: e.message,
         };
     
-        res.end(JSON.stringify(retObj));  
+        res.send(JSON.stringify(retObj));  
       });
     }
   });

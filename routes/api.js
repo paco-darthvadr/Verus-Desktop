@@ -2,6 +2,8 @@
 const express = require('express');
 let api = express.Router();
 
+api = require('./api/auth.js')(api);
+
 api.setconf = require('../private/setconf.js');
 api.nativeCoind = require('./nativeCoind.js');
 api.nativeCoindList = {};
@@ -11,7 +13,7 @@ api._appConfig = require('./appConfig.js');
 api.chainParams = require('./chainParams')
 
 api.coinsInitializing = [];
-api.coindInstanceRegistry = {};
+api.startedDaemonRegistry = {};
 api.confFileIndex = {};
 api.logFileIndex = {};
 api.coindStdout = {};
@@ -110,9 +112,6 @@ api = require('./api/electrum/addresses.js')(api);
 api = require('./api/electrum/transactions.js')(api);
 api = require('./api/electrum/parseTxAddresses.js')(api);
 api = require('./api/electrum/block.js')(api);
-api = require('./api/electrum/createtx.js')(api);
-api = require('./api/electrum/createtx-split.js')(api);
-api = require('./api/electrum/createtx-multi.js')(api);
 api = require('./api/electrum/interest.js')(api);
 api = require('./api/electrum/listunspent.js')(api);
 api = require('./api/electrum/insight.js')(api);
@@ -176,23 +175,15 @@ api = require('./api/pin.js')(api);
 api = require('./api/downloadZcparams.js')(api);
 api = require('./api/coinsList.js')(api);
 api = require('./api/rpc.js')(api);
-api = require('./api/debugLog.js')(api);
 api = require('./api/confMaxconnections.js')(api);
 api = require('./api/appInfo.js')(api);
 api = require('./api/conf.js')(api);
 api = require('./api/daemonControl.js')(api);
-api = require('./api/auth.js')(api);
 api = require('./api/addressBook.js')(api);
 api = require('./api/system.js')(api);
 
 // Utility APIs
 api = require('./api/utility_apis/csvExport.js')(api);
-
-// elections
-api = require('./api/elections.js')(api);
-
-// explorer
-// api = require('./api/explorer/overview.js')(api);
 
 // kv
 api = require('./api/kv.js')(api);
@@ -205,6 +196,7 @@ api.eth = {
   tokenInfo: {},
   abi: {},
 };
+api = require('./api/eth/contracts/contracts.js')(api);
 api = require('./api/eth/auth.js')(api);
 api = require('./api/eth/keys.js')(api);
 api = require('./api/eth/network.js')(api);
@@ -214,7 +206,6 @@ api = require('./api/eth/info')(api);
 api = require('./api/eth/transactions.js')(api);
 api = require('./api/eth/coins.js')(api);
 api = require('./api/eth/gasPrice.js')(api);
-api = require('./api/eth/createtx.js')(api);
 api = require('./api/eth/utils.js')(api);
 api = require('./api/eth/remove')(api);
 api = require('./api/eth/send.js')(api);
@@ -222,7 +213,7 @@ api = require('./api/eth/send.js')(api);
 api.printDirs();
 
 // default route
-api.get('/', (req, res, next) => {
+api.setGet('/', (req, res, next) => {
   res.send('Agama app server2');
 });
 

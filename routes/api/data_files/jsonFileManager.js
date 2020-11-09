@@ -1,8 +1,5 @@
 const fs = require('fs-extra');
-const _fs = require('graceful-fs');
-const fsnode = require('fs');
 const { ALLOWED_PATHS_ARR } = require('../utils/constants/index');
-const appInfo = require('../appInfo');
 
 module.exports = (api) => {
   api.handleFileProblem = (desc, throwError) => {

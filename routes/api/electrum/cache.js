@@ -154,25 +154,16 @@ module.exports = (api) => {
    *  type: POST
    *
    */
-  api.post('/electrum/cache/delete', (req, res, next) => {
-    if (api.checkToken(req.body.token)) {
-      api.electrumCache = {};
-      api.saveLocalSPVCache();
+  api.setPost('/electrum/cache/delete', (req, res, next) => {
+    api.electrumCache = {};
+    api.saveLocalSPVCache();
 
-      const retObj = {
-        msg: 'success',
-        result: 'spv cache is removed',
-      };
+    const retObj = {
+      msg: 'success',
+      result: 'spv cache is removed',
+    };
 
-      res.end(JSON.stringify(retObj));
-    } else {
-      const retObj = {
-        msg: 'error',
-        result: 'unauthorized access',
-      };
-
-      res.end(JSON.stringify(retObj));
-    }
+    res.send(JSON.stringify(retObj));
   });
 
   api.getTransaction = (txid, network, ecl) => {

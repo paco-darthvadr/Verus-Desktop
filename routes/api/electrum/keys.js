@@ -148,32 +148,6 @@ module.exports = (api) => {
     }
   };
 
-  api.post('/electrum/seedtowif', (req, res, next) => {
-    if (api.checkToken(req.body.token)) {
-      const keys = api.seedToWif(
-        req.body.seed,
-        req.body.network.toLowerCase(),
-        req.body.iguana
-      );
-
-      const retObj = {
-        msg: 'success',
-        result: {
-          keys,
-        },
-      };
-
-      res.end(JSON.stringify(retObj));
-    } else {
-      const retObj = {
-        msg: 'error',
-        result: 'unauthorized access',
-      };
-
-      res.end(JSON.stringify(retObj));
-    }
-  });
-
   api.getCoinByPub = (address, coin) => {
     const _skipNetworks = [
       'btc',
@@ -215,22 +189,22 @@ module.exports = (api) => {
     }
   };
 
-  api.get('/electrum/keys/addressversion', (req, res, next) => {
+  api.setGet('/electrum/keys/addressversion', (req, res, next) => {
     const retObj = {
       msg: 'success',
       result: getAddressVersion(req.query.address),
     };
 
-    res.end(JSON.stringify(retObj));
+    res.send(JSON.stringify(retObj));
   });
 
-  api.get('/electrum/keys/validateaddress', (req, res, next) => {
+  api.setGet('/electrum/keys/validateaddress', (req, res, next) => {
     const retObj = {
       msg: 'success',
       result: addressVersionCheck(networks[req.query.network.toLowerCase()] || networks.kmd, req.query.address),
     };
 
-    res.end(JSON.stringify(retObj));
+    res.send(JSON.stringify(retObj));
   });
 
   api.getSpvFees = () => {
@@ -244,47 +218,6 @@ module.exports = (api) => {
 
     return _fees;
   };
-
-  api.post('/electrum/seed/bip39/match', (req, res, next) => {
-    if (api.checkToken(req.body.token)) {
-      const seed = bip39.mnemonicToSeed(req.body.seed);
-      const hdMaster = bitcoin.HDNode.fromSeedBuffer(seed, api.electrumJSNetworks.kmd);
-      const matchPattern = req.body.match;
-      const _defaultAddressDepth = req.body.addressdepth;
-      const _defaultAccountCount = req.body.accounts;
-      let _addresses = [];
-      let _matchingKey;
-
-      for (let i = 0; i < _defaultAccountCount; i++) {
-        for (let j = 0; j < 1; j++) {
-          for (let k = 0; k < _defaultAddressDepth; k++) {
-            const _key = hdMaster.derivePath(`m/44'/141'/${i}'/${j}/${k}`);
-
-            if (_key.keyPair.getAddress() === matchPattern) {
-              _matchingKey = {
-                pub: _key.keyPair.getAddress(),
-                priv: _key.keyPair.toWIF(),
-              };
-            }
-          }
-        }
-      }
-
-      const retObj = {
-        msg: 'success',
-        result: _matchingKey ? _matchingKey : 'address is not found',
-      };
-
-      res.end(JSON.stringify(retObj));
-    } else {
-      const retObj = {
-        msg: 'error',
-        result: 'unauthorized access',
-      };
-
-      res.end(JSON.stringify(retObj));
-    }
-  });
 
   return api;
 };

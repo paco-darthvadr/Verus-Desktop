@@ -49,32 +49,23 @@ module.exports = (api) => {
     }
   };
 
-  api.post('/backup_appdata', async (req, res, next) => {
-    const { token, dirName } = req.body
+  api.setPost('/backup_appdata', async (req, res, next) => {
+    const { dirName } = req.body
    
-    if (api.checkToken(token)) {
-      try {
-        const retObj = {
-          msg: 'success',
-          result: await api.backupAppData(dirName),
-        };
-
-        res.end(JSON.stringify(retObj));
-      } catch (e) {
-        const retObj = {
-          msg: 'error',
-          result: e.message,
-        };
-
-        res.end(JSON.stringify(retObj));
-      }
-    } else {
+    try {
       const retObj = {
-        msg: 'error',
-        result: 'unauthorized access',
+        msg: 'success',
+        result: await api.backupAppData(dirName),
       };
 
-      res.end(JSON.stringify(retObj));
+      res.send(JSON.stringify(retObj));
+    } catch (e) {
+      const retObj = {
+        msg: 'error',
+        result: e.message,
+      };
+
+      res.send(JSON.stringify(retObj));
     }
   });
 

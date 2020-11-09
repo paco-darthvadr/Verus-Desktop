@@ -131,13 +131,13 @@ const template = [
       {
         label: 'Show Verus data folder (default)',
         click (item, focusedWindow) {
-          shell.openItem(pathsDaemons().paths.vrscDir);
+          shell.openItem(pathsDaemons().paths.vrscDataDir);
         }
       },
       {
         label: 'Show binary folder',
         click (item, focusedWindow) {
-          shell.openItem(pathsDaemons().paths.komodocliDir);
+          shell.openItem(pathsDaemons().paths.assetsFolder);
         }
       },
       {

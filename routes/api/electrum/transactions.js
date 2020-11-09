@@ -7,7 +7,7 @@ const btcnetworks = require('agama-wallet-lib/src/bitcoinjs-networks');
 // TODO: add z -> pub, pub -> z flag for zcash forks
 
 module.exports = (api) => {
-  api.get('/electrum/get_transactions', (req, res, next) => {
+  api.setGet('/electrum/get_transactions', (req, res, next) => {
     api.electrum.get_transactions({
       network: req.query.network,
       coin: req.query.chainTicker,
@@ -17,10 +17,10 @@ module.exports = (api) => {
       txid: req.query.txid,
     })
     .then((txhistory) => {
-      res.end(JSON.stringify(txhistory));
+      res.send(JSON.stringify(txhistory));
     })
     .catch(error => {
-      res.end(JSON.stringify({
+      res.send(JSON.stringify({
         msg: 'error',
         result: error.message,
       }));
@@ -542,7 +542,7 @@ module.exports = (api) => {
     });
   };
 
-  api.get('/electrum/gettransaction', (req, res, next) => {
+  api.setGet('/electrum/gettransaction', (req, res, next) => {
     async function _getTransaction() {
       const network = req.query.network || api.validateChainTicker(req.query.coin);
       let ecl;
@@ -564,7 +564,7 @@ module.exports = (api) => {
           result: json,
         };
 
-        res.end(JSON.stringify(retObj));
+        res.send(JSON.stringify(retObj));
       });
     };
     _getTransaction();

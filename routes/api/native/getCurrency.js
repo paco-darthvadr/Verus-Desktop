@@ -1,9 +1,9 @@
 const Promise = require('bluebird');
 
 module.exports = (api) => {    
-  api.native.get_currency = (chain, token, name) => {
+  api.native.get_currency = (chain, name) => {
     return new Promise((resolve, reject) => {      
-      api.native.callDaemon(chain, 'getcurrency', [name], token)
+      api.native.callDaemon(chain, 'getcurrency', [name])
       .then((currency) => {
         resolve({ ...currency, parent_name: chain })
       })
@@ -13,17 +13,17 @@ module.exports = (api) => {
     });
   };
 
-  api.post('/native/get_currency', (req, res, next) => {
-    const { token, chainTicker, name } = req.body
+  api.setPost('/native/get_currency', (req, res, next) => {
+    const { chainTicker, name } = req.body
 
-    api.native.get_currency(chainTicker, token, name)
+    api.native.get_currency(chainTicker, name)
     .then((currency) => {
       const retObj = {
         msg: 'success',
         result: currency,
       };
   
-      res.end(JSON.stringify(retObj));  
+      res.send(JSON.stringify(retObj));  
     })
     .catch(error => {
       const retObj = {
@@ -31,7 +31,7 @@ module.exports = (api) => {
         result: error.message,
       };
   
-      res.end(JSON.stringify(retObj));  
+      res.send(JSON.stringify(retObj));  
     })
   });
  

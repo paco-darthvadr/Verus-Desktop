@@ -51,6 +51,23 @@ module.exports = (api) => {
                     for (const toSave of diagnosticFiles) {
                       await fs.writeFile(path.join(diagPath, toSave.name), JSON.stringify(toSave.data, null, 2))
                     }
+
+                    for (const pathName in api.paths) {
+                      if (pathName.slice(pathName.length - 7) === "DataDir") {
+                        const debugLogPath = path.join(api.paths[pathName], 'debug.log')
+                        const coinFolder = path.join(diagPath, pathName)
+
+                        try {
+                          fs.mkdirSync(coinFolder);
+
+                          await fs.copyFile(debugLogPath, path.join(coinFolder, 'debug.log'))
+                        } catch(e) {
+                          fs.rmdirSync(coinFolder);
+                          api.log('Could not copy debug file from ' + pathName, 'diagnostics')
+                          api.log(e, 'diagnostics')
+                        }
+                      }
+                    }
   
                     dialog.showMessageBox(mainWindow, {
                       title: "Success!",

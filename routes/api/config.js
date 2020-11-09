@@ -114,38 +114,29 @@ module.exports = (api) => {
    *  type: POST
    *  params: configObj
    */
-  api.post('/config/save', (req, res, next) => {
-    if (api.checkToken(req.body.token)) {
-      if (!req.body.configObj) {
-        const retObj = {
-          msg: 'error',
-          result: 'no configObj provided',
-        };
-
-        res.end(JSON.stringify(retObj));
-      } else {
-        try {
-          api.saveLocalAppConf(req.body.configObj);
-        } catch(e) {
-          res.end(JSON.stringify({
-            msg: 'error',
-            result: e.message,
-          }));
-          return
-        }
-
-        res.end(JSON.stringify({
-          msg: 'success',
-          result: 'config saved',
-        }));
-      }
-    } else {
+  api.setPost('/config/save', (req, res, next) => {
+    if (!req.body.configObj) {
       const retObj = {
         msg: 'error',
-        result: 'unauthorized access',
+        result: 'no configObj provided',
       };
 
-      res.end(JSON.stringify(retObj));
+      res.send(JSON.stringify(retObj));
+    } else {
+      try {
+        api.saveLocalAppConf(req.body.configObj);
+      } catch(e) {
+        res.send(JSON.stringify({
+          msg: 'error',
+          result: e.message,
+        }));
+        return
+      }
+
+      res.send(JSON.stringify({
+        msg: 'success',
+        result: 'config saved',
+      }));
     }
   });
 
@@ -153,50 +144,41 @@ module.exports = (api) => {
    *  type: POST
    *  params: none
    */
-  api.post('config/reset', (req, res, next) => {
-    if (api.checkToken(req.body.token)) {
-      api.saveLocalAppConf(api.defaultAppConfig);
+  api.setPost('config/reset', (req, res, next) => {
+    api.saveLocalAppConf(api.defaultAppConfig);
 
-      const retObj = {
-        msg: 'success',
-        result: 'config saved',
-      };
+    const retObj = {
+      msg: 'success',
+      result: 'config saved',
+    };
 
-      res.end(JSON.stringify(retObj));
-    } else {
-      const retObj = {
-        msg: 'error',
-        result: 'unauthorized access',
-      };
-
-      res.end(JSON.stringify(retObj));
-    }
+    res.send(JSON.stringify(retObj));
   });
 
   /*
    *  type: GET
    *
    */
-  api.get('/config/load', (req, res, next) => {
+  api.setGet('/config/load', (req, res, next) => {
     const retObj = {
       msg: 'success',
       result: api.loadLocalConfig(),
     };
 
-    res.send(retObj);
+    res.send(JSON.stringify(retObj));
   });
 
   /*
    *  type: GET
    *
    */
-  api.get('/config/schema', (req, res, next) => {
+  api.setGet('/config/schema', (req, res, next) => {
     const retObj = {
       msg: 'success',
       result: api.appConfigSchema,
     };
 
-    res.send(retObj);
+    res.send(JSON.stringify(retObj));
   });
 
   api.testLocation = (path) => {

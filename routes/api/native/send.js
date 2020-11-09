@@ -3,31 +3,23 @@ const { RPC_WALLET_INSUFFICIENT_FUNDS } = require("../utils/rpc/rpcStatusCodes")
 
 module.exports = (api) => {  
   api.native.encodeMemo = (memo) => {
-    var hex;
-    var i;
-  
-    var result = "";
-    for (i = 0; i < memo.length; i++) {
-      hex = memo.charCodeAt(i).toString(16);
-      result += ("000"+hex).slice(-4);
-    }
-  
-    return result;
+    return Array.from(memo).map(c => 
+      c.charCodeAt(0) < 128 ? c.charCodeAt(0).toString(16).padStart(2, '0') :
+      encodeURIComponent(c).replace(/\%/g,'').toLowerCase()
+    ).join('');
   }
 
   api.native.testSendCurrency = async (chainTicker, txParams) => {
     const rawtx = await api.native.callDaemon(
       chainTicker,
       "sendcurrency",
-      [...txParams, true],
-      api.appSessionHash
+      [...txParams, true]
     )
 
     return await api.native.callDaemon(
       chainTicker,
       "decoderawtransaction",
-      [rawtx],
-      api.appSessionHash
+      [rawtx]
     )
   }
 
@@ -95,7 +87,7 @@ module.exports = (api) => {
     deductedAmount = Number((spendAmount + fee).toFixed(8))
 
     try {
-      const balances = await api.native.get_balances(chainTicker, api.appSessionHash, false)
+      const balances = await api.native.get_balances(chainTicker, false)
       const { interest } = balances.native.public
 
       if (deductedAmount > balance) {
@@ -117,13 +109,12 @@ module.exports = (api) => {
         try {
           fromCurrency = await api.native.get_currency(
             chainTicker,
-            api.appSessionHash,
             currency == null ? chainTicker : currency
           );
           
           if (convertto != null && convertto !== currency) {
-            toCurrency = await api.native.get_currency(chainTicker, api.appSessionHash, convertto)            
-            currentHeight = await api.native.get_info(chainTicker, api.appSessionHash).longestchain
+            toCurrency = await api.native.get_currency(chainTicker, convertto)            
+            currentHeight = await api.native.get_info(chainTicker).longestchain
 
             if (currentHeight < toCurrency.startblock && !preconvert) {
               throw new Error("Preconvert expired! You can no longer preconvert this currency.")
@@ -283,11 +274,20 @@ module.exports = (api) => {
     }
   };
 
-  api.post('/native/sendtx', async (req, res, next) => {
-    const token = req.body.token;
+  api.setPost('/native/sendtx', async (req, res, next) => {
+    const {
+      chainTicker,
+      toAddress,
+      amount,
+      balance,
+      fromAddress,
+      customFee,
+      memo,
+      currencyParams
+    } = req.body;
 
-    if (api.checkToken(token)) {
-      const {
+    try {
+      const preflightRes = await api.native.txPreflight(
         chainTicker,
         toAddress,
         amount,
@@ -296,95 +296,66 @@ module.exports = (api) => {
         customFee,
         memo,
         currencyParams
-      } = req.body;
+      )
 
-      try {
-        const preflightRes = await api.native.txPreflight(
-          chainTicker,
-          toAddress,
-          amount,
-          balance,
-          fromAddress,
-          customFee,
-          memo,
-          currencyParams
-        )
-
-        api.native.callDaemon(chainTicker, preflightRes.cliCmd, preflightRes.txParams, token)
-        .then(txid => {
-          const retObj = {
-            msg: "success",
-            result: { ...preflightRes, txid }
-          };
-          res.end(JSON.stringify(retObj));
-        }).catch(e => {
-          const retObj = {
-            msg: "error",
-            result: e.message
-          };
-          res.end(JSON.stringify(retObj));
-        })
-      } catch (e) {
+      api.native.callDaemon(chainTicker, preflightRes.cliCmd, preflightRes.txParams)
+      .then(txid => {
+        const retObj = {
+          msg: "success",
+          result: { ...preflightRes, txid }
+        };
+        res.send(JSON.stringify(retObj));
+      }).catch(e => {
         const retObj = {
           msg: "error",
           result: e.message
         };
-
-        res.end(JSON.stringify(retObj));
-      }
-    } else {
+        res.send(JSON.stringify(retObj));
+      })
+    } catch (e) {
       const retObj = {
         msg: "error",
-        result: "unauthorized access"
+        result: e.message
       };
-      res.end(JSON.stringify(retObj));
+
+      res.send(JSON.stringify(retObj));
     }
   });
 
-  api.post("/native/tx_preflight", async (req, res, next) => {
-    const token = req.body.token;
+  api.setPost("/native/tx_preflight", async (req, res, next) => {
+    const {
+      chainTicker,
+      toAddress,
+      amount,
+      balance,
+      fromAddress,
+      customFee,
+      memo,
+      currencyParams
+    } = req.body;
 
-    if (api.checkToken(token)) {
-      const {
-        chainTicker,
-        toAddress,
-        amount,
-        balance,
-        fromAddress,
-        customFee,
-        memo,
-        currencyParams
-      } = req.body;
-
-      try {
-        res.end(
-          JSON.stringify({
-            msg: "success",
-            result: await api.native.txPreflight(
-              chainTicker,
-              toAddress,
-              amount,
-              balance,
-              fromAddress,
-              customFee,
-              memo,
-              currencyParams
-            )
-          })
-        );
-      } catch (e) {
-        const retObj = {
-          msg: "error",
-          result: e.message
-        };
-        res.end(JSON.stringify(retObj));
-      }
-    } else {
+    try {
+      res.send(
+        JSON.stringify({
+          msg: "success",
+          result: await api.native.txPreflight(
+            chainTicker,
+            toAddress,
+            amount,
+            balance,
+            fromAddress,
+            customFee,
+            memo,
+            currencyParams
+          )
+        })
+      );
+    } catch (e) {
       const retObj = {
         msg: "error",
-        result: "unauthorized access"
+        result: e.message
       };
-      res.end(JSON.stringify(retObj));
+      res.send(JSON.stringify(retObj));
     }
   });
     

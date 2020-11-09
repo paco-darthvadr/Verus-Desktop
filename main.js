@@ -86,7 +86,11 @@ for (let i = 0; i < process.argv.length; i++) {
 	}
 }
 
-const appSessionHash = _argv.token ? _argv.token : randomBytes(32).toString('hex');
+// Two so post and get can be called concurrently, TODO: create a more performance efficient way
+const appPostSessionHash = randomBytes(32).toString('hex')
+const appNonPostSessionHash = randomBytes(32).toString('hex')
+const apiShieldKey = randomBytes(32).toString('hex')
+
 const _spvFees = api.getSpvFees();
 
 api.writeLog('usb mode: ' + global.USB_MODE, 'init');
@@ -99,11 +103,6 @@ api.writeLog(`cpu_cores: ${os.cpus().length}`);
 api.writeLog(`platform: ${osPlatform}`);
 api.writeLog(`os_release: ${os.release()}`);
 api.writeLog(`os_type: ${os.type()}`);
-
-if (process.argv.indexOf('devmode') > -1 ||
-		process.argv.indexOf('nogui') > -1) {
-	api.log(`app init ${appSessionHash}`, 'init');
-}
 
 api.log('usb mode: ' + global.USB_MODE, 'init');
 api.log(`app info: ${appBasicInfo.name} ${appBasicInfo.version}`, 'init');
@@ -243,7 +242,7 @@ if (os.platform() === 'win32') {
 }
 
 // close app
-function forseCloseApp() {
+function forceCloseApp() {
 	forceQuitApp = true;
 	app.quit();
 }
@@ -252,7 +251,7 @@ if (!_argv.nogui ||
 		(_argv.nogui && _argv.nogui === '1')) {
 	app.on('ready', () => createWindow('open', process.argv.indexOf('dexonly') > -1 ? true : null));
 } else {
-	server.listen(appConfig.general.main.agamaPort, () => {
+	server.listen(appConfig.general.main.agamaPort, async () => {
 		api.log(`guiapp and sockets.io are listening on port ${appConfig.general.main.agamaPort}`, 'init');
 		api.writeLog(`guiapp and sockets.io are listening on port ${appConfig.general.main.agamaPort}`, 'init');
 		// start sockets.io
@@ -260,7 +259,6 @@ if (!_argv.nogui ||
 	});
 	api.setIO(io); // pass sockets object to api router
 	api.setVar('appBasicInfo', appBasicInfo);
-	api.setVar('appSessionHash', appSessionHash);
 }
 
 function createAppCloseWindow() {
@@ -326,7 +324,7 @@ function createAppCloseWindow() {
 		]);
 
 		// check if agama is already running
-		portscanner.checkPortStatus(appConfig.general.main.agamaPort, '127.0.0.1', (error, status) => {
+		portscanner.checkPortStatus(appConfig.general.main.agamaPort, '127.0.0.1', async (error, status) => {
 			// Status is 'open' if currently in use or 'closed' if available
 			if (status === 'closed') {
 				server.listen(appConfig.general.main.agamaPort, () => {
@@ -349,7 +347,9 @@ function createAppCloseWindow() {
 
 				api.setIO(io); // pass sockets object to api router
 				api.setVar('appBasicInfo', appBasicInfo);
-				api.setVar('appSessionHash', appSessionHash);
+				api.setVar('appPostSessionHash', appPostSessionHash);
+				api.setVar('appNonPostSessionHash', appNonPostSessionHash);
+				api.setVar('apiShieldKey', apiShieldKey);
 
 				// load our index.html (i.e. Agama GUI)
 				api.writeLog('show agama gui');
@@ -371,7 +371,9 @@ function createAppCloseWindow() {
 					appConfig,
 					arch: version.minVersion.indexOf('-spv-only') > -1 ? 'spv-only' : arch(),
 					appBasicInfo,
-					appSessionHash,
+					appPostSessionHash,
+					appNonPostSessionHash,
+					apiShieldKey,
 					testLocation: api.testLocation,
 					kmdMainPassiveMode: api.kmdMainPassiveMode,
 					getAppRuntimeLog: api.getAppRuntimeLog,
@@ -423,7 +425,7 @@ function createAppCloseWindow() {
 				});
 
 				mainWindow.setResizable(false);
-				mainWindow.forseCloseApp = forseCloseApp;
+				mainWindow.forceCloseApp = forceCloseApp;
 
 				willQuitApp = true;
 				server.listen(appConfig.general.main.agamaPort + 1, () => {
@@ -443,7 +445,7 @@ function createAppCloseWindow() {
 		  });
 
 		  /*loadingWindow.on('close', (e) => {
-		  	if (!forseCloseApp) {
+		  	if (!forceCloseApp) {
 			    if (willQuitApp) {
 			      loadingWindow = null;
 			    } else {
@@ -518,6 +520,7 @@ function createAppCloseWindow() {
 					return new Promise((resolve, reject) => {
 						const result = 'Quiting App: done';
 
+						forceQuitApp = true
 						app.quit();
 						api.log(result, 'quit');
 						resolve(result);
@@ -536,14 +539,14 @@ function createAppCloseWindow() {
 				if (process.argv.indexOf('dexonly') > -1) {
 					api.killRogueProcess('marketmaker');
 				}
-				if (!Object.keys(api.coindInstanceRegistry).length ||
+				if (!Object.keys(api.startedDaemonRegistry).length ||
 						!appConfig.general.native.stopNativeDaemonsOnQuit) {
 					closeApp();
 				} else {
 					createAppCloseWindow();
 					api.quitKomodod(appConfig.general.native.cliStopTimeout);
 					_appClosingInterval = setInterval(() => {
-						if (!Object.keys(api.coindInstanceRegistry).length) {
+						if (!Object.keys(api.startedDaemonRegistry).length) {
 							closeApp();
 						}
 					}, 1000);
@@ -596,7 +599,7 @@ app.on('will-quit', (event) => {
 	if (!forceQuitApp) {
 		// loading window is still open
 		api.log('will-quit while loading window active', 'quit');
-		// event.preventDefault();
+		event.preventDefault();
 	}
 });
 

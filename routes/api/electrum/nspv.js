@@ -86,7 +86,7 @@ module.exports = (api) => {
     isNSPVReady[coin] = false;
 
     const nspv = spawn(
-      `${api.paths.komodocliDir}/nspv`,
+      `${api.paths.assetsFolder}/nspv`,
       coin.toUpperCase() === 'KMD' ? [] : [coin.toUpperCase()],
       {
         cwd: api.paths.agamaDir,

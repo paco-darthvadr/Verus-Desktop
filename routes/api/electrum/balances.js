@@ -7,9 +7,9 @@ const kmdCalcInterest = require('agama-wallet-lib/src/komodo-interest');
 const UTXO_1MONTH_THRESHOLD_SECONDS = 2592000;
 
 module.exports = (api) => {
-  api.get('/electrum/get_balances', (req, res, next) => {
+  api.setGet('/electrum/get_balances', (req, res, next) => {
     if (!req.query.chainTicker) {
-      res.end(JSON.stringify({
+      res.send(JSON.stringify({
         msg: 'error',
         result: 'No coin passed to electrum get_balances',
       }));
@@ -17,7 +17,7 @@ module.exports = (api) => {
     const coinLc = req.query.chainTicker.toLowerCase()
 
     if (!api.electrumKeys[coinLc] || !api.electrumKeys[coinLc].pub) {
-      res.end(JSON.stringify({
+      res.send(JSON.stringify({
         msg: 'error',
         result: `No address found for ${req.query.chainTicker}`,
       }));
@@ -46,7 +46,7 @@ module.exports = (api) => {
         },
       };
 
-      res.end(JSON.stringify(retObj));
+      res.send(JSON.stringify(retObj));
     })
     .catch(e => {
       const retObj = {
@@ -54,7 +54,7 @@ module.exports = (api) => {
         result: e.message
       };
 
-      res.end(JSON.stringify(retObj));
+      res.send(JSON.stringify(retObj));
     })
   });
 
