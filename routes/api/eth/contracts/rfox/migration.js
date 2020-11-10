@@ -9,21 +9,7 @@ module.exports = (api) => {
     try {
       res.send(JSON.stringify({
         msg: 'success',
-        result: await api.eth.rfox.estimateGasClaimRFoxAccountBalances()
-      })); 
-    } catch (e) {
-      res.send(JSON.stringify({
-        msg: 'error',
-        result: e.message
-      })); 
-    }
-  });
-
-  api.setGet('/eth/rfox/get_account_balances', async (req, res, next) => {
-    try {
-      res.send(JSON.stringify({
-        msg: 'success',
-        result: await api.eth.rfox.getAccountBalances()
+        result: await api.eth.rfox.estimateGasClaimAccountBalances()
       })); 
     } catch (e) {
       res.send(JSON.stringify({
@@ -51,7 +37,7 @@ module.exports = (api) => {
     try {
       res.send(JSON.stringify({
         msg: 'success',
-        result: await api.eth.rfox.getAccountBalances()
+        result: await api.eth.rfox.claimAccountBalances()
       })); 
     } catch (e) {
       res.send(JSON.stringify({
@@ -71,7 +57,7 @@ module.exports = (api) => {
       const contract = new ethers.Contract(
         RFOX_UTILITY_CONTRACT, 
         RFOX_UTILITY_ABI, 
-        api.eth.connect[symbol.toUpperCase()]);
+        api.eth.connect[coin]);
       
       const uncompressedPubKey = api.eth.connect[coin].signingKey.publicKey
     
@@ -79,7 +65,7 @@ module.exports = (api) => {
       const y = Buffer.from(uncompressedPubKey.slice(68), 'hex')
     
       return (
-        await contract.estimateGas.withdrawBalance(x, y)
+        await contract.estimate.withdrawBalance(x, y)
       ).mul(await api.eth.connect[coin].provider.getGasPrice());
     } else {
       throw new Error("Could not connect to uninitialized coin RFOX.")
@@ -90,11 +76,13 @@ module.exports = (api) => {
    * Claims claimable account balance of a RedFOX account
    */
   api.eth.rfox.claimAccountBalances = async () => {
+    const coin = 'RFOX'
+
     if (api.eth.connect[coin]) {
       const contract = new ethers.Contract(
         RFOX_UTILITY_CONTRACT, 
         RFOX_UTILITY_ABI, 
-        api.eth.connect[symbol.toUpperCase()]);
+        api.eth.connect[coin]);
       
       const uncompressedPubKey = api.eth.connect[coin].signingKey.publicKey
     
@@ -111,11 +99,13 @@ module.exports = (api) => {
    * Gets total account balance of a RedFOX account
    */
   api.eth.rfox.getAccountBalances = async () => {
+    const coin = 'RFOX'
+
     if (api.eth.connect[coin]) {
       const contract = new ethers.Contract(
         RFOX_UTILITY_CONTRACT, 
         RFOX_UTILITY_ABI, 
-        api.eth.connect[symbol.toUpperCase()]);
+        api.eth.connect[coin]);
       
       const uncompressedPubKey = api.eth.connect[coin].signingKey.publicKey
   

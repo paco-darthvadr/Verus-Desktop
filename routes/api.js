@@ -209,6 +209,7 @@ api = require('./api/eth/gasPrice.js')(api);
 api = require('./api/eth/utils.js')(api);
 api = require('./api/eth/remove')(api);
 api = require('./api/eth/send.js')(api);
+api = require('./api/eth/contracts/rfox/migration')(api);
 
 api.printDirs();
 
