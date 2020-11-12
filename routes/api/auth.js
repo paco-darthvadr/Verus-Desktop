@@ -10,6 +10,7 @@ module.exports = (api) => {
 
   api.checkToken = (validity_key, path, time) => {
     if (api.seenTimes.includes(time)) return false 
+    else if (Math.abs(new Date().valueOf() - time) > 60000) return false
     else {
       let newSeenTimes = [...api.seenTimes, time]
       newSeenTimes = newSeenTimes.filter(x => (x > time - 60000 && x < time + 60000))
