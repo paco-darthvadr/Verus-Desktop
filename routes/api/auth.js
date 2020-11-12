@@ -1,23 +1,31 @@
 const passwdStrength = require('passwd-strength');
-const { randomBytes } = require('crypto');
-const iocane = require('iocane');
-const session = iocane.createSession().use('gcm')
+const CryptoJS = require("crypto-js");
+var blake2b = require('blake2b')
 
-const decrypt = session.decrypt.bind(session);
-const encrypt = session.encrypt.bind(session);
+const decrypt = (data, key) => CryptoJS.AES.decrypt(data, key).toString(CryptoJS.enc.Utf8);
+const encrypt = (data, key) => CryptoJS.AES.encrypt(data, key).toString()
 
 module.exports = (api) => {
-  api.checkToken = (validity_key, reqtype = 'POST') => {
-    return new Promise(async (resolve) => {
-      const hash = reqtype === 'POST' ? 'appPostSessionHash' : 'appNonPostSessionHash'
+  api.seenTimes = []
 
-      if (api[hash] === validity_key) {        
-        api.setVar(hash, randomBytes(32).toString('hex'))
-        global.app[hash] = api[hash]
-  
-        resolve(true)
-      } else resolve(false)
-    })
+  api.checkToken = (validity_key, path, time) => {
+    if (api.seenTimes.includes(time)) return false 
+    else {
+      let newSeenTimes = [...api.seenTimes, time]
+      newSeenTimes = newSeenTimes.filter(x => (x > time - 60000 && x < time + 60000))
+
+      api.seenTimes = newSeenTimes
+    }
+
+    const token = api.appSecretToken
+
+    var hash = blake2b(64)
+
+    hash.update(Buffer.from(time.toString()))
+    hash.update(Buffer.from(token))
+    hash.update(Buffer.from(path))
+
+    return hash.digest('hex') === validity_key
   };
 
   api.setPost = (url, handler) => {
@@ -26,13 +34,21 @@ module.exports = (api) => {
 
       try {
         let payload = null
+
+        if (
+          !api.checkToken(
+            req.body.validity_key,
+            req.body.path,
+            Number(req.body.time)
+          )
+        )
+          throw new Error("Incorrect API validity key");
         
         if (!encrypted) {
-          if (!(await api.checkToken(req.body.validity_key))) throw new Error("Incorrect API validity key")
-          else {
-            payload = req.body.payload
-          }
-        } else payload = JSON.parse(await decrypt(req.body.payload, api.apiShieldKey))
+          payload = req.body.payload;
+        } else {
+          payload = JSON.parse(decrypt(req.body.payload, api.apiShieldKey))
+        }
         
         handler({...req, body: payload}, {
           ...res,
@@ -40,14 +56,14 @@ module.exports = (api) => {
             res.send(
               JSON.stringify(
                 encrypted
-                  ? { payload: await encrypt(data, api.apiShieldKey) }
+                  ? { payload: encrypt(data, api.apiShieldKey) }
                   : { payload: data }
               )
             );
           }
         }, next)
       } catch(e) {  
-        api.log('HTTP POST authorization error', 'setPost')
+        api.log('HTTP POST error', 'setPost')
         api.log(e, 'setPost')
 
         res.send(
@@ -65,12 +81,19 @@ module.exports = (api) => {
   api.setGet = (url, handler) => {
     api.get(url, async (req, res, next) => {
       try {        
-        if (!(await api.checkToken(req.query.validity_key, 'GET'))) throw new Error("Incorrect API validity key")
+        if (
+          !api.checkToken(
+            req.query.validity_key,
+            req.query.path,
+            Number(req.query.time)
+          )
+        )
+          throw new Error("Incorrect API validity key");
         
         handler(req, res, next)
       } catch(e) {  
-        api.log('HTTP GET authorization error', 'setPost')
-        api.log(e, 'setPost')
+        api.log('HTTP GET error', 'setGet')
+        api.log(e, 'setGet')
 
         res.send(JSON.stringify({
           payload: JSON.stringify({

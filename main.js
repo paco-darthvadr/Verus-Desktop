@@ -87,8 +87,7 @@ for (let i = 0; i < process.argv.length; i++) {
 }
 
 // Two so post and get can be called concurrently, TODO: create a more performance efficient way
-const appPostSessionHash = randomBytes(32).toString('hex')
-const appNonPostSessionHash = randomBytes(32).toString('hex')
+const appSecretToken = randomBytes(32).toString('hex')
 const apiShieldKey = randomBytes(32).toString('hex')
 
 const _spvFees = api.getSpvFees();
@@ -347,8 +346,7 @@ function createAppCloseWindow() {
 
 				api.setIO(io); // pass sockets object to api router
 				api.setVar('appBasicInfo', appBasicInfo);
-				api.setVar('appPostSessionHash', appPostSessionHash);
-				api.setVar('appNonPostSessionHash', appNonPostSessionHash);
+				api.setVar('appSecretToken', appSecretToken);
 				api.setVar('apiShieldKey', apiShieldKey);
 
 				// load our index.html (i.e. Agama GUI)
@@ -371,8 +369,7 @@ function createAppCloseWindow() {
 					appConfig,
 					arch: version.minVersion.indexOf('-spv-only') > -1 ? 'spv-only' : arch(),
 					appBasicInfo,
-					appPostSessionHash,
-					appNonPostSessionHash,
+					appSecretToken,
 					apiShieldKey,
 					testLocation: api.testLocation,
 					kmdMainPassiveMode: api.kmdMainPassiveMode,
