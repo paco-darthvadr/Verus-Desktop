@@ -10,8 +10,7 @@ module.exports = (api) => {
     const decodedTx = await api.native.callDaemon(
       chainTicker,
       "decoderawtransaction",
-      [rawTx],
-      api.appSessionHash
+      [rawTx]
     );
 
     let outs = decodedTx.vout
@@ -28,7 +27,7 @@ module.exports = (api) => {
         totalOut += (output.scriptPubKey.reservetransfer.value + output.scriptPubKey.reservetransfer.fees)
         totalTransferFees += output.scriptPubKey.reservetransfer.fees
 
-        if (!currencyNotChainticker && await api.native.get_currency(chain, api_token, currency).name !== chainTicker) {
+        if (!currencyNotChainticker && await api.native.get_currency(chain, currency).name !== chainTicker) {
           currencyNotChainticker = true
         }
 
@@ -48,10 +47,8 @@ module.exports = (api) => {
           [await api.native.callDaemon(
             chainTicker,
             "getrawtransaction",
-            [input.txid],
-            api.appSessionHash
-          )],
-          api.appSessionHash
+            [input.txid]
+          )]
         );
 
         let inouts = inputTx.vout
@@ -68,7 +65,7 @@ module.exports = (api) => {
             totalOut += (output.scriptPubKey.reservetransfer.value + output.scriptPubKey.reservetransfer.fees)
             totalTransferFees += output.scriptPubKey.reservetransfer.fees
     
-            if (!currencyNotChainticker && await api.native.get_currency(chain, api_token, currency).name !== chainTicker) {
+            if (!currencyNotChainticker && await api.native.get_currency(chain, currency).name !== chainTicker) {
               currencyNotChainticker = true
             }
     

@@ -1,7 +1,7 @@
 const fs = require('fs-extra');
 
 module.exports = (api) => {
-  api.loadCoinsListFromFile = () => {
+  api.loadCoinsListFromFile = async () => {
     try {
       if (fs.existsSync(`${api.paths.agamaDir}/shepherd/coinslist.json`)) {
         const _coinsList = JSON.parse(fs.readFileSync(`${api.paths.agamaDir}/shepherd/coinslist.json`, 'utf8'));
@@ -10,7 +10,7 @@ module.exports = (api) => {
           const _coin = _coinsList[i].selectedCoin.split('|');
 
           if (_coinsList[i].spvMode.checked) {
-            api.addElectrumCoin(_coin[0]);
+            const addCoin = await api.addElectrumCoin(_coin[0]);
             api.log(`add spv coin ${_coin[0]} from file`, 'spv.coins');
           }
         }
@@ -21,89 +21,37 @@ module.exports = (api) => {
   }
 
   /*
-   *  type: GET
-   *
-   */
-  //TODO: Re-evauluate as POST or eliminate use of API token
-  /*api.get('/coinslist', (req, res, next) => {
-    if (api.checkToken(req.query.token)) {
-      if (fs.existsSync(`${api.paths.agamaDir}/shepherd/coinslist.json`)) {
-        fs.readFile(`${api.paths.agamaDir}/shepherd/coinslist.json`, 'utf8', (err, data) => {
-          if (err) {
-            const retObj = {
-              msg: 'error',
-              result: err,
-            };
-
-            res.end(JSON.stringify(retObj));
-          } else {
-            const retObj = {
-              msg: 'success',
-              result: data ? JSON.parse(data) : '',
-            };
-
-            res.end(JSON.stringify(retObj));
-          }
-        });
-      } else {
-        const retObj = {
-          msg: 'error',
-          result: 'coin list doesn\'t exist',
-        };
-
-        res.end(JSON.stringify(retObj));
-      }
-    } else {
-      const retObj = {
-        msg: 'error',
-        result: 'unauthorized access',
-      };
-
-      res.end(JSON.stringify(retObj));
-    }
-  });*/
-
-  /*
    *  type: POST
    *  params: payload
    */
-  api.post('/coinslist', (req, res, next) => {
-    if (api.checkToken(req.body.token)) {
-      const _payload = req.body.payload;
+  api.setPost('/coinslist', (req, res, next) => {
+    const _payload = req.body.payload;
 
-      if (!_payload) {
-        const retObj = {
-          msg: 'error',
-          result: 'no payload provided',
-        };
-
-        res.end(JSON.stringify(retObj));
-      } else {
-        fs.writeFile(`${api.paths.agamaDir}/shepherd/coinslist.json`, JSON.stringify(_payload), (err) => {
-          if (err) {
-            const retObj = {
-              msg: 'error',
-              result: err,
-            };
-
-            res.end(JSON.stringify(retObj));
-          } else {
-            const retObj = {
-              msg: 'success',
-              result: 'done',
-            };
-
-            res.end(JSON.stringify(retObj));
-          }
-        });
-      }
-    } else {
+    if (!_payload) {
       const retObj = {
         msg: 'error',
-        result: 'unauthorized access',
+        result: 'no payload provided',
       };
 
-      res.end(JSON.stringify(retObj));
+      res.send(JSON.stringify(retObj));
+    } else {
+      fs.writeFile(`${api.paths.agamaDir}/shepherd/coinslist.json`, JSON.stringify(_payload), (err) => {
+        if (err) {
+          const retObj = {
+            msg: 'error',
+            result: err,
+          };
+
+          res.send(JSON.stringify(retObj));
+        } else {
+          const retObj = {
+            msg: 'success',
+            result: 'done',
+          };
+
+          res.send(JSON.stringify(retObj));
+        }
+      });
     }
   });
 

@@ -6,14 +6,14 @@ const decimals = require('agama-wallet-lib/src/eth-erc20-decimals');
 const { ETHERSCAN_API_KEY } = require('../../../keys/etherscan')
 
 module.exports = (api) => {  
-  api.get('/eth/get_balances', (req, res, next) => {
+  api.setGet('/eth/get_balances', (req, res, next) => {
     const coin = req.query.chainTicker
     let address
 
     try {
       address = api.eth.get_info(coin).address
     } catch (e) {
-      res.end(JSON.stringify({
+      res.send(JSON.stringify({
         msg: 'error',
         result: e.message
       })); 
@@ -37,10 +37,10 @@ module.exports = (api) => {
     api.eth.get_balances(address, coin, req.query.network)
     .then((balance) => {
       balanceObj.native.public.confirmed = balance
-      res.end(JSON.stringify(api.eth.parseEthJson(balanceObj))); 
+      res.send(JSON.stringify(api.eth.parseEthJson(balanceObj))); 
     })
     .catch(e => {
-      res.end(JSON.stringify({
+      res.send(JSON.stringify({
         msg: 'error',
         result: e.message
       })); 

@@ -88,54 +88,19 @@ module.exports = (api) => {
    *  type: POST
    *  params: userObj
    */
-  api.post('/users/save', (req, res, next) => {
-    if (api.checkToken(req.body.token)) {
-      if (!req.body.userObj) {
-        const retObj = {
-          msg: 'error',
-          result: 'no userObj provided',
-        };
-
-        res.end(JSON.stringify(retObj));
-      } else {
-        let retObj 
-
-        try {
-          api.saveLocalUsers(req.body.userObj);
-
-          retObj = {
-            msg: 'success',
-            result: 'users saved',
-          };
-        } catch(e) {
-          retObj = {
-            msg: 'error',
-            result: e.message,
-          };
-        }
-
-        res.end(JSON.stringify(retObj));
-      }
-    } else {
+  api.setPost('/users/save', (req, res, next) => {
+    if (!req.body.userObj) {
       const retObj = {
         msg: 'error',
-        result: 'unauthorized access',
+        result: 'no userObj provided',
       };
 
-      res.end(JSON.stringify(retObj));
-    }
-  });
-
-  /*
-   *  type: POST
-   *  params: none
-   */
-  api.post('/users/backup', (req, res, next) => {
-    if (api.checkToken(req.body.token)) {
+      res.send(JSON.stringify(retObj));
+    } else {
       let retObj 
 
       try {
-        api.backupLocalUsers();
+        api.saveLocalUsers(req.body.userObj);
 
         retObj = {
           msg: 'success',
@@ -148,14 +113,7 @@ module.exports = (api) => {
         };
       }
 
-      res.end(JSON.stringify(retObj));
-    } else {
-      const retObj = {
-        msg: 'error',
-        result: 'unauthorized access',
-      };
-
-      res.end(JSON.stringify(retObj));
+      res.send(JSON.stringify(retObj));
     }
   });
 
@@ -163,53 +121,67 @@ module.exports = (api) => {
    *  type: POST
    *  params: none
    */
-  api.post('/users/reset', (req, res, next) => {
-    if (api.checkToken(req.body.token)) {
-      let retObj 
+  api.setPost('/users/backup', (req, res, next) => {
+    let retObj 
 
-      try {
-        api.saveLocalUsers({});
+    try {
+      api.backupLocalUsers();
 
-        retObj = {
-          msg: 'success',
-          result: 'users saved',
-        };
-      } catch(e) {
-        retObj = {
-          msg: 'error',
-          result: e.message,
-        };
-      }
-
-      res.end(JSON.stringify(retObj));
-    } else {
-      const retObj = {
-        msg: 'error',
-        result: 'unauthorized access',
+      retObj = {
+        msg: 'success',
+        result: 'users saved',
       };
-
-      res.end(JSON.stringify(retObj));
+    } catch(e) {
+      retObj = {
+        msg: 'error',
+        result: e.message,
+      };
     }
+
+    res.send(JSON.stringify(retObj));
+  });
+
+  /*
+   *  type: POST
+   *  params: none
+   */
+  api.setPost('/users/reset', (req, res, next) => {
+    let retObj 
+
+    try {
+      api.saveLocalUsers({});
+
+      retObj = {
+        msg: 'success',
+        result: 'users saved',
+      };
+    } catch(e) {
+      retObj = {
+        msg: 'error',
+        result: e.message,
+      };
+    }
+
+    res.send(JSON.stringify(retObj));
   });
 
   /*
    *  type: GET
    *
    */
-  api.get('/users/load', (req, res, next) => {
+  api.setGet('/users/load', (req, res, next) => {
     try {
       const obj = api.loadLocalUsers();
-      res.end(JSON.stringify({
+      res.send(JSON.stringify({
         msg: 'success',
         result: obj,
       }));
     } catch (e) {
-      res.end(JSON.stringify({
+      res.send(JSON.stringify({
         msg: 'error',
         result: e.message,
       }));
     }
-    
   });
 
   return api;

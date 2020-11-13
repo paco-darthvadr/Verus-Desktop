@@ -1,15 +1,13 @@
 const { Menu } = require('electron');
 const electron = require('electron');
 const app = electron.app;
-const { shell, dialog } = require('electron');
+const { shell } = require('electron');
 const {
   pathsAgama,
   pathsDaemons,
 } = require('../routes/api/pathsUtil');
-const path = require('path')
-const fs = require('fs');
 const { createFetchBoostrapWindow } = require('../routes/children/fetch-bootstrap/window');
-const { appConfig } = require('../routes/api');
+const { appConfig, promptUpdate, generateDiagnosticPacket } = require('../routes/api');
 
 const template = [
   {
@@ -133,13 +131,19 @@ const template = [
       {
         label: 'Show Verus data folder (default)',
         click (item, focusedWindow) {
-          shell.openItem(pathsDaemons().paths.vrscDir);
+          shell.openItem(pathsDaemons().paths.vrscDataDir);
         }
       },
       {
         label: 'Show binary folder',
         click (item, focusedWindow) {
-          shell.openItem(pathsDaemons().paths.komodocliDir);
+          shell.openItem(pathsDaemons().paths.assetsFolder);
+        }
+      },
+      {
+        label: 'Generate diagnostic packet',
+        click (item, focusedWindow) {
+          generateDiagnosticPacket(focusedWindow)
         }
       },
       {
@@ -148,41 +152,12 @@ const template = [
           createFetchBoostrapWindow('VRSC', appConfig)
         }
       },
-      /*{
-        label: global.USB_MODE ? 'Disable USB Mode' : 'Enable USB Mode',
+      {
+        label: "Check for updates",
         click (item, focusedWindow) {
-          const verusIcon = path.join(__dirname, '../assets/icons/vrsc_256x256x32.png');
-
-          try {
-            const rootLocation = path.join(__dirname, '../');
-            const location = `${rootLocation}version`
-            const localVersionFile = fs.readFileSync(location, 'utf8');
-            let localVersion = localVersionFile.split(localVersionFile.indexOf('\r\n') > -1 ? '\r\n' : '\n');
-  
-            localVersion[2] = global.USB_MODE ? "mode=standard" : "mode=usb"
-  
-            fs.writeFileSync(location, localVersion.join('\n'))
-
-            dialog.showMessageBox({
-              icon: verusIcon,
-              title: "Success",
-              message: `${
-                global.USB_MODE ? "Disabled" : "Enabled"
-              } USB mode, restart Verus Desktop for changes to take effect.`,
-            });
-          } catch(e) {
-            console.log(e)
-            dialog.showMessageBox({
-              icon: verusIcon,
-              type: "error",
-              title: "Error",
-              message: `Failed to ${
-                global.USB_MODE ? "disable" : "enable"
-              } USB mode.`,
-            });
-          }
+          promptUpdate(focusedWindow, true)
         }
-      }*/,
+      }
     ]
   }
 ];

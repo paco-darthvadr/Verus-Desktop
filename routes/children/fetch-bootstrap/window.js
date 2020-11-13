@@ -21,7 +21,8 @@ function createFetchBoostrapWindow(chainTicker, appConfig) {
 			icon: agamaIcon,
 			backgroundColor: "#3165D4",
 			show: false,
-			title: `Fetch ${chainTicker} Bootstrap`
+			title: `Fetch ${chainTicker} Bootstrap`,
+			contextIsolation: true
 		});
 		fetchWindow.show();
 	

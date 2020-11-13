@@ -1,7 +1,7 @@
 {
   "name": "verus-desktop",
   "productName": "Verus-Desktop",
-  "version": "0.7.2-3",
+  "version": "0.7.2-4",
   "description": "Verus Desktop Wallet App",
   "main": "main.js",
   "scripts": {
@@ -13,7 +13,7 @@
     "dist-win": "electron-builder --publish=never  --win",
     "test": "mocha",
     "update-agamalib": "rm -rf node_modules/agama-wallet-lib/ && yarn install",
-    "postinstall": "rm -rf node_modules/bitgo-utxo-lib/node_modules/create-hash && electron-builder install-app-deps"
+    "postinstall": "rm -rf node_modules/bitgo-utxo-lib/node_modules/create-hash"
   },
   "engines": {
     "node": ">11"
@@ -39,11 +39,12 @@
   "devDependencies": {
     "cross-env": "^5.2.1",
     "electron": "^4.2.12",
-    "electron-builder": "22.8.1",
+    "electron-builder": "22.9.1",
     "electron-devtools-installer": "^2.2.4",
     "electron-rebuild": "^1.11.0"
   },
   "dependencies": {
+    "@ethersproject/signing-key": "^5.0.5",
     "adm-zip": "^0.4.7",
     "agama-wallet-lib": "git+https://github.com/VerusCoin/agama-wallet-lib.git#dev",
     "arch": "^2.1.0",
@@ -51,11 +52,13 @@
     "bigi": "^1.4.2",
     "bip39": "^2.5.0",
     "bitgo-utxo-lib": "git+https://github.com/VerusCoin/bitgo-utxo-lib.git",
+    "blake2b": "https://github.com/michaeltout/blake2b.git",
     "bluebird": "^3.4.7",
     "body-parser": "^1.15.2",
     "buffer-reverse": "^1.0.1",
     "coinselect": "github:bitcoinjs/coinselect",
     "create-hash": "git://github.com/pbca26/createHash#electron-v4",
+    "crypto-js": "^4.0.0",
     "csv-writer": "^1.6.0",
     "ethers": "^4.0.44",
     "express": "^4.14.0",

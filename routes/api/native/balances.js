@@ -4,7 +4,7 @@ const PRIVATE = 1
 const PUBLIC = 0
 
 module.exports = (api) => {    
-  api.native.get_balances = (coin, token, includePrivate) => {
+  api.native.get_balances = (coin, includePrivate) => {
     const getBalanceSchema = () => {
       return {
         public: {
@@ -21,8 +21,8 @@ module.exports = (api) => {
     }
     
     return new Promise((resolve, reject) => {
-      let balancePromises = [api.native.callDaemon(coin, 'getwalletinfo', [], token)]
-      if (includePrivate || coin === 'KMD') balancePromises.push(api.native.callDaemon(coin, 'z_gettotalbalance', [], token))
+      let balancePromises = [api.native.callDaemon(coin, 'getwalletinfo', [])]
+      if (includePrivate || coin === 'KMD') balancePromises.push(api.native.callDaemon(coin, 'z_gettotalbalance', []))
       //KMD Interest is only found in z_gettotalbalance
 
       Promise.all(balancePromises)
@@ -78,19 +78,18 @@ module.exports = (api) => {
     });
   };
 
-  api.post('/native/get_balances', (req, res, next) => {
-    const token = req.body.token;
+  api.setPost('/native/get_balances', (req, res, next) => {
     const includePrivate = req.body.includePrivate;
     const coin = req.body.chainTicker;
 
-    api.native.get_balances(coin, token, includePrivate)
+    api.native.get_balances(coin, includePrivate)
     .then((balances) => {
       const retObj = {
         msg: 'success',
         result: balances,
       };
   
-      res.end(JSON.stringify(retObj));  
+      res.send(JSON.stringify(retObj));  
     })
     .catch(error => {
       const retObj = {
@@ -98,7 +97,7 @@ module.exports = (api) => {
         result: error.message,
       };
   
-      res.end(JSON.stringify(retObj));  
+      res.send(JSON.stringify(retObj));  
     })
   });
 

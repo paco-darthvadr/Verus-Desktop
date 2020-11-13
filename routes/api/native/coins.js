@@ -58,59 +58,50 @@ module.exports = (api) => {
   /**
    * Function to activate coin daemon in native mode
    */
-  api.post('/native/coins/activate', (req, res) => {
-    if (api.checkToken(req.body.token)) {
-      const { chainTicker, launchConfig } = req.body
-      let {
+  api.setPost('/native/coins/activate', (req, res) => {
+    const { chainTicker, launchConfig } = req.body
+    let {
+      startupOptions,
+      daemon,
+      fallbackPort,
+      dirNames,
+      confName,
+      tags,
+    } = launchConfig;
+
+    if (
+      api.appConfig.coin.native.stakeGuard[chainTicker] &&
+      api.appConfig.coin.native.stakeGuard[chainTicker].length > 0
+    ) {
+      startupOptions.push(`-cheatcatcher=${api.appConfig.coin.native.stakeGuard[chainTicker]}`)
+    }
+
+    api.native
+      .activateNativeCoin(
+        chainTicker,
         startupOptions,
         daemon,
         fallbackPort,
         dirNames,
         confName,
-        tags,
-      } = launchConfig;
+        tags
+      )
+      .then(result => {
+        const retObj = {
+          msg: "success",
+          result
+        };
 
-      if (
-        api.appConfig.coin.native.stakeGuard[chainTicker] &&
-        api.appConfig.coin.native.stakeGuard[chainTicker].length > 0
-      ) {
-        startupOptions.push(`-cheatcatcher=${api.appConfig.coin.native.stakeGuard[chainTicker]}`)
-      }
-
-      api.native
-        .activateNativeCoin(
-          chainTicker,
-          startupOptions,
-          daemon,
-          fallbackPort,
-          dirNames,
-          confName,
-          tags
-        )
-        .then(result => {
-          const retObj = {
-            msg: "success",
-            result
-          };
-
-          res.end(JSON.stringify(retObj));
-        })
-        .catch(e => {
-          const retObj = {
-            msg: "error",
-            result: e.message
-          };
-          
-          res.end(JSON.stringify(retObj));
-        });
-    } else {
-      const retObj = {
-        msg: 'error',
-        result: 'unauthorized access',
-      };
-
-      res.end(JSON.stringify(retObj));
-    }
+        res.send(JSON.stringify(retObj));
+      })
+      .catch(e => {
+        const retObj = {
+          msg: "error",
+          result: e.message
+        };
+        
+        res.send(JSON.stringify(retObj));
+      });
   });
 
   return api;

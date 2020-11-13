@@ -20,7 +20,7 @@ module.exports = (api) => {
   api.saveCurrencyWhitelist = (whitelist) =>
     api.saveJsonFile(whitelist, CURRENCY_WHITELIST, WHITELIST_DESC);
 
-  api.get('/load_currency_blacklist', async (req, res, next) => {
+  api.setGet('/load_currency_blacklist', async (req, res, next) => {
     api.loadCurrencyBlacklist()
     .then((blacklist) => {
       const retObj = {
@@ -28,7 +28,7 @@ module.exports = (api) => {
         result: blacklist,
       };
   
-      res.end(JSON.stringify(retObj));  
+      res.send(JSON.stringify(retObj));  
     })
     .catch(error => {
       const retObj = {
@@ -36,11 +36,11 @@ module.exports = (api) => {
         result: error.message,
       };
   
-      res.end(JSON.stringify(retObj));  
+      res.send(JSON.stringify(retObj));  
     })
   });
 
-  api.get('/load_currency_whitelist', (req, res, next) => {
+  api.setGet('/load_currency_whitelist', (req, res, next) => {
     api.loadCurrencyWhitelist()
     .then((whitelist) => {
       const retObj = {
@@ -48,7 +48,7 @@ module.exports = (api) => {
         result: whitelist,
       };
   
-      res.end(JSON.stringify(retObj));  
+      res.send(JSON.stringify(retObj));  
     })
     .catch(error => {
       const retObj = {
@@ -56,65 +56,47 @@ module.exports = (api) => {
         result: error.message,
       };
   
-      res.end(JSON.stringify(retObj));  
+      res.send(JSON.stringify(retObj));  
     })
   });
 
-  api.post('/save_currency_blacklist', async (req, res, next) => {
-    const { token, blacklist } = req.body
+  api.setPost('/save_currency_blacklist', async (req, res, next) => {
+    const { blacklist } = req.body
    
-    if (api.checkToken(token)) {
-      try {
-        const retObj = {
-          msg: 'success',
-          result: await api.saveCurrencyBlacklist(blacklist),
-        };
-
-        res.end(JSON.stringify(retObj));
-      } catch (e) {
-        const retObj = {
-          msg: 'error',
-          result: e.message,
-        };
-
-        res.end(JSON.stringify(retObj));
-      }
-    } else {
+    try {
       const retObj = {
-        msg: 'error',
-        result: 'unauthorized access',
+        msg: 'success',
+        result: await api.saveCurrencyBlacklist(blacklist),
       };
 
-      res.end(JSON.stringify(retObj));
+      res.send(JSON.stringify(retObj));
+    } catch (e) {
+      const retObj = {
+        msg: 'error',
+        result: e.message,
+      };
+
+      res.send(JSON.stringify(retObj));
     }
   });
 
-  api.post('/save_currency_whitelist', async (req, res, next) => {
-    const { token, whitelist } = req.body
+  api.setPost('/save_currency_whitelist', async (req, res, next) => {
+    const { whitelist } = req.body
    
-    if (api.checkToken(token)) {
-      try {
-        const retObj = {
-          msg: 'success',
-          result: await api.saveCurrencyWhitelist(whitelist),
-        };
-
-        res.end(JSON.stringify(retObj));
-      } catch (e) {
-        const retObj = {
-          msg: 'error',
-          result: e.message,
-        };
-
-        res.end(JSON.stringify(retObj));
-      }
-    } else {
+    try {
       const retObj = {
-        msg: 'error',
-        result: 'unauthorized access',
+        msg: 'success',
+        result: await api.saveCurrencyWhitelist(whitelist),
       };
 
-      res.end(JSON.stringify(retObj));
+      res.send(JSON.stringify(retObj));
+    } catch (e) {
+      const retObj = {
+        msg: 'error',
+        result: e.message,
+      };
+
+      res.send(JSON.stringify(retObj));
     }
   });
 

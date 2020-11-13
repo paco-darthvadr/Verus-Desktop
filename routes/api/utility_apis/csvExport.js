@@ -27,32 +27,23 @@ module.exports = (api) => {
     await csvWriter.writeRecords(transactions)
   }
 
-  api.post('/export_transaction_csv', async (req, res, next) => {
-    const { token, transactions, path } = req.body
+  api.setPost('/export_transaction_csv', async (req, res, next) => {
+    const { transactions, path } = req.body
    
-    if (api.checkToken(token)) {
-      try {
-        const retObj = {
-          msg: 'success',
-          result: await api.saveTransactionCsv(transactions, path),
-        };
-
-        res.end(JSON.stringify(retObj));
-      } catch (e) {
-        const retObj = {
-          msg: 'error',
-          result: e.message,
-        };
-
-        res.end(JSON.stringify(retObj));
-      }
-    } else {
+    try {
       const retObj = {
-        msg: 'error',
-        result: 'unauthorized access',
+        msg: 'success',
+        result: await api.saveTransactionCsv(transactions, path),
       };
 
-      res.end(JSON.stringify(retObj));
+      res.send(JSON.stringify(retObj));
+    } catch (e) {
+      const retObj = {
+        msg: 'error',
+        result: e.message,
+      };
+
+      res.send(JSON.stringify(retObj));
     }
   });
 
