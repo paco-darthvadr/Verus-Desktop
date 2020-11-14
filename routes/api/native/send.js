@@ -10,17 +10,18 @@ module.exports = (api) => {
   }
 
   api.native.testSendCurrency = async (chainTicker, txParams) => {
-    const rawtx = await api.native.callDaemon(
-      chainTicker,
-      "sendcurrency",
-      [...txParams, true]
-    )
+    // const rawtx = await api.native.callDaemon(
+    //   chainTicker,
+    //   "sendcurrency",
+    //   [...txParams, true]
+    // )
 
-    return await api.native.callDaemon(
-      chainTicker,
-      "decoderawtransaction",
-      [rawtx]
-    )
+    // return await api.native.callDaemon(
+    //   chainTicker,
+    //   "decoderawtransaction",
+    //   [rawtx]
+    // )
+    return {}
   }
 
   /**
