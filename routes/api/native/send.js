@@ -200,7 +200,7 @@ module.exports = (api) => {
             "Failed to verify that sendcurrency input data matches what is going to be sent."
           );
         }*/
-      } else if (fromAddress || toAddress[0] === "z" || customFee != null) {
+      } else if (fromAddress || (toAddress[0] === "z" && toAddress.indexOf('@') === -1)  || customFee != null) {
         cliCmd = "z_sendmany";
         if (customFee) fee = customFee;
         if (!fromAddress) throw new Error("You must specify a from address in a private transaction.")
