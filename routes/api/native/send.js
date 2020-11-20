@@ -10,17 +10,18 @@ module.exports = (api) => {
   }
 
   api.native.testSendCurrency = async (chainTicker, txParams) => {
-    const rawtx = await api.native.callDaemon(
-      chainTicker,
-      "sendcurrency",
-      [...txParams, true]
-    )
+    // const rawtx = await api.native.callDaemon(
+    //   chainTicker,
+    //   "sendcurrency",
+    //   [...txParams, true]
+    // )
 
-    return await api.native.callDaemon(
-      chainTicker,
-      "decoderawtransaction",
-      [rawtx]
-    )
+    // return await api.native.callDaemon(
+    //   chainTicker,
+    //   "decoderawtransaction",
+    //   [rawtx]
+    // )
+    return {}
   }
 
   /**
@@ -199,7 +200,7 @@ module.exports = (api) => {
             "Failed to verify that sendcurrency input data matches what is going to be sent."
           );
         }*/
-      } else if (fromAddress || toAddress[0] === "z" || customFee != null) {
+      } else if (fromAddress || (toAddress[0] === "z" && toAddress.indexOf('@') === -1)  || customFee != null) {
         cliCmd = "z_sendmany";
         if (customFee) fee = customFee;
         if (!fromAddress) throw new Error("You must specify a from address in a private transaction.")
