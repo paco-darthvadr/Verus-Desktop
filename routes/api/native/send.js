@@ -104,7 +104,7 @@ module.exports = (api) => {
       }
   
       if (isSendCurrency) {
-        const { currency, convertto, refundto, preconvert, subtractfee, mintnew } = currencyParams
+        const { currency, convertto, refundto, preconvert, subtractfee, mintnew, via } = currencyParams
         cliCmd = "sendcurrency";
         
         try {
@@ -162,7 +162,8 @@ module.exports = (api) => {
             amount: spendAmount,
             address: toAddress,
             memo,
-            mintnew
+            mintnew,
+            via
           }]
         ];
 

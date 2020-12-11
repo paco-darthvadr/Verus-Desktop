@@ -6,10 +6,22 @@ const checkFlag = require('../utils/flags');
 module.exports = (api) => {    
   // Derives possible conversion paths between source and destination currencies
   // (or all possible destinations if destination is null)
-  api.native.get_conversion_paths = (chain, src, dest = null, includeVia = false, ignoreCurrencies = [], via = null) => {
-    return new Promise(async (resolve, reject) => {  
+  api.native.get_conversion_paths = (
+    chain,
+    src,
+    dest = null,
+    includeVia = false,
+    ignoreCurrencies = [],
+    via = null,
+    root
+  ) => {
+    return new Promise(async (resolve, reject) => {
       try {
-        const source = typeof src === 'string' ? await api.native.get_currency(chain, src) : src
+        const source =
+          typeof src === "string"
+            ? await api.native.get_currency(chain, src)
+            : src;
+        const fractionalSource = checkFlag(source.options, IS_FRACTIONAL);
 
         api.native
           .callDaemon(
@@ -20,23 +32,90 @@ module.exports = (api) => {
           .then(async (paths) => {
             let convertables = {};
 
-            paths.forEach((path) => {
+            for (const path of paths) {
               const currencyName = Object.keys(path)[0];
+              let pricingCurrencyState;
+              let price;
+
+              if (via) {
+                if (via.bestcurrencystate) {
+                  pricingCurrencyState = via.bestcurrencystate;
+                } else {
+                  pricingCurrencyState = (
+                    await api.native.get_currency(chain, via.currencyid)
+                  ).bestcurrencystate;
+                }
+
+                price =
+                  1 /
+                  (pricingCurrencyState.currencies[source.currencyid]
+                    .lastconversionprice /
+                    pricingCurrencyState.currencies[
+                      path[currencyName].currencyid
+                    ].lastconversionprice);
+              } else {
+                if (path[currencyName].bestcurrencystate) {
+                  pricingCurrencyState = path[currencyName].bestcurrencystate;
+                } else {
+                  pricingCurrencyState = (
+                    await api.native.get_currency(chain, currencyName)
+                  ).bestcurrencystate;
+                }
+
+                price =
+                  1 /
+                  pricingCurrencyState.currencies[source.currencyid]
+                    .lastconversionprice;
+              }
+
               convertables[path[currencyName].currencyid] = {
                 via,
                 destination: path[currencyName],
+                price,
               };
-            });
+            }
 
-            if (checkFlag(source.options, IS_FRACTIONAL) && dest == null) {
+            if (fractionalSource && dest == null) {
               for (const reserve of source.currencies) {
+                let pricingCurrencyState;
+
                 if (
                   !convertables[reserve] &&
                   !ignoreCurrencies.includes(reserve)
                 ) {
+                  if (via) {
+                    if (via.bestcurrencystate) {
+                      pricingCurrencyState = via.bestcurrencystate;
+                    } else {
+                      pricingCurrencyState = (
+                        await api.native.get_currency(chain, via.currencyid)
+                      ).bestcurrencystate;
+                    }
+
+                    price =
+                      1 /
+                      (pricingCurrencyState.currencies[root.currencyid]
+                        .lastconversionprice /
+                        pricingCurrencyState.currencies[reserve]
+                          .lastconversionprice);
+                  } else {
+                    if (source.bestcurrencystate) {
+                      pricingCurrencyState = source.bestcurrencystate;
+                    } else {
+                      pricingCurrencyState = (
+                        await api.native.get_currency(chain, src)
+                      ).bestcurrencystate;
+                    }
+
+                    price =
+                      pricingCurrencyState.currencies[reserve]
+                        .lastconversionprice;
+                  }
+
                   convertables[reserve] = {
                     via,
                     destination: await api.native.get_currency(chain, reserve),
+                    price,
                   };
                 }
               }
@@ -44,7 +123,13 @@ module.exports = (api) => {
 
             if (includeVia) {
               for (const key in convertables) {
-                if (!ignoreCurrencies.includes(key)) {
+                if (
+                  checkFlag(
+                    convertables[key].destination.options,
+                    IS_FRACTIONAL
+                  ) &&
+                  !ignoreCurrencies.includes(key)
+                ) {
                   convertables = {
                     ...convertables,
                     ...(await api.native.get_conversion_paths(
@@ -53,7 +138,8 @@ module.exports = (api) => {
                       dest,
                       false,
                       Object.keys(convertables),
-                      convertables[key].destination
+                      convertables[key].destination,
+                      source
                     )),
                   };
                 }
@@ -65,8 +151,8 @@ module.exports = (api) => {
           .catch((err) => {
             reject(err);
           });
-      } catch(e) {
-        reject(e)
+      } catch (e) {
+        reject(e);
       }
     });
   };
