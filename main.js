@@ -334,12 +334,16 @@ function createAppCloseWindow() {
 				});
 
 				// initialise window
-				mainWindow = new BrowserWindow({ // dirty hack to prevent main window flash on quit
+				mainWindow = new BrowserWindow({
 					width: closeAppAfterLoading ? 1 : 1280,
 					height: closeAppAfterLoading ? 1 : 850,
 					icon: agamaIcon,
 					show: false,
-					contextIsolation: true
+					contextIsolation: true,
+					webPreferences: {
+						enableRemoteModule: true,
+						preload: path.resolve(__dirname, "preload.js")
+					}
 				});
 
 				mainWindow.loadURL(appConfig.general.main.dev || process.argv.indexOf('devmode') > -1 ? 'http://127.0.0.1:3000' : `file://${__dirname}/gui/Verus-Desktop-GUI/react/build/index.html`);
@@ -418,7 +422,7 @@ function createAppCloseWindow() {
 					frame: false,
 					icon: agamaIcon,
 					show: false,
-					contextIsolation: true
+					contextIsolation: true,
 				});
 
 				mainWindow.setResizable(false);

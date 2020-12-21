@@ -22,7 +22,11 @@ function createFetchBoostrapWindow(chainTicker, appConfig) {
 			backgroundColor: "#3165D4",
 			show: false,
 			title: `Fetch ${chainTicker} Bootstrap`,
-			contextIsolation: true
+			contextIsolation: true,
+			webPreferences: {
+				enableRemoteModule: true,
+				nodeIntegration: true
+			}
 		});
 		fetchWindow.show();
 	
