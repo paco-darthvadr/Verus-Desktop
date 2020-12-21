@@ -53,9 +53,8 @@ const appConfig = {
           .concat(["KOMODO", "zcashd", "komodod", "chipsd"]),
         pbaasChains: [],
         pbaasTestmode: true,
-        enableVrsctest: false,
         alwaysPromptUpdates: true,
-        encryptApi: false
+        encryptApiPost: true
       },
       electrum: {
         maxVinParseLimit: 120,
@@ -101,7 +100,8 @@ const appConfig = {
         host: {
           type: "text_input",
           displayName: "Hostname",
-          info: "The application hostname."
+          info: "The application hostname.",
+          hidden: true
         },
         agamaPort: {
           type: "number_input",
@@ -112,24 +112,22 @@ const appConfig = {
         dev: {
           type: "checkbox",
           displayName: "Dev Mode",
-          info:
-            "Run Verus in devmode, where it will search for a running GUI instead of using the pre-compiled one."
+          info: "Run Verus in devmode, where it will search for a running GUI instead of using the pre-compiled one.",
+          hidden: true
         },
         pbaasTestmode: {
           type: "checkbox",
           displayName: "Verus Multiverse Testmode",
-          info:
-            "Changes Verus Multiverse capabilities to run in test mode. (Will work with only VRSCTEST)"
-        },
-        enableVrsctest: {
-          type: "checkbox",
-          displayName: "Enable VRSCTEST",
-          info: "Enables the Verus Testnet as a coin to add."
+          info: "Changes Verus Multiverse capabilities to run in test mode. (Will work with only VRSCTEST)",
+          hidden: true
         },
         alwaysPromptUpdates: {
           type: "checkbox",
           displayName: "Notfy me about all app updates",
           info: "Enables update notifications on app start for all updates, including non-mandatory."
+        },
+        encryptApiPost: {
+          hidden: true
         },
       },
       electrum: {
