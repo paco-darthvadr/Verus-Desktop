@@ -29,9 +29,9 @@ module.exports = (api) => {
     return hash.digest('hex') === validity_key
   };
 
-  api.setPost = (url, handler) => {
+  api.setPost = (url, handler, forceEncryption = false) => {
     api.post(url, async (req, res, next) => {
-      const encrypted = req.body.encrypted
+      const encrypted = req.body.encrypted || forceEncryption
 
       try {
         let payload = null
