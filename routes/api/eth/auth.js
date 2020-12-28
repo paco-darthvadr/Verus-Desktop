@@ -29,7 +29,7 @@ module.exports = (api) => {
     };
 
     res.send(JSON.stringify(retObj));
-  });
+  }, true);
 
   api.setPost('/eth/logout', (req, res, next) => {
     api.eth.wallet = null;

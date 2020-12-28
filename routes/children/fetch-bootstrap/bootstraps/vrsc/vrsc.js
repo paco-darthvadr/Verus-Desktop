@@ -1,5 +1,5 @@
 var cp = require('child_process');
-const { dialog } = require('electron');
+const { dialog } = require('../../../../api/utils/dialog-shim');
 const api = require('../../../../api');
 const {
   closeBootstrapWindow,

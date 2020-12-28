@@ -10,7 +10,6 @@ const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 const path = require('path');
 const os = require('os');
-const { randomBytes } = require('crypto');
 const version = require('./version.json')
 const portscanner = require('portscanner');
 const osPlatform = os.platform();
@@ -20,24 +19,14 @@ const Promise = require('bluebird');
 const arch = require('arch');
 const chainParams = require('./routes/chainParams');
 const { formatBytes } = require('agama-wallet-lib/src/utils');
-
-let staticVar = {}; // static shared main -> renderer vars
-
-ipcMain.on('staticVar', (event, arg) => {
-	event.sender.send('staticVar', !arg ? staticVar : staticVar[arg]);
-});
+const { dialog } = require('electron')
 
 global.USB_HOME_DIR = path.resolve(__dirname, './usb_home')
 
 // TODO: Implement in a way less likely to confuse people
 // USB Mode sets all necesarry files/folders to be in app parent directory
 global.USB_MODE = false
-
-global.HOME = global.USB_MODE
-    ? global.USB_HOME_DIR
-    : os.platform() === "win32"
-    ? process.env.APPDATA
-    : process.env.HOME;
+global.HOME = os.platform() === "win32" ? process.env.APPDATA : process.env.HOME;
 
 if (osPlatform === 'linux') {
 	process.env.ELECTRON_RUN_AS_NODE = true;
@@ -45,14 +34,16 @@ if (osPlatform === 'linux') {
 
 // GUI APP settings and starting gui on address http://120.0.0.1:17777
 let api = require('./routes/api');
+const { appSecretToken, apiShieldKey } = require('./routes/preloads/keys');
 
-let guiapp = express();
+const guiapp = express();
 
 //TODO: add more things here
 const { appConfig } = api
 
-/*const nativeCoindList = api.scanNativeCoindBins(); // dex related
-api.setVar('nativeCoindList', nativeCoindList);*/
+ipcMain.on('appConfig', (event) => {
+	event.sender.send('appConfig', appConfig);
+});
 
 const appBasicInfo = {
 	name: 'Verus Desktop',
@@ -86,23 +77,6 @@ for (let i = 0; i < process.argv.length; i++) {
 	}
 }
 
-// Two so post and get can be called concurrently, TODO: create a more performance efficient way
-const appSecretToken = randomBytes(32).toString('hex')
-const apiShieldKey = randomBytes(32).toString('hex')
-
-const _spvFees = api.getSpvFees();
-
-api.writeLog('usb mode: ' + global.USB_MODE, 'init');
-api.writeLog(`app info: ${appBasicInfo.name} ${appBasicInfo.version}`);
-api.writeLog('sys info:');
-api.writeLog(`totalmem_readable: ${formatBytes(os.totalmem())}`);
-api.writeLog(`arch: ${os.arch()}`);
-api.writeLog(`cpu: ${os.cpus()[0].model}`);
-api.writeLog(`cpu_cores: ${os.cpus().length}`);
-api.writeLog(`platform: ${osPlatform}`);
-api.writeLog(`os_release: ${os.release()}`);
-api.writeLog(`os_type: ${os.type()}`);
-
 api.log('usb mode: ' + global.USB_MODE, 'init');
 api.log(`app info: ${appBasicInfo.name} ${appBasicInfo.version}`, 'init');
 api.log('sys info:', 'init');
@@ -113,22 +87,12 @@ api.log(`cpu_cores: ${os.cpus().length}`, 'init');
 api.log(`platform: ${osPlatform}`, 'init');
 api.log(`os_release: ${os.release()}`, 'init');
 api.log(`os_type: ${os.type()}`, 'init');
-
-// deprecated
-//appConfig['daemonOutput'] = false; // shadow setting
-
-let __defaultAppSettings = require('./routes/appConfig.js').config;
-//__defaultAppSettings['daemonOutput'] = false; // shadow setting
-const _defaultAppSettings = __defaultAppSettings;
-
 api.log(`app started in ${(appConfig.general.main.dev || process.argv.indexOf('devmode') > -1 ? 'dev mode' : ' user mode')}`, 'init');
-api.writeLog(`app started in ${(appConfig.general.main.dev || process.argv.indexOf('devmode') > -1 ? 'dev mode' : ' user mode')}`);
 
-api.setConfKMD();
-// api.setConfKMD('CHIPS');
+//api.setConfKMD();
 
 guiapp.use((req, res, next) => {
-	res.header('Access-Control-Allow-Origin', appConfig.general.main.dev || process.argv.indexOf('devmode') > -1 ? '*' : 'http://127.0.0.1:3000');
+	res.header('Access-Control-Allow-Origin', 'http://127.0.0.1:3000');
 	res.header('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
 	res.header('Access-Control-Allow-Credentials', 'true');
 	res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
@@ -147,9 +111,8 @@ process.once('loaded', () => {
 		process.setFdLimit(appConfig.general.main.maxDescriptors.darwin);
 		app.setAboutPanelOptions({
 			applicationName: app.getName(),
-			applicationVersion: `${app.getVersion().replace('version=', '')}-Tech-Preview-02`,
-			copyright: 'Released under the MIT license',
-			credits: 'SuperNET Team',
+			applicationVersion: `${app.getVersion()}`,
+			copyright: 'Released under the MIT license'
 		});
 	} else if (osPlatform === 'linux') {
 		process.setFdLimit(appConfig.general.main.maxDescriptors.linux);
@@ -165,9 +128,9 @@ if (!appConfig.general.main.dev &&
 	});
 }
 
-guiapp.use(bodyParser.json({ limit: '50mb' })); // support json encoded bodies
+guiapp.use(bodyParser.json({ limit: '500mb' })); // support json encoded bodies
 guiapp.use(bodyParser.urlencoded({
-	limit: '50mb',
+	limit: '500mb',
 	extended: true,
 })); // support encoded bodies
 
@@ -185,50 +148,10 @@ let io = require('socket.io').listen(server);
 // Set httpServer timeout to 10 minutes
 io.httpServer.timeout = 600000
 
-const _zcashParamsExist = api.zcashParamsExist();
-let willQuitApp = false;
 let mainWindow;
 let appCloseWindow;
 let closeAppAfterLoading = false;
 let forceQuitApp = false;
-
-// apply parsed argv
-if (api.argv) {
-	if (api.argv.servers) {
-		api.log('set electrum servers from argv', 'argv');
-
-		try {
-			const _servers = JSON.parse(api.argv.servers);
-
-			for (let key in _servers) {
-				if (api.electrumServers[key]) {
-					api.electrumServers[key].serverList = _servers[key];
-				}
-			}
-		} catch (e) {
-			api.log('error: malformatted servers argv', 'argv');
-		}
-	}
-
-	if (api.argv.coins) {
-		const _coins = api.argv.coins.split(',');
-
-		for (let i = 0; i < _coins.length; i++) {
-			api.addElectrumCoin(_coins[i].toUpperCase());
-			api.log(`add coin from argv ${_coins[i]}`, 'dev');
-		}
-	}
-
-	if (api.argv.seed) {
-		const _seed = api.argv.seed.split('=');
-
-		if (_seed &&
-				_seed[0]) {
-			api.log('load seed from argv', 'dev');
-			api.auth(_seed[0], true);
-		}
-	}
-}
 
 module.exports = guiapp;
 let agamaIcon;
@@ -252,7 +175,6 @@ if (!_argv.nogui ||
 } else {
 	server.listen(appConfig.general.main.agamaPort, async () => {
 		api.log(`guiapp and sockets.io are listening on port ${appConfig.general.main.agamaPort}`, 'init');
-		api.writeLog(`guiapp and sockets.io are listening on port ${appConfig.general.main.agamaPort}`, 'init');
 		// start sockets.io
 		io.set('origins', appConfig.general.main.dev  || process.argv.indexOf('devmode') > -1 ? 'http://127.0.0.1:3000' : null); // set origin
 	});
@@ -268,14 +190,26 @@ function createAppCloseWindow() {
 		frame: false,
 		icon: agamaIcon,
 		show: false,
-		contextIsolation: true
+		webPreferences: {
+			allowRunningInsecureContent: false,
+			contextIsolation: true,
+			enableRemoteModule: false,
+			nativeWindowOpen: false,
+			nodeIntegration: false,
+			nodeIntegrationInWorker: false,
+			nodeIntegrationInSubFrames: false,
+			safeDialogs: true,
+			webSecurity: true,
+			webviewTag: false,
+			sandbox: true,
+		}
 	});
 
 	appCloseWindow.setResizable(false);
 
 	appCloseWindow.loadURL(
     appConfig.general.main.dev || process.argv.indexOf("devmode") > -1
-      ? `http://${appConfig.general.main.host}:${appConfig.general.main.agamaPort}/gui/startup/app-closing.html`
+      ? `http://127.0.0.1:${appConfig.general.main.agamaPort}/gui/startup/app-closing.html`
       : `file://${__dirname}/gui/startup/app-closing.html`
   );
 
@@ -283,20 +217,19 @@ function createAppCloseWindow() {
     setTimeout(() => {
       appCloseWindow.show();
     }, 40);
-  });
+	});
+	
+	appCloseWindow.webContents.on('devtools-opened', () => {
+		dialog.showMessageBox(appCloseWindow, {
+			type: "warning",
+			title: "Be Careful!",
+			message: "WARNING! You are opening the developer tools menu. ONLY enter commands here if you know exactly what you are doing. If someone told you to copy+paste commands into here, you should probably ignore them, close dev tools, and stay safe.",
+			buttons: ["OK"],
+		})
+	});
 }
 
-/*async*/ function createWindow(status, hideLoadingWindow) {
-	/*if (
-    	process.env.NODE_ENV === 'development' ||
-    	process.env.DEBUG_PROD === 'true'
-  	) {
-    	await installExtensions();
-  	}*/
-	if (process.argv.indexOf('spvcoins=all/add-all') > -1) {
-		api.startSPV('kmd');
-	}
-
+function createWindow(status) {
 	if (status === 'open') {
 		require(path.join(__dirname, 'private/mainmenu'));
 
@@ -328,89 +261,50 @@ function createAppCloseWindow() {
 			if (status === 'closed') {
 				server.listen(appConfig.general.main.agamaPort, () => {
 					api.log(`guiapp and sockets.io are listening on port ${appConfig.general.main.agamaPort}`, 'init');
-					api.writeLog(`guiapp and sockets.io are listening on port ${appConfig.general.main.agamaPort}`);
 					// start sockets.io
 					io.set('origins', appConfig.general.main.dev || process.argv.indexOf('devmode') > -1 ? 'http://127.0.0.1:3000' : null); // set origin
 				});
 
 				// initialise window
-				mainWindow = new BrowserWindow({ // dirty hack to prevent main window flash on quit
+				mainWindow = new BrowserWindow({
 					width: closeAppAfterLoading ? 1 : 1280,
 					height: closeAppAfterLoading ? 1 : 850,
 					icon: agamaIcon,
 					show: false,
-					contextIsolation: true
+					webPreferences: {
+						allowRunningInsecureContent: false,
+						contextIsolation: true,
+						enableRemoteModule: false,
+						nativeWindowOpen: false,
+						nodeIntegration: false,
+						nodeIntegrationInWorker: false,
+						nodeIntegrationInSubFrames: false,
+						safeDialogs: true,
+						webSecurity: true,
+						webviewTag: false,
+		
+						preload: path.resolve(__dirname, "routes", "preloads", "main", "preload.js")
+					}
 				});
-
-				mainWindow.loadURL(appConfig.general.main.dev || process.argv.indexOf('devmode') > -1 ? 'http://127.0.0.1:3000' : `file://${__dirname}/gui/Verus-Desktop-GUI/react/build/index.html`);
 
 				api.setIO(io); // pass sockets object to api router
 				api.setVar('appBasicInfo', appBasicInfo);
 				api.setVar('appSecretToken', appSecretToken);
 				api.setVar('apiShieldKey', apiShieldKey);
 
-				// load our index.html (i.e. Agama GUI)
-				api.writeLog('show agama gui');
-        const _assetChainPorts = require('./routes/ports.js');
-        const nspvPorts = api.nspvPorts;
+				api.log("saving secret files...", 'init')
+				try {
+					await api.saveSecrets({
+						appSecretToken,
+						apiShieldKey
+					})
+				} catch(e) {
+					api.log("error saving secret files!", 'init')
+					api.log(e, "init")
+				}
+				
 
-				staticVar.arch = version.minVersion.indexOf('-spv-only') > -1 ? 'spv-only' : arch();
-				staticVar.appBasicInfo = appBasicInfo;
-				staticVar.assetChainPorts = _assetChainPorts;
-				staticVar.appConfigSchema = api.appConfigSchema;
-				staticVar.argv = process.argv;
-				staticVar.isWindows = os.platform() === 'win32' ? true : false;
-				staticVar.spvFees = _spvFees;
-				staticVar.electrumServers = api.electrumServersFlag;
-        staticVar.chainParams = chainParams;
-        staticVar.nspvPorts = nspvPorts;
-
-				let _global = {
-					appConfig,
-					arch: version.minVersion.indexOf('-spv-only') > -1 ? 'spv-only' : arch(),
-					appBasicInfo,
-					appSecretToken,
-					apiShieldKey,
-					testLocation: api.testLocation,
-					kmdMainPassiveMode: api.kmdMainPassiveMode,
-					getAppRuntimeLog: api.getAppRuntimeLog,
-					// nativeCoindList,
-					zcashParamsExist: _zcashParamsExist,
-					zcashParamsExistPromise: api.zcashParamsExistPromise,
-					appExit,
-					getMaxconKMDConf: api.getMaxconKMDConf,
-					setMaxconKMDConf: api.setMaxconKMDConf,
-					// getMMCacheData: api.getMMCacheData,
-					activeSection: 'wallets', // temp deprecated
-					argv: process.argv,
-					getAssetChainPorts: api.getAssetChainPorts,
-					startSPV: api.startSPV,
-					startNative: api.startNative,
-					getCoinByPub: api.getCoinByPub,
-					resetSettings: () => { api.saveLocalAppConf(__defaultAppSettings) },
-					createSeed: {
-						triggered: false,
-						firstLoginPH: null,
-						secondaryLoginPH: null,
-					},
-					checkStringEntropy: api.checkStringEntropy,
-					pinAccess: false,
-					isWatchOnly: api.isWatchOnly,
-					sha256: (data) => {
-						const crypto = require('crypto');
-						return crypto.createHash('sha256').update(data).digest();
-					},
-					randomBytes: (size) => {
-						return randomBytes(size || 32).toString('hex');
-					},
-				};
-				global.app = _global;
-				/*for (let i = 0; i < process.argv.length; i++) {
-				    if (process.argv[i].indexOf('nvote') > -1) {
-				      console.log('enable notary node elections ui');
-				      mainWindow.nnVoteChain = 'VOTE2018';
-				    }
-				  }*/
+				mainWindow.loadURL(appConfig.general.main.dev || process.argv.indexOf('devmode') > -1 ? 'http://127.0.0.1:3000' : `file://${__dirname}/gui/Verus-Desktop-GUI/react/build/index.html`);
 			} else {
 				mainWindow = new BrowserWindow({
 					width: 500,
@@ -418,7 +312,19 @@ function createAppCloseWindow() {
 					frame: false,
 					icon: agamaIcon,
 					show: false,
-					contextIsolation: true
+					webPreferences: {
+						allowRunningInsecureContent: false,
+						contextIsolation: true,
+						enableRemoteModule: false,
+						nativeWindowOpen: false,
+						nodeIntegration: false,
+						nodeIntegrationInWorker: false,
+						nodeIntegrationInSubFrames: false,
+						safeDialogs: true,
+						webSecurity: true,
+						webviewTag: false,
+						sandbox: true,
+					}
 				});
 
 				mainWindow.setResizable(false);
@@ -427,11 +333,19 @@ function createAppCloseWindow() {
 				willQuitApp = true;
 				server.listen(appConfig.general.main.agamaPort + 1, () => {
 					api.log(`guiapp and sockets.io are listening on port ${appConfig.general.main.agamaPort + 1}`, 'init');
-					api.writeLog(`guiapp and sockets.io are listening on port ${appConfig.general.main.agamaPort + 1}`);
 				});
-				mainWindow.loadURL(appConfig.general.main.dev || process.argv.indexOf('devmode') > -1 ? `http://${appConfig.general.main.host}:${appConfig.general.main.agamaPort + 1}/gui/startup/agama-instance-error.html` : `file://${__dirname}/gui/startup/agama-instance-error.html`);
+				mainWindow.loadURL(appConfig.general.main.dev || process.argv.indexOf('devmode') > -1 ? `http://127.0.0.1:${appConfig.general.main.agamaPort + 1}/gui/startup/agama-instance-error.html` : `file://${__dirname}/gui/startup/agama-instance-error.html`);
 				api.log('another agama app is already running', 'init');
 			}
+
+			mainWindow.webContents.on('devtools-opened', () => {
+				dialog.showMessageBox(mainWindow, {
+					type: "warning",
+					title: "Be Careful!",
+					message: "WARNING! You are opening the developer tools menu. ONLY enter commands here if you know exactly what you are doing. If someone told you to copy+paste commands into here, you should probably ignore them, close dev tools, and stay safe.",
+					buttons: ["OK"],
+				})
+			});
 
 		  mainWindow.webContents.on('did-finish-load', () => {
 		    setTimeout(() => {
@@ -440,17 +354,6 @@ function createAppCloseWindow() {
 					api.promptUpdate(mainWindow)
 		    }, 40);
 		  });
-
-		  /*loadingWindow.on('close', (e) => {
-		  	if (!forceCloseApp) {
-			    if (willQuitApp) {
-			      loadingWindow = null;
-			    } else {
-			      closeAppAfterLoading = true;
-			      e.preventDefault();
-			    }
-			  }
-			});*/
 
 			mainWindow.webContents.on('context-menu', (e, params) => { // context-menu returns params
 				const {
@@ -468,11 +371,6 @@ function createAppCloseWindow() {
 				}
 			});
 
-			if (appConfig.general.main.dev ||
-					process.argv.indexOf('devmode') > -1) {
-				mainWindow.webContents.openDevTools();
-			}
-
 			function appExit() {
 				if (((api.appConfig.general.main.dev || process.argv.indexOf('devmode') > -1) && api.appConfig.general.electrum.cache) ||
 						(!api.appConfig.general.main.dev && process.argv.indexOf('devmode') === -1)) {
@@ -482,7 +380,6 @@ function createAppCloseWindow() {
 				const CloseDaemons = () => {
 					return new Promise((resolve, reject) => {
 						api.log('Closing Main Window...', 'quit');
-						api.writeLog('exiting app...');
 
             api.quitKomodod(appConfig.general.native.cliStopTimeout);
             api.stopNSPVDaemon('all');
@@ -490,7 +387,6 @@ function createAppCloseWindow() {
 						const result = 'Closing daemons: done';
 
 						api.log(result, 'quit');
-						api.writeLog(result);
 						resolve(result);
 					});
 				}
@@ -608,17 +504,3 @@ app.on('quit', (event) => {
 		// event.preventDefault();
 	}
 });
-
-const installExtensions = async () => {
-  const installer = require('electron-devtools-installer');
-  const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
-  const extensions = [
-		'REACT_DEVELOPER_TOOLS',
-		'REDUX_DEVTOOLS'
-	];
-
-  return Promise.all(
-    extensions.map(name => installer.default(installer[name], forceDownload))
-	)
-	.catch(console.log);
-};

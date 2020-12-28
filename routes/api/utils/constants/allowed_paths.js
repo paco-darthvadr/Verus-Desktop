@@ -1,6 +1,9 @@
 // Identities
 const NAME_COMMITMENTS = 'nameCommits.json'
 
+// API Secrets
+const SECRETS = 'secrets.json'
+
 // Currencies
 const CURRENCY_BLACKLIST = 'shepherd/currencies/blacklist.json'
 const CURRENCY_WHITELIST = 'shepherd/currencies/whitelist.json'
@@ -15,6 +18,7 @@ const ALLOWED_PATHS_ARR = [
   CURRENCY_GRAYLIST,
   CURRENCY_WHITELIST,
   UPDATE_LOG,
+  SECRETS
 ];
 
 module.exports = {
@@ -23,5 +27,6 @@ module.exports = {
   CURRENCY_GRAYLIST,
   CURRENCY_WHITELIST,
   ALLOWED_PATHS_ARR,
-  UPDATE_LOG
+  UPDATE_LOG,
+  SECRETS
 }

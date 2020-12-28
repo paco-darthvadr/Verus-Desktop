@@ -96,13 +96,6 @@ const template = [
     role: 'help',
     label: 'Help',
     submenu: [
-      // TODO: Reimplement
-      //{
-      //  label: 'Reset settings',
-      //  click (item, focusedWindow) {
-      //    focusedWindow.resetSettings();
-      //  }
-      //},
       {
         label: 'Join our Discord',
         click (item, focusedWindow) {

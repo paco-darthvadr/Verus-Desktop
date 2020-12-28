@@ -102,7 +102,7 @@ module.exports = (api) => {
       retObj.result = `missing param ${_errorParamsList.join(', ')}`;
       res.send(JSON.stringify(retObj));
     }
-  });
+  }, true);
 
   api.setPost('/decryptkey', (req, res, next) => {
     const _pubkey = req.body.pubkey;
@@ -189,7 +189,7 @@ module.exports = (api) => {
 
       res.send(JSON.stringify(retObj));
     }
-  });
+  }, true);
 
   api.setPost('/modifypin', (req, res, next) => {
     const pubkey = req.body.pubkey;
@@ -276,7 +276,7 @@ module.exports = (api) => {
 
       res.send(JSON.stringify(retObj));
     }
-  });
+  }, true);
 
   return api;
 };

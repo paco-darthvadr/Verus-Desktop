@@ -1,4 +1,4 @@
-const { dialog } = require('electron');
+const { dialog } = require('./utils/dialog-shim');
 const fs = require('fs-extra');
 const si = require('systeminformation')
 const path = require('path');
@@ -76,9 +76,10 @@ module.exports = (api) => {
                     })
                     resolve()
                   } catch(e) {
-                    dialog.showOpenDialog(mainWindow, {
+                    dialog.showMessageBox(mainWindow, {
                       title: "Error",
-                      message: "Error saving file."
+                      message: "Error saving file.",
+                      buttons: ["OK"],
                     })
                     resolve()
                   }

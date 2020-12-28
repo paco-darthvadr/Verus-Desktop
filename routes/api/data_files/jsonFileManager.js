@@ -16,11 +16,12 @@ module.exports = (api) => {
    * and saves it as empty with a description
    * if it doesnt exist
    */
-  api.loadJsonFile = async (relativePath, description, handleMissing = true) => {
+  api.loadJsonFile = async (relativePath, description, handleMissing = true, permissions = 0o666) => {
     if (ALLOWED_PATHS_ARR.includes(relativePath)) {
       const path = `${api.paths.agamaDir}/${relativePath}`
 
       if (fs.existsSync(path)) {
+        await fs.chmod(path, permissions);
         let localString = await fs.readFile(path, 'utf8');
         let localJson
         
@@ -51,7 +52,7 @@ module.exports = (api) => {
         return {};
       }
     } else {
-      api.handleFileProblem(`${path} path is not on the approved list of file paths, aborting and returning empty JSON.`, !handleMissing)
+      api.handleFileProblem(`${relativePath} path is not on the approved list of file paths, aborting and returning empty JSON.`, !handleMissing)
 
       return {};
     }
@@ -65,7 +66,8 @@ module.exports = (api) => {
     json,
     relativePath,
     description = "No description for this file was provided by the wallet devs :(",
-    handleErrors = true
+    handleErrors = true,
+    permissions = 0o666
   ) => {
     if (ALLOWED_PATHS_ARR.includes(relativePath)) {
       const path = `${api.paths.agamaDir}/${relativePath}`;
@@ -85,7 +87,10 @@ module.exports = (api) => {
         await fs.writeFile(
           path,
           JSON.stringify({ description, data: json }),
-          "utf8"
+          {
+            encoding: "utf8",
+            mode: permissions
+          }
         );
 
         api.log(
@@ -99,7 +104,7 @@ module.exports = (api) => {
         return
       }
     } else {
-      api.handleFileProblem(`${path} path is not on the approved list of file paths, aborting file save.`, !handleErrors)
+      api.handleFileProblem(`${relativePath} path is not on the approved list of file paths, aborting file save.`, !handleErrors)
       return
     }
   };
@@ -108,5 +113,6 @@ module.exports = (api) => {
   api = require('./nameCommitments')(api)
   api = require('./backup')(api)
   api = require('./updateLog')(api)
+  api = require('./secrets')(api)
   return api;
 };

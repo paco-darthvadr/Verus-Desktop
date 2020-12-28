@@ -2,16 +2,16 @@ const path = require('path');
 const fixPath = require('fix-path');
 const os = require('os');
 
-const pathsAgama = (api) => {
+const pathsAgama = (api, home) => {
   if (!api) api = { paths: {} };
   else if (!api.paths) api.paths = {};
 
   if (global.USB_MODE) {
     if (os.platform() === 'darwin') fixPath()
 
-    api.paths.VerusDesktopDir = `${global.HOME}/Verus-Desktop`;
-    api.paths.agamaDir = `${global.HOME}/Verus-Desktop/appdata`;
-    api.paths.backupDir = `${global.HOME}/Verus-Desktop/backups`;
+    api.paths.VerusDesktopDir = `${home}/Verus-Desktop`;
+    api.paths.agamaDir = `${home}/Verus-Desktop/appdata`;
+    api.paths.backupDir = `${home}/Verus-Desktop/backups`;
 
     if (os.platform() === 'win32') {
       api.paths.VerusDesktopDir = path.normalize(api.paths.VerusDesktopDir);
@@ -24,29 +24,29 @@ const pathsAgama = (api) => {
     switch (os.platform()) {
       case "darwin":
         fixPath();
-        api.paths.VerusDesktopDir = `${global.HOME}/Library/Application Support/Verus-Desktop`;
+        api.paths.VerusDesktopDir = `${home}/Library/Application Support/Verus-Desktop`;
 
-        api.paths.agamaDir = `${global.HOME}/Library/Application Support/Verus-Desktop/appdata`;
-        api.paths.backupDir = `${global.HOME}/Library/Application Support/Verus-Desktop/backups`;
+        api.paths.agamaDir = `${home}/Library/Application Support/Verus-Desktop/appdata`;
+        api.paths.backupDir = `${home}/Library/Application Support/Verus-Desktop/backups`;
         return api;
         break;
 
       case "linux":
-        api.paths.VerusDesktopDir = `${global.HOME}/.verus-desktop`;
+        api.paths.VerusDesktopDir = `${home}/.verus-desktop`;
 
-        api.paths.agamaDir = `${global.HOME}/.verus-desktop/appdata`;
-        api.paths.backupDir = `${global.HOME}/.verus-desktop/backups`;
+        api.paths.agamaDir = `${home}/.verus-desktop/appdata`;
+        api.paths.backupDir = `${home}/.verus-desktop/backups`;
         return api;
         break;
 
       case "win32":
-        api.paths.VerusDesktopDir = `${global.HOME}/Verus-Desktop`;
+        api.paths.VerusDesktopDir = `${home}/Verus-Desktop`;
         api.paths.VerusDesktopDir = path.normalize(api.paths.VerusDesktopDir);
 
-        api.paths.agamaDir = `${global.HOME}/Verus-Desktop/appdata`;
+        api.paths.agamaDir = `${home}/Verus-Desktop/appdata`;
         api.paths.agamaDir = path.normalize(api.paths.agamaDir);
 
-        api.paths.backupDir = `${global.HOME}/Verus-Desktop/backups`;
+        api.paths.backupDir = `${home}/Verus-Desktop/backups`;
         api.paths.backupDir = path.normalize(api.paths.backupDir);
         return api;
         break;
