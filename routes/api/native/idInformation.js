@@ -35,10 +35,10 @@ module.exports = (api) => {
               const iAddr = identities[i].identity.identityaddress
               const zAddr = identities[i].identity.privateaddress
               let zBalance = null
+              let iBalances = {}
 
-              const iBalance = Number(
-                await api.native.get_addr_balance(coin, iAddr, useCache, txcount, totalBalance)
-              )
+              iBalances = await api.native.get_addr_balance(coin, iAddr, useCache, txcount, totalBalance)
+              const tBalance = iBalances[coin]
               
               if (zAddr != null) {
                 try {
@@ -53,7 +53,7 @@ module.exports = (api) => {
               formattedIds[i].balances = {
                 native: {
                   public: {
-                    confirmed: iBalance,
+                    confirmed: tBalance,
                     unconfirmed: null,
                     immature: null
                   },
@@ -61,15 +61,15 @@ module.exports = (api) => {
                     confirmed: zBalance
                   }
                 },
-                reserve: {}
+                reserve: {...iBalances, [coin]: null}
               }
 
               formattedIds[i].addresses = {
                 public: [{
                   address: iAddr,
                   balances: {
-                    native: iBalance,
-                    reserve: {}
+                    native: tBalance,
+                    reserve: {...iBalances, [coin]: null}
                   },
                   tag: "identity"
                 }],

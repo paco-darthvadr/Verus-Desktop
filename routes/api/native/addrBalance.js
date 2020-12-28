@@ -61,18 +61,20 @@ module.exports = (api) => {
     }
     
     // Optimization, TODO: Apply to all verusd coins
-    const useGetAddrBalance = (coin === 'VRSC' || coin === 'VRSCTEST') && address[0] !== 'z'
+    const useGetCurrencyBalance = (coin === 'VRSC' || coin === 'VRSCTEST') && address[0] !== 'z'
 
     return new Promise((resolve, reject) => {
       api.native
-        .callDaemon(coin, useGetAddrBalance ? "getaddressbalance" : "z_getbalance", [address])
-        .then(balance => {
-          if (useGetAddrBalance) {
-            balance = fromSats(balance.balance)
-          }
-          
-          if (useCache) cacheAddrBalanceResult(balance)
-          resolve(balance);
+        .callDaemon(coin, useGetCurrencyBalance ? "getcurrencybalance" : "z_getbalance", [address])
+        .then(balance => {    
+          let balanceObj = useGetCurrencyBalance ? balance : {
+            [coin]: Number(balance)
+          }  
+
+          if (balanceObj[coin] == null) balanceObj[coin] = 0
+
+          if (useCache) cacheAddrBalanceResult(balanceObj)
+          resolve(balanceObj);
         })
         .catch(err => {
           if (err.code === RPC_INVALID_ADDRESS_OR_KEY) cacheAddrBalanceResult(err)

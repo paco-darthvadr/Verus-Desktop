@@ -77,7 +77,8 @@ const appConfig = {
         includeP2shAddrs: false,
         includeEmptyChangeAddrs: false,
         nativeCacheMbLimit: 30,
-        filterGenerateTransactions: true
+        filterGenerateTransactions: true,
+        showAddressCurrencyBalances: true
       }
     },
     coin: {
@@ -179,8 +180,13 @@ const appConfig = {
         },
         filterGenerateTransactions: {
           type: 'checkbox',
-          displayName: 'Separate mining/staking transactions',
+          displayName: 'Separate Mining/Staking Transactions',
           info: 'Filter all mining/staking related transactions out of the main wallet tab, and only show them under the mining tab.',
+        },
+        showAddressCurrencyBalances: {
+          type: 'checkbox',
+          displayName: 'Show Currency Balances for Addresses',
+          info: 'Show balances for every currency for each of your addresses. May impact performance on large wallets.',
         },
       }
     },
