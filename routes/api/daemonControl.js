@@ -124,16 +124,20 @@ module.exports = (api) => {
     })
   }
 
-  api.initConffile = (coin, confName, fallbackPort) => {
+  api.initConfFile = (coin, confName, fallbackPort) => {
     const coinLc = coin.toLowerCase()
     return new Promise((resolve, reject) => {
       const confFile = `${api.paths[`${coinLc}DataDir`]}/${confName == null ? coin : confName}.conf`;
 
       api.log(`initializing ${coinLc} conf file for verus-desktop`, 'native.process');
       fs.access(confFile, fs.R_OK | fs.W_OK)
-        .then(() => {
+        .then(async () => {
           api.log(`located ${confFile}`, "native.debug");
           api.confFileIndex[coin] = confFile
+          
+          api.log(`setting permissions of ${confFile} to 0600`, "native.debug");
+          await fs.chmod(confFile, '0600');
+
           return fs.readFile(confFile, "utf8")
         })
         .then(confHandle => {
@@ -182,7 +186,9 @@ module.exports = (api) => {
           );
 
           return fs
-            .writeFile(confFile, "")
+            .writeFile(confFile, "", {
+              mode: 0o600
+            })
             .then(() => {
               api.log(
                 `${confFile} created, saving to conf file index...`,
@@ -460,7 +466,7 @@ module.exports = (api) => {
           await createFetchBoostrapWindow(coin, api.appConfig)
         }
 
-        return Promise.all([api.initLogfile(coin), api.initConffile(coin, confName, fallbackPort)])
+        return Promise.all([api.initLogfile(coin), api.initConfFile(coin, confName, fallbackPort)])
       })
       .then(() => {
         return api.prepareCoinPort(coin, confName, fallbackPort)

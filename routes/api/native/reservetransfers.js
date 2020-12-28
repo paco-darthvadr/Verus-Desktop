@@ -23,9 +23,7 @@ module.exports = (api) => {
               z_operation.result.txid,
               1
             ]);
-          } catch (e) {
-            api.log(e, "getreservetransfers")
-          }
+          } catch (e) {}
           
           transfers.push({
             from,

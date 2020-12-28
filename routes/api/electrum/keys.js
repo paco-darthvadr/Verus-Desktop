@@ -207,17 +207,5 @@ module.exports = (api) => {
     res.send(JSON.stringify(retObj));
   });
 
-  api.getSpvFees = () => {
-    let _fees = {};
-
-    for (let key in api.electrumServers) {
-      if (api.electrumServers[key].txfee) {
-        _fees[key.toUpperCase()] = api.electrumServers[key].txfee;
-      }
-    }
-
-    return _fees;
-  };
-
   return api;
 };

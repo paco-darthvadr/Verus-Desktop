@@ -24,7 +24,7 @@ module.exports = (api) => {
         msg: "success",
         result: await api.native.sendcurrency(chainTicker, from, outputs.map(x => {
           Object.keys(x).map(y => {
-            if (x[y] === null) delete x[y]
+            if (x[y] == null || x[y].length === 0) delete x[y]
           })
 
           return x

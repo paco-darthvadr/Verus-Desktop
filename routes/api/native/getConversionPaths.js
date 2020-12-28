@@ -6,7 +6,7 @@ const checkFlag = require('../utils/flags');
 module.exports = (api) => {    
   // Derives possible conversion paths between source and destination currencies
   // (or all possible destinations if destination is null)
-  api.native.get_conversion_paths = (
+  api.native.get_conversion_paths_rec = (
     chain,
     src,
     dest = null,
@@ -153,6 +153,36 @@ module.exports = (api) => {
           });
       } catch (e) {
         reject(e);
+      }
+    });
+  };
+
+  api.native.get_conversion_paths = (
+    chain,
+    src,
+    dest = null,
+    includeVia = false,
+    ignoreCurrencies = [],
+    via = null,
+    root
+  ) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let paths = await api.native.get_conversion_paths_rec(chain, src, dest, includeVia, ignoreCurrencies, via, root)
+        let toDelete;
+
+        for (const key in paths) {
+          if (paths[key].destination.currencyid === src || paths[key].destination.name === src) {
+            toDelete = key
+            break;
+          }
+        }
+
+        if (toDelete) delete paths[toDelete]
+
+        resolve(paths)
+      } catch(e) {
+        reject(e)
       }
     });
   };
