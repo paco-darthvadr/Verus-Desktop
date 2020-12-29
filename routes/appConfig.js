@@ -76,6 +76,7 @@ const appConfig = {
         zcashParamsSrc: "z.cash",
         includeP2shAddrs: false,
         includeEmptyChangeAddrs: false,
+        defaultShowEmptyAddrs: true,
         nativeCacheMbLimit: 30,
         filterGenerateTransactions: true,
         showAddressCurrencyBalances: true
@@ -177,6 +178,11 @@ const appConfig = {
           displayName: "Include Empty Change Addresses",
           info:
             "Include automatically generated change adresses in your address list, even if they're empty."
+        },
+        defaultShowEmptyAddrs: {
+          type: "checkbox",
+          displayName: "Show Empty Addresses by Default",
+          info: "Show empty addresses by default when viewing the address list."
         },
         filterGenerateTransactions: {
           type: 'checkbox',
