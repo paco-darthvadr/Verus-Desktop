@@ -85,7 +85,9 @@ module.exports = (api) => {
       }
     } 
 
-    deductedAmount = Number((spendAmount + fee).toFixed(8))
+    deductedAmount = isSendCurrency
+      ? Number(spendAmount.toFixed(8))
+      : Number((spendAmount + fee).toFixed(8));
 
     try {
       const balances = await api.native.get_balances(chainTicker, false)
