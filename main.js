@@ -28,10 +28,6 @@ global.USB_HOME_DIR = path.resolve(__dirname, './usb_home')
 global.USB_MODE = false
 global.HOME = os.platform() === "win32" ? process.env.APPDATA : process.env.HOME;
 
-if (osPlatform === 'linux') {
-	process.env.ELECTRON_RUN_AS_NODE = true;
-}
-
 // GUI APP settings and starting gui on address http://120.0.0.1:17777
 let api = require('./routes/api');
 const { appSecretToken, apiShieldKey } = require('./routes/preloads/keys');
