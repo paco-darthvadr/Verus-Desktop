@@ -6,10 +6,14 @@ const allowedOrigins = [
   "github.com",
 
   // Explorer Origins
-  'https://www.kmdexplorer.io',
+
+  'www.kmdexplorer.io',
+  'explorer.veruscoin.io',
+  "testex.verus.io",
+
   // KMD asset chains
-  'https://explorer.dionpay.com',
-  'http://live.block.koinon.cloud',
+  'explorer.dionpay.com',
+  'live.block.koinon.cloud',
   'explorer1.patenttx.com',
   'zilla.explorer.dexstats.info',
   'mgnx.explorer.dexstats.info',
@@ -46,8 +50,6 @@ const allowedOrigins = [
   'beer.kmdexplorer.io',
   'ninja.kmdexplorer.io',
   'dsec.kmdexplorer.io',
-  'explorer.veruscoin.io',
-  "testex.verus.io",
   'kmdice.explorer.dexstats.info',
   'ksb.explorer.dexstats.info',
   'our.explorer.dexstats.info',
@@ -59,6 +61,7 @@ const allowedOrigins = [
   'labs.explorer.dexstats.info',
   'dp.explorer.komodo.top',
   'wlc21.explorer.dexstats.info/',
+
   // non-kmd coins
   'explorer.qtum.org',
   'denarius.name',
