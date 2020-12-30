@@ -45,7 +45,6 @@ const appConfig = {
         lang: "EN",
         fiatRates: true,
         fiatCurrency: "USD",
-        loadCoinsFromStorage: false,
         requirePinToConfirmTx: false,
         defaultUserId: "",
         reservedChains: coinObjArray
