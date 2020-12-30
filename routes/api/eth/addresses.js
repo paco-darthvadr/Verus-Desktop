@@ -68,7 +68,7 @@ module.exports = (api) => {
         result: `No privkey found for coin ${coin}`
       }));  
     }
-  });
+  }, true);
 
   return api;
 };

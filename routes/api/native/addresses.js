@@ -306,7 +306,7 @@ module.exports = (api) => {
   
       res.send(JSON.stringify(retObj));  
     })
-  });
+  }, true);
 
   return api;
 };
