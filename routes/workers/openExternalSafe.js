@@ -1,6 +1,6 @@
 const allowedOrigins = [
   // Non-Explorer Origins
-  "wiki.veruscoin.io",
+  "wiki.verus.io",
   "verus.io",
   "discord.gg",
   "github.com",
@@ -8,7 +8,7 @@ const allowedOrigins = [
   // Explorer Origins
 
   'www.kmdexplorer.io',
-  'explorer.veruscoin.io',
+  'explorer.verus.io',
   "testex.verus.io",
 
   // KMD asset chains
@@ -134,7 +134,7 @@ const allowedOrigins = [
   'etherscan.io/tx/',
   'ropsten.etherscan.io/tx/',
 ]
- 
+
 function generateOpenExternalSafe(shell, url) {
   return async (inputUrl) => {
     const URL = url.parse(inputUrl);
