@@ -1,12 +1,12 @@
 const Promise = require('bluebird');
 
-module.exports = (api) => {    
+module.exports = (api) => {
   /**
    * Recovers an ID given the information
    * @param {String} coin The chainTicker of the coin that the ID is based on
    * @param {String} name The name of the ID to reserve
    * @param {String[]} primaryaddresses An array of the primary addresses for this id
-   * @param {Number} minimumsignatures The minimum signitures required to sign a tx for this ID
+   * @param {Number} minimumsignatures The minimum signatures required to sign a tx for this ID
    * @param {String[]} contenthashes The content to initially attach to this id
    * @param {String} revocationauthority The ID that can revoke this ID
    * @param {String} recoveryauthority The ID that can recover this ID

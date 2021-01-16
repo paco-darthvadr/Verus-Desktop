@@ -108,7 +108,7 @@ const appConfig = {
           type: "number_input",
           displayName: "Verus Port",
           info:
-            "The port with which the Verus GUI will communcate with its back end."
+            "The port that the Verus GUI will use to communicate with its back end."
         },
         dev: {
           type: "checkbox",
@@ -124,7 +124,7 @@ const appConfig = {
         },
         alwaysPromptUpdates: {
           type: "checkbox",
-          displayName: "Notfy me about all app updates",
+          displayName: "Notify me about all app updates",
           info: "Enables update notifications on app start for all updates, including non-mandatory."
         },
         encryptApiPost: {
@@ -176,7 +176,7 @@ const appConfig = {
           type: "checkbox",
           displayName: "Include Empty Change Addresses",
           info:
-            "Include automatically generated change adresses in your address list, even if they're empty."
+            "Include automatically generated change addresses in your address list, even if they're empty."
         },
         defaultShowEmptyAddrs: {
           type: "checkbox",
