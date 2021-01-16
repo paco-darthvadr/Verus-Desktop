@@ -72,7 +72,7 @@ const appConfig = {
         dataDir: "",
         maxTxListLength: 2147483647,
         csvListtransactionsMaxLength: 1000,
-        zcashParamsSrc: "z.cash",
+        zcashParamsSrc: "verus.io",
         includeP2shAddrs: false,
         includeEmptyChangeAddrs: false,
         defaultShowEmptyAddrs: true,
