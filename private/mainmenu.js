@@ -105,7 +105,7 @@ const template = [
       {
         label: 'Verus Wiki',
         click (item, focusedWindow) {
-          shell.openExternal('https://wiki.veruscoin.io/#!index.md');
+          shell.openExternal('https://wiki.verus.io/#!index.md');
         }
       },
       // ref: https://github.com/sindresorhus/new-github-issue-url
@@ -118,7 +118,7 @@ const template = [
       {
         label: 'Show Verus Desktop Wallet data folder',
         click (item, focusedWindow) {
-          shell.openPath(pathsAgama().paths.agamaDir);
+          shell.openPath(pathsAgama(null, global.HOME).paths.agamaDir);
         }
       },
       {
