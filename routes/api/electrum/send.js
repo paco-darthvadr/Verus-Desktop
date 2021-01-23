@@ -686,7 +686,7 @@ module.exports = (api) => {
         };
         res.send(JSON.stringify(retObj));
       });
-  });
+  }, true);
 
   api.setPost('/electrum/tx_preflight', (req, res, next) => {
     const {
@@ -737,7 +737,7 @@ module.exports = (api) => {
         };
         res.send(JSON.stringify(retObj));
       });
-  });
+  }, true);
     
   return api;
 };

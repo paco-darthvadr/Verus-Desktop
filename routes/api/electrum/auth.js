@@ -18,7 +18,7 @@ module.exports = (api) => {
     };
 
     res.send(JSON.stringify(retObj));
-  });
+  }, true);
 
   api.auth = (seed, isIguana) => {
     let _wifError = false;

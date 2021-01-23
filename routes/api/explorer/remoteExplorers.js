@@ -16,8 +16,9 @@ const remoteExplorers = {
   CHIPS: 'http://CHIPS1.explorer.supernet.org',
   COQUI: 'https://explorer.coqui.cash',
   MNZ: 'https://www.mnzexplorer.com',
-  VRSC: 'https://explorer.veruscoin.io/',
+  VRSC: 'https://explorer.verus.io/',
   PIRATE: 'https://pirate.kmdexplorer.io',
+  VRSCTEST: 'https://testex.verus.io'
 };
 // TODO Our landing page gets added to this list
 module.exports = remoteExplorers;

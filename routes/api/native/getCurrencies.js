@@ -13,6 +13,7 @@ module.exports = (api) => {
             ...currency.currencydefinition,
             bestheight: currency.bestheight,
             lastconfirmedheight: currency.lastconfirmedheight,
+            bestcurrencystate: currency.bestcurrencystate
           }))
         );
       })

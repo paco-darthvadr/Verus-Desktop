@@ -85,7 +85,9 @@ module.exports = (api) => {
       }
     } 
 
-    deductedAmount = Number((spendAmount + fee).toFixed(8))
+    deductedAmount = isSendCurrency
+      ? Number(spendAmount.toFixed(8))
+      : Number((spendAmount + fee).toFixed(8));
 
     try {
       const balances = await api.native.get_balances(chainTicker, false)
@@ -104,7 +106,7 @@ module.exports = (api) => {
       }
   
       if (isSendCurrency) {
-        const { currency, convertto, refundto, preconvert, subtractfee, mintnew } = currencyParams
+        const { currency, convertto, refundto, preconvert, subtractfee, mintnew, via } = currencyParams
         cliCmd = "sendcurrency";
         
         try {
@@ -162,7 +164,8 @@ module.exports = (api) => {
             amount: spendAmount,
             address: toAddress,
             memo,
-            mintnew
+            mintnew,
+            via
           }]
         ];
 

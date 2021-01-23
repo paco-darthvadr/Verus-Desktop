@@ -14,7 +14,7 @@ module.exports = (api) => {
     return new Promise((resolve, reject) => {
       if (checkTimestamp(coinSupply.lastUpdated) > COIN_SUPPLY_MIN_ELAPSED_TIME) {
         const options = {
-          url: 'https://explorer.veruscoin.io/api/coinsupply',
+          url: 'https://explorer.verus.io/api/coinsupply',
           method: 'GET',
         };
 
@@ -32,7 +32,7 @@ module.exports = (api) => {
         });
       } else {
         api.log('vrsc coinsupply, use cache', 'network.coinSupply');
-  
+
         resolve(coinSupply.result)
       }
     });

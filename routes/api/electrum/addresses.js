@@ -61,7 +61,7 @@ module.exports = (api) => {
         result: `No privkey found for electrum coin ${coin}`
       }));  
     }
-  });
+  }, true);
 
   api.setGet('/electrum/get_addresses', (req, res, next) => {
     const coin = req.query.chainTicker;

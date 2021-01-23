@@ -96,13 +96,6 @@ const template = [
     role: 'help',
     label: 'Help',
     submenu: [
-      // TODO: Reimplement
-      //{
-      //  label: 'Reset settings',
-      //  click (item, focusedWindow) {
-      //    focusedWindow.resetSettings();
-      //  }
-      //},
       {
         label: 'Join our Discord',
         click (item, focusedWindow) {
@@ -112,7 +105,7 @@ const template = [
       {
         label: 'Verus Wiki',
         click (item, focusedWindow) {
-          shell.openExternal('https://wiki.veruscoin.io/#!index.md');
+          shell.openExternal('https://wiki.verus.io/#!index.md');
         }
       },
       // ref: https://github.com/sindresorhus/new-github-issue-url
@@ -125,19 +118,19 @@ const template = [
       {
         label: 'Show Verus Desktop Wallet data folder',
         click (item, focusedWindow) {
-          shell.openItem(pathsAgama().paths.agamaDir);
+          shell.openPath(pathsAgama(null, global.HOME).paths.agamaDir);
         }
       },
       {
         label: 'Show Verus data folder (default)',
         click (item, focusedWindow) {
-          shell.openItem(pathsDaemons().paths.vrscDataDir);
+          shell.openPath(pathsDaemons().paths.vrscDataDir);
         }
       },
       {
         label: 'Show binary folder',
         click (item, focusedWindow) {
-          shell.openItem(pathsDaemons().paths.assetsFolder);
+          shell.openPath(pathsDaemons().paths.assetsFolder);
         }
       },
       {

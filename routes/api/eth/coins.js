@@ -1,24 +1,4 @@
 module.exports = (api) => {  
-  api.setGet('/eth/coins', (req, res, next) => {
-    if (api.eth.wallet &&
-        api.eth.coins &&
-        Object.keys(api.eth.coins).length) {
-      let _coins = {};
-
-      const retObj = {
-        msg: 'success',
-        result: api.eth.coins,
-      };
-      res.send(JSON.stringify(retObj));
-    } else {
-      const retObj = {
-        msg: 'error',
-        result: 'false',
-      };
-      res.send(JSON.stringify(retObj));
-    }
-  });
-
   api.setPost('/eth/coins/activate', (req, res, next) => {
     const _coin = req.body.chainTicker;
   
@@ -66,26 +46,6 @@ module.exports = (api) => {
         };
         res.send(JSON.stringify(retObj));
       }
-    } else {
-      const retObj = {
-        msg: 'error',
-        result: 'coin param is empty',
-      };
-      res.send(JSON.stringify(retObj));
-    }
-  });
-
-  api.setGet('/eth/coins/remove', (req, res, next) => {
-    const _coin = req.query.chainTicker;
-
-    if (_coin) {
-      api.eth.coins[_coin.toUpperCase()] = {};
-
-      const retObj = {
-        msg: 'success',
-        result: 'true',
-      };
-      res.send(JSON.stringify(retObj));
     } else {
       const retObj = {
         msg: 'error',

@@ -45,7 +45,6 @@ const appConfig = {
         lang: "EN",
         fiatRates: true,
         fiatCurrency: "USD",
-        loadCoinsFromStorage: false,
         requirePinToConfirmTx: false,
         defaultUserId: "",
         reservedChains: coinObjArray
@@ -53,9 +52,8 @@ const appConfig = {
           .concat(["KOMODO", "zcashd", "komodod", "chipsd"]),
         pbaasChains: [],
         pbaasTestmode: true,
-        enableVrsctest: false,
         alwaysPromptUpdates: true,
-        encryptApi: false
+        encryptApiPost: true
       },
       electrum: {
         maxVinParseLimit: 120,
@@ -74,11 +72,13 @@ const appConfig = {
         dataDir: "",
         maxTxListLength: 2147483647,
         csvListtransactionsMaxLength: 1000,
-        zcashParamsSrc: "z.cash",
+        zcashParamsSrc: "verus.io",
         includeP2shAddrs: false,
         includeEmptyChangeAddrs: false,
+        defaultShowEmptyAddrs: true,
         nativeCacheMbLimit: 30,
-        filterGenerateTransactions: true
+        filterGenerateTransactions: true,
+        showAddressCurrencyBalances: true
       }
     },
     coin: {
@@ -101,35 +101,34 @@ const appConfig = {
         host: {
           type: "text_input",
           displayName: "Hostname",
-          info: "The application hostname."
+          info: "The application hostname.",
+          hidden: true
         },
         agamaPort: {
           type: "number_input",
           displayName: "Verus Port",
           info:
-            "The port with which the Verus GUI will communcate with its back end."
+            "The port that the Verus GUI will use to communicate with its back end."
         },
         dev: {
           type: "checkbox",
           displayName: "Dev Mode",
-          info:
-            "Run Verus in devmode, where it will search for a running GUI instead of using the pre-compiled one."
+          info: "Run Verus in devmode, where it will search for a running GUI instead of using the pre-compiled one.",
+          hidden: true
         },
         pbaasTestmode: {
           type: "checkbox",
           displayName: "Verus Multiverse Testmode",
-          info:
-            "Changes Verus Multiverse capabilities to run in test mode. (Will work with only VRSCTEST)"
-        },
-        enableVrsctest: {
-          type: "checkbox",
-          displayName: "Enable VRSCTEST",
-          info: "Enables the Verus Testnet as a coin to add."
+          info: "Changes Verus Multiverse capabilities to run in test mode. (Will work with only VRSCTEST)",
+          hidden: true
         },
         alwaysPromptUpdates: {
           type: "checkbox",
-          displayName: "Notfy me about all app updates",
+          displayName: "Notify me about all app updates",
           info: "Enables update notifications on app start for all updates, including non-mandatory."
+        },
+        encryptApiPost: {
+          hidden: true
         },
       },
       electrum: {
@@ -177,12 +176,22 @@ const appConfig = {
           type: "checkbox",
           displayName: "Include Empty Change Addresses",
           info:
-            "Include automatically generated change adresses in your address list, even if they're empty."
+            "Include automatically generated change addresses in your address list, even if they're empty."
+        },
+        defaultShowEmptyAddrs: {
+          type: "checkbox",
+          displayName: "Show Empty Addresses by Default",
+          info: "Show empty addresses by default when viewing the address list."
         },
         filterGenerateTransactions: {
           type: 'checkbox',
-          displayName: 'Separate mining/staking transactions',
+          displayName: 'Separate Mining/Staking Transactions',
           info: 'Filter all mining/staking related transactions out of the main wallet tab, and only show them under the mining tab.',
+        },
+        showAddressCurrencyBalances: {
+          type: 'checkbox',
+          displayName: 'Show Currency Balances for Addresses',
+          info: 'Show balances for every currency for each of your addresses. May impact performance on large wallets.',
         },
       }
     },

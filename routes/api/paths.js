@@ -10,7 +10,7 @@ const os = require('os');
 
 module.exports = (api) => {
   api.pathsAgama = () => {
-    api = pathsAgama(api);
+    api = pathsAgama(api, global.HOME);
   }
 
   api.pathsDaemons = () => {

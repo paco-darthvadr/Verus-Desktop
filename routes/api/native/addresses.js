@@ -15,6 +15,11 @@ module.exports = (api) => {
   }
   
   api.native.get_addresses = (coin, includePrivate) => {
+    // TODO: Update for mainnet, change to accomodate all verusd coins
+    const includeCurrencyBalances =
+      api.appConfig.general.native.showAddressCurrencyBalances &&
+      coin === "VRSCTEST";
+
     return new Promise((resolve, reject) => {
       let addressPromises = [
         api.native.callDaemon(coin, "listaddressgroupings", []),
@@ -37,7 +42,6 @@ module.exports = (api) => {
           };
           let pubAddrsSeen = [];
           let addressGroupingsParsed = {}
-          let zBalanceSeen = (tBalanceSeen = 0);
 
           const addressGroupings = jsonResults[0];
           const addressesByAccount = jsonResults[1];
@@ -55,7 +59,6 @@ module.exports = (api) => {
               if (!pubAddrsSeen.includes(address)) {
                 //let balanceObj = ;
                 let balance = addressArr[1]
-                tBalanceSeen += balance
 
                 // Addresses that start with an 'R' and dont include an account field are labeled
                 // as change
@@ -92,6 +95,21 @@ module.exports = (api) => {
             });
           });
 
+          if (includeCurrencyBalances) {
+            for (const address in addressGroupingsParsed) {
+              let balances = await api.native.get_addr_balance(coin, address, true, txcount, Number(totalBalance.total))
+
+              addressGroupingsParsed[address] = {
+                tag: addressGroupingsParsed[address].tag,
+                address: addressGroupingsParsed[address].address,
+                balances: {
+                  native: balances[coin],
+                  reserve: {...balances, [coin]: null}
+                }
+              }
+            }
+          }
+
           // Filter out addresses according to settings
           resObj.public = resObj.public.concat(Object.values(addressGroupingsParsed).filter(addressObj => {
             const { tag, balances } = addressObj
@@ -106,9 +124,6 @@ module.exports = (api) => {
           //Compile private addresses and addresses not covered by listaddressgroupings
           let fullAddrList = privateAddrListResult.concat(addressesByAccount);
 
-          const totalZBalance = Number(totalBalance.private);
-          const totalTBalance = Number(totalBalance.transparent);
-
           for (let i = 0; i < fullAddrList.length; i++) {
             const address = fullAddrList[i];
 
@@ -118,21 +133,11 @@ module.exports = (api) => {
               let balanceObj = { native: 0, reserve: {} };
 
               try {
-                //If balance for type has been reached, stop checking balances, improves performance
-                if (
-                  (isZ && zBalanceSeen < totalZBalance) ||
-                  (!isZ && tBalanceSeen < totalTBalance)
-                ) {
-                  balanceObj.native = Number(
-                    await api.native.get_addr_balance(coin, address, true, txcount, Number(totalBalance.total))
-                  );
+                let balances = await api.native.get_addr_balance(coin, address, true, txcount, Number(totalBalance.total))
 
-                  isZ
-                    ? (zBalanceSeen += balanceObj.native)
-                    : (tBalanceSeen += balanceObj.native);
-                } else {
-                  balanceObj.native = 0;
-                }
+                balanceObj.native = balances[coin]
+
+                balanceObj.reserve = {...balances, [coin]: null}
 
                 const addrObj = {
                   address,
@@ -152,6 +157,8 @@ module.exports = (api) => {
               } catch (e) {
                 throw e;
               }
+
+              pubAddrsSeen.push(address)
             }
           }
 
@@ -299,7 +306,7 @@ module.exports = (api) => {
   
       res.send(JSON.stringify(retObj));  
     })
-  });
+  }, true);
 
   return api;
 };

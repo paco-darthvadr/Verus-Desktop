@@ -143,6 +143,8 @@ api = require('./api/native/transactions')(api);
 api = require('./api/native/zoperations')(api);
 api = require('./api/native/remove')(api);
 api = require('./api/native/send.js')(api);
+api = require('./api/native/sendcurrency.js')(api);
+api = require('./api/native/reservetransfers.js')(api);
 api = require('./api/native/nameRegistration.js')(api);
 api = require('./api/native/idRegistration.js')(api);
 api = require('./api/native/idRevocation.js')(api);
@@ -173,13 +175,11 @@ api = require('./api/binsUtils.js')(api);
 api = require('./api/downloadUtil.js')(api);
 api = require('./api/pin.js')(api);
 api = require('./api/downloadZcparams.js')(api);
-api = require('./api/coinsList.js')(api);
 api = require('./api/rpc.js')(api);
 api = require('./api/confMaxconnections.js')(api);
 api = require('./api/appInfo.js')(api);
 api = require('./api/conf.js')(api);
 api = require('./api/daemonControl.js')(api);
-api = require('./api/addressBook.js')(api);
 api = require('./api/system.js')(api);
 
 // Utility APIs
@@ -206,7 +206,6 @@ api = require('./api/eth/info')(api);
 api = require('./api/eth/transactions.js')(api);
 api = require('./api/eth/coins.js')(api);
 api = require('./api/eth/gasPrice.js')(api);
-api = require('./api/eth/utils.js')(api);
 api = require('./api/eth/remove')(api);
 api = require('./api/eth/send.js')(api);
 api = require('./api/eth/contracts/rfox/migration')(api);
@@ -241,10 +240,6 @@ if (api.appConfig.general.electrum &&
 }
 
 api.checkCoinConfigIntegrity();
-
-if (api.appConfig.general.main.loadCoinsFromStorage) {
-  api.loadCoinsListFromFile();
-}
 
 // Diagnostic and debugging info
 api = require('./api/diagnostics.js')(api);

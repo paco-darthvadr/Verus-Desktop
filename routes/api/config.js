@@ -144,7 +144,7 @@ module.exports = (api) => {
    *  type: POST
    *  params: none
    */
-  api.setPost('config/reset', (req, res, next) => {
+  api.setPost('/config/reset', (req, res, next) => {
     api.saveLocalAppConf(api.defaultAppConfig);
 
     const retObj = {

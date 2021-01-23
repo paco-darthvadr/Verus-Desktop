@@ -4,6 +4,7 @@ const os = require('os');
 let agamaIcon;
 let fetchWindow = null
 const path = require('path');
+const { dialog } = require('electron')
 
 if (os.platform() === 'linux') {
 	agamaIcon = path.join(__dirname, '/assets/icons/vrsc_512x512x32.png');
@@ -22,13 +23,26 @@ function createFetchBoostrapWindow(chainTicker, appConfig) {
 			backgroundColor: "#3165D4",
 			show: false,
 			title: `Fetch ${chainTicker} Bootstrap`,
-			contextIsolation: true
+			webPreferences: {
+				enableRemoteModule: true,
+				nodeIntegration: true
+			}
 		});
+
+		fetchWindow.webContents.on('devtools-opened', () => {
+			dialog.showMessageBox(fetchWindow, {
+				type: "warning",
+				title: "Be Careful!",
+				message: "WARNING! You are opening the developer tools menu. ONLY enter commands here if you know exactly what you are doing. If someone told you to copy+paste commands into here, you should probably ignore them, close dev tools, and stay safe.",
+				buttons: ["OK"],
+			})
+		});
+
 		fetchWindow.show();
-	
+		
 		fetchWindow.loadURL(
 			appConfig.general.main.dev || process.argv.indexOf("devmode") > -1
-				? `http://${appConfig.general.main.host}:${appConfig.general.main.agamaPort}/gui/fetch-bootstrap/fetch-bootstrap.html?ticker=${chainTicker}`
+				? `http://127.0.0.1:${appConfig.general.main.agamaPort}/gui/fetch-bootstrap/fetch-bootstrap.html?ticker=${chainTicker}`
 				: `file://${__dirname}/../../../gui/fetch-bootstrap/fetch-bootstrap.html?ticker=${chainTicker}`
 		);
 

@@ -1,5 +1,5 @@
 var cp = require('child_process');
-const { dialog } = require('electron');
+const { dialog } = require('../../../../api/utils/dialog-shim');
 const api = require('../../../../api');
 const {
   closeBootstrapWindow,
@@ -15,7 +15,7 @@ function setup(print) {
       type: "question",
       title: "Bootstrap VRSC?",
       message: "Would you like to speed up syncing to the Verus blockchain by downloading blockchain data from the internet?\n\n" +
-          "This will run a script to download blockchain information from veruscoin.io.\n\nBefore accepting, "  +
+          "This will run a script to download blockchain information from verus.io.\n\nBefore accepting, "  +
           "make sure that any running instances of Verus in native mode are shut down.\n\nWhile the script is running, please do not " +
           "close the script window, or start Verus in native mode. When it is finished, it will close itself.",
       buttons: ["Yes", "No"]
