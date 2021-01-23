@@ -15,7 +15,7 @@ module.exports = (api) => {
   api.isPbaasDaemon = (daemon, coin) => {
     return daemon === 'verusd' && api.appConfig.general.main.reservedChains.indexOf(coin) === -1
   }
-  
+
   api.processChainArgs = (coin, paramArray) => {
     const paramString = paramArray.join(' ')
     api.native.startParams[coin] = paramString;
@@ -47,7 +47,7 @@ module.exports = (api) => {
               "native.process"
             );
             api.logFileIndex[coin] = logName
-  
+
             resolve()
           })
           .catch(e => reject(e))
@@ -93,7 +93,7 @@ module.exports = (api) => {
           return fs.appendFile(confFile, `\nrpcport=${fallbackPort}`)
         } else {
           api.log(`no ${coin} default port or fallback port found, finding available port...`, "native.process");
-  
+
           return new Promise((resolve, reject) => {
             portscanner.findAPortNotInUse(3000, 3010, '127.0.0.1')
             .then(port => {
@@ -102,7 +102,7 @@ module.exports = (api) => {
             })
             .then(resolve)
             .catch(e => reject(e))
-          }) 
+          })
         }
       }
 
@@ -134,7 +134,7 @@ module.exports = (api) => {
         .then(async () => {
           api.log(`located ${confFile}`, "native.debug");
           api.confFileIndex[coin] = confFile
-          
+
           api.log(`setting permissions of ${confFile} to 0600`, "native.debug");
           await fs.chmod(confFile, '0600');
 
@@ -244,19 +244,19 @@ module.exports = (api) => {
             "native.process"
           );
 
-          return fs.mkdir(coinDir).then(() => {
+          return fs.mkdir(coinDir,{ recursive: true }).then(() => {
             api.log(
               `${coinDir} created...`,
               "native.process"
             );
-  
+
             resolve(false)
           })
           .catch(e => reject(e))
         })
         .catch(e => {
           api.log(
-            `error accessing ${coinDir}, doesnt exist or another proc is already running`,
+            `error accessing ${coinDir}, doesn't exist or another proc is already running`,
             "native.process"
           );
           reject(e);
@@ -305,7 +305,7 @@ module.exports = (api) => {
           })
           .catch(e => {
             api.log(
-              `failed to read ${coin} port from conf file, and/or it wasnt found in the default ports list!`,
+              `failed to read ${coin} port from conf file, and/or it wasn't found in the default ports list!`,
               "native.process"
             );
 
@@ -362,16 +362,16 @@ module.exports = (api) => {
       }, (error, stdout, stderr) => {
         api.writeLog(`stdout: ${stdout}`, 'native.debug');
         api.writeLog(`stderr: ${stderr}`, 'native.debug');
-  
+
         if (error !== null) {
           api.log(`exec error: ${error}`, 'native.debug');
           api.writeLog(`exec error: ${error}`, 'native.debug');
         }
       });
-  
+
       daemonChild.on('exit', (exitCode) => {
         const errMsg = `${daemon} exited with code ${exitCode}${exitCode === 0 ? '' : ', crashed?'}`;
-  
+
         fs.appendFile(`${api.paths.agamaDir}/${coin}.log`, errMsg, (err) => {
           if (err) {
             api.writeLog(errMsg);
@@ -383,7 +383,7 @@ module.exports = (api) => {
 
       daemonChild.on('error', (err) => {
         const errMsg = `${daemon} error: ${err.message}`;
-  
+
         fs.appendFile(`${api.paths.agamaDir}/${coin}.log`, errMsg, (err) => {
           if (err) {
             api.writeLog(errMsg);
@@ -402,11 +402,11 @@ module.exports = (api) => {
   }
 
   /**
-   * Start a coin daemon provided that start params, the daemon name, 
+   * Start a coin daemon provided that start params, the daemon name,
    * and optionally, the custom name of the coin data directory
    * @param {String} coin The chain ticker for the daemon to start
    * @param {String[]} acOptions Options to start the coin daemon with
-   * @param {String} deamon The name of the coin daemon binary
+   * @param {String} daemon The name of the coin daemon binary
    * @param {Object} dirNames An object containing the names of the coin data
    * directory, from the home directory of the system, on each different OS { darwin, linux, win32 }
    * @param {Number} fallbackPort (optional) The port that will be used if none if found for the coin
@@ -430,7 +430,7 @@ module.exports = (api) => {
         api.appConfig.coin.native.dataDir[coin].length > 0
       ) {
         api.log(`custom data dir detected, setting coin dir to ${api.appConfig.coin.native.dataDir[coin]}`, 'native.process');
-        
+
         api.setCoinDir(coinLc, {
           linux: api.appConfig.coin.native.dataDir[coin],
           darwin: api.appConfig.coin.native.dataDir[coin],
@@ -457,7 +457,7 @@ module.exports = (api) => {
           api.log(`${coin} dir path set to ${api.paths[`${coinLc}DataDir`]}...`, 'native.process');
         } else api.log(`${coin} data directory retrieved...`, 'native.process');
       }
-      
+
       api.log(`selected data: ${JSON.stringify(acOptions, null, '\t')}`, 'native.confd');
 
       api.initCoinDir(coinLc)
