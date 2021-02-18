@@ -118,7 +118,7 @@ const template = [
       {
         label: 'Show Verus Desktop Wallet data folder',
         click (item, focusedWindow) {
-          shell.openPath(pathsAgama().paths.agamaDir);
+          shell.openPath(pathsAgama(null, global.HOME).paths.agamaDir);
         }
       },
       {
