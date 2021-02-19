@@ -86,6 +86,7 @@ const appConfig = {
         includePrivateAddrs: zCoins,
         includePrivateBalances: zCoins,
         includePrivateTransactions: zCoins,
+        includePrivateAddressBalances: zCoins,
         stakeGuard: nativeCoinStrings,
         dataDir: nativeCoinStrings
       }

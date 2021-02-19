@@ -7,10 +7,10 @@ const {
   RPC_OK,
   RPC_PARSE_ERROR
 } = require("../utils/rpc/rpcStatusCodes");
-const RpcError = require('../utils/rpc/rpcError')
+const RpcError = require('../utils/rpc/rpcError');
 
 module.exports = (api) => {
-  api.native.callDaemon = (coin, cmd, params) => {   
+  api.native.callDaemon = (coin, cmd, params) => {  
     return new Promise(async (resolve, reject) => {
       let _payload;
   
@@ -31,16 +31,18 @@ module.exports = (api) => {
         };
       }
 
-      try {
-        const rpcJsonParsed = api.native.convertRpcJson(await api.sendToCli(_payload))
-
-        if (rpcJsonParsed.msg === 'success') resolve(rpcJsonParsed.result);
-        else reject(new RpcError(rpcJsonParsed.code, rpcJsonParsed.result))
-      } catch(e) {
-        api.log("RPC Error", "callDaemon")
-        api.log(e, "callDaemon")
-        reject(new RpcError(-1, "RPC Error"))
-      }
+      setImmediate(async () => {
+        try {
+          const rpcJsonParsed = api.native.convertRpcJson(await api.sendToCli(_payload))
+  
+          if (rpcJsonParsed.msg === 'success') resolve(rpcJsonParsed.result);
+          else reject(new RpcError(rpcJsonParsed.code, rpcJsonParsed.result))
+        } catch(e) {
+          api.log("RPC Error", "callDaemon")
+          api.log(e, "callDaemon")
+          reject(new RpcError(-1, "RPC Error"))
+        }
+      });
     });
   }
 

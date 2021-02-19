@@ -14,7 +14,7 @@ module.exports = (api) => {
     }
   }
   
-  api.native.get_addresses = (coin, includePrivate) => {
+  api.native.get_addresses = (coin, includePrivateAddresses, includePrivateBalances) => {
     // TODO: Update for mainnet, change to accomodate all verusd coins
     const includeCurrencyBalances =
       api.appConfig.general.native.showAddressCurrencyBalances &&
@@ -28,7 +28,7 @@ module.exports = (api) => {
         api.native.callDaemon(coin, "getwalletinfo", [])
       ];
 
-      if (includePrivate) {
+      if (includePrivateAddresses) {
         addressPromises.push(
           api.native.callDaemon(coin, "z_listaddresses", [])
         );
@@ -133,7 +133,15 @@ module.exports = (api) => {
               let balanceObj = { native: 0, reserve: {} };
 
               try {
-                let balances = await api.native.get_addr_balance(coin, address, true, txcount, Number(totalBalance.total))
+                let balances = includePrivateBalances
+                  ? await api.native.get_addr_balance(
+                      coin,
+                      address,
+                      true,
+                      txcount,
+                      Number(totalBalance.total)
+                    )
+                  : { [coin]: 0 };
 
                 balanceObj.native = balances[coin]
 
@@ -236,10 +244,11 @@ module.exports = (api) => {
   });
 
   api.setPost('/native/get_addresses', (req, res, next) => {
-    const includePrivate = req.body.includePrivate;
+    const includePrivateAddresses = req.body.includePrivateAddresses;
+    const includePrivateBalances = req.body.includePrivateBalances;
     const coin = req.body.chainTicker;
 
-    api.native.get_addresses(coin, includePrivate)
+    api.native.get_addresses(coin, includePrivateAddresses, includePrivateBalances)
     .then((addresses) => {
       const retObj = {
         msg: 'success',

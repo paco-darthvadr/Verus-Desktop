@@ -71,7 +71,7 @@ module.exports = api => {
         
 
       Promise.all(transactionPromises)
-        .then(jsonResults => {
+        .then(async jsonResults => {
           jsonResults.map((result, index) => {
             if (index === PUBLIC_TRANSACTIONS) {
               // Filter out extra two transactions associated with each stake
@@ -93,17 +93,16 @@ module.exports = api => {
             }
           });
 
-          return Promise.all(
-            privateAddresses.map(address => {
-              return api.native.callDaemon(
-                coin,
-                "z_listreceivedbyaddress",
-                [address, 0]
-              );
-            })
-          );
-        })
-        .then(receivedByAddressList => {
+          let receivedByAddressList = []
+
+          for (const address of privateAddresses) {
+            receivedByAddressList.push(await api.native.callDaemon(
+              coin,
+              "z_listreceivedbyaddress",
+              [address, 0]
+            ))
+          }
+
           const privateTxs = receivedByAddressList
             .map((receivedByAddressArray, addressIndex) => {
               return receivedByAddressArray.map(privTx => {
