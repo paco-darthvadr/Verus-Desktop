@@ -10,10 +10,10 @@ module.exports = (api) => {
 
   api.checkToken = (validity_key, path, time) => {
     if (api.seenTimes.includes(time)) throw new Error("Cannot repeat call");
-    else if (Math.abs(new Date().valueOf() - time) > 60000) throw new Error("Cannot make expired call.");
+    else if (Math.abs(new Date().valueOf() - time) > 600000) throw new Error("Cannot make expired call.");
     else {
       let newSeenTimes = [...api.seenTimes, time]
-      newSeenTimes = newSeenTimes.filter(x => (x > time - 60000 && x < time + 60000))
+      newSeenTimes = newSeenTimes.filter(x => (x > time - 600000 && x < time + 600000))
 
       api.seenTimes = newSeenTimes
     }
