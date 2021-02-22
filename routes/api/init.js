@@ -77,11 +77,22 @@ module.exports = (api) => {
         fs.mkdirSync(api.paths.backupDir);
 
         if (fs.existsSync(api.paths.backupDir)) {
-          api.log(`created verus desktop backup folder at ${api.paths.agamaDir}`, 'init');
-          api.writeLog(`created verus desktop backup folder at ${api.paths.agamaDir}`);
+          api.log(`created verus desktop backup folder at ${api.paths.backupDir}`, 'init');
+          api.writeLog(`created verus desktop backup folder at ${api.paths.backupDir}`);
         }
       } else {
         api.log('verus desktop backup folder already exists', 'init');
+      }
+
+      if (!fs.existsSync(api.paths.crashesDir)) {
+        fs.mkdirSync(api.paths.crashesDir);
+
+        if (fs.existsSync(api.paths.crashesDir)) {
+          api.log(`created verus desktop crash report folder at ${api.paths.crashesDir}`, 'init');
+          api.writeLog(`created verus desktop crash report folder at ${api.paths.crashesDir}`);
+        }
+      } else {
+        api.log('verus desktop crash report folder already exists', 'init');
       }
 
       if (!fs.existsSync(`${api.paths.agamaDir}/shepherd`)) {

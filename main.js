@@ -2,6 +2,7 @@
 // TODO: CLEANUP THIS FILE
 
 const electron = require('electron');
+const { crashReporter } = require('electron')
 const {
 	Menu,
 	ipcMain,
@@ -16,8 +17,6 @@ const osPlatform = os.platform();
 const express = require('express');
 const bodyParser = require('body-parser');
 const Promise = require('bluebird');
-const arch = require('arch');
-const chainParams = require('./routes/chainParams');
 const { formatBytes } = require('agama-wallet-lib/src/utils');
 const { dialog } = require('electron')
 
@@ -49,6 +48,16 @@ const appBasicInfo = {
 
 app.setName(appBasicInfo.name);
 app.setVersion(appBasicInfo.version);
+
+if (appConfig.general.main.uploadCrashReports) {
+	app.setPath('crashDumps', api.paths.crashesDir)
+	crashReporter.start({
+		productName: 'Dev-Testing',
+		companyName: 'devtesting',
+		submitURL: 'https://submit.backtrace.io/devtesting/f127b8ff9b6701ef2269f63233cc31792cf581843a804cfd0945103ee575d05b/minidump',
+		uploadToServer: true,
+	})
+}
 
 // parse argv
 let _argv = {};

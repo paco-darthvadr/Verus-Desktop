@@ -36,6 +36,7 @@ const appConfig = {
           linux: 1000000
         },
         dev: false,
+        uploadCrashReports: false,
         debug: false,
         roundValues: false,
         experimentalFeatures: false,
@@ -115,6 +116,12 @@ const appConfig = {
           type: "checkbox",
           displayName: "Dev Mode",
           info: "Run Verus in devmode, where it will search for a running GUI instead of using the pre-compiled one.",
+          hidden: true
+        },
+        uploadCrashReports: {
+          type: "checkbox",
+          displayName: "",
+          info: "",
           hidden: true
         },
         pbaasTestmode: {
