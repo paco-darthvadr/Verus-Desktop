@@ -149,7 +149,12 @@ guiapp.use('/gui', express.static(guipath));
 guiapp.use('/api', api);
 
 const server = require('http').createServer(guiapp);
-let io = require('socket.io').listen(server);
+let io = require('socket.io')(server, {
+	cors: {
+		origin: appConfig.general.main.dev || process.argv.indexOf('devmode') > -1 ? 'http://127.0.0.1:3000' : null,
+		methods: ["GET", "POST"]
+	}
+})
 
 // Set httpServer timeout to 10 minutes
 io.httpServer.timeout = 600000
@@ -181,8 +186,6 @@ if (!_argv.nogui ||
 } else {
 	server.listen(appConfig.general.main.agamaPort, async () => {
 		api.log(`guiapp and sockets.io are listening on port ${appConfig.general.main.agamaPort}`, 'init');
-		// start sockets.io
-		io.set('origins', appConfig.general.main.dev  || process.argv.indexOf('devmode') > -1 ? 'http://127.0.0.1:3000' : null); // set origin
 	});
 	api.setIO(io); // pass sockets object to api router
 	api.setVar('appBasicInfo', appBasicInfo);
@@ -267,8 +270,6 @@ function createWindow(status) {
 			if (status === 'closed') {
 				server.listen(appConfig.general.main.agamaPort, () => {
 					api.log(`guiapp and sockets.io are listening on port ${appConfig.general.main.agamaPort}`, 'init');
-					// start sockets.io
-					io.set('origins', appConfig.general.main.dev || process.argv.indexOf('devmode') > -1 ? 'http://127.0.0.1:3000' : null); // set origin
 				});
 
 				// initialise window
