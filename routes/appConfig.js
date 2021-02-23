@@ -36,6 +36,7 @@ const appConfig = {
           linux: 1000000
         },
         dev: false,
+        livelog: false,
         uploadCrashReports: false,
         debug: false,
         roundValues: false,
@@ -116,6 +117,12 @@ const appConfig = {
           type: "checkbox",
           displayName: "Dev Mode",
           info: "Run Verus in devmode, where it will search for a running GUI instead of using the pre-compiled one.",
+          hidden: true
+        },
+        livelog: {
+          type: "checkbox",
+          displayName: "Live Logs",
+          info: "Save app behaviour to a log file while the app is running.",
           hidden: true
         },
         uploadCrashReports: {

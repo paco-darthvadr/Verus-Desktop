@@ -102,7 +102,6 @@ module.exports = (api) => {
 
       api.log('config.json write file is done', 'settings');
       api.log(`app config.json file is created successfully at: ${api.paths.agamaDir}`, 'settings');
-      api.writeLog(`app config.json file is created successfully at: ${api.paths.agamaDir}`);
     } catch (e) {
       api.log('error writing config', 'settings');
       api.log(e, 'settings');

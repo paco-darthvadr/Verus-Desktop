@@ -29,6 +29,7 @@ global.HOME = os.platform() === "win32" ? process.env.APPDATA : process.env.HOME
 
 // GUI APP settings and starting gui on address http://120.0.0.1:17777
 let api = require('./routes/api');
+api.clearWriteLog()
 const { appSecretToken, apiShieldKey } = require('./routes/preloads/keys');
 
 const guiapp = express();

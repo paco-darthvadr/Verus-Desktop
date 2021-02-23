@@ -67,7 +67,6 @@ module.exports = (api) => {
       const localElectrumServersList = fs.readFileSync(`${api.paths.agamaDir}/electrumServers.json`, 'utf8');
 
       api.log('electrum servers list set from local file', 'spv.serverList');
-      api.writeLog('electrum servers list set from local file');
 
       try {
         api.electrumServers = JSON.parse(localElectrumServersList);
@@ -77,7 +76,6 @@ module.exports = (api) => {
       }
     } else {
       api.log('local electrum servers list file is not found!', 'spv.serverList');
-      api.writeLog('local lectrum servers list file is not found!');
 
       api.saveElectrumServersList();
     }
@@ -100,7 +98,6 @@ module.exports = (api) => {
 
             setTimeout(() => {
               api.log(result, 'spv.serverList');
-              api.writeLog(result);
               resolve(result);
             }, 1000);
           });
@@ -119,7 +116,6 @@ module.exports = (api) => {
             setTimeout(() => {
               api.log(result, 'spv.serverList');
               api.log(`electrumServers.json file is created successfully at: ${api.paths.agamaDir}`, 'spv.serverList');
-              api.writeLog(`electrumServers.json file is created successfully at: ${api.paths.agamaDir}`);
               resolve(result);
             }, 2000);
           });
@@ -144,7 +140,6 @@ module.exports = (api) => {
 
             setTimeout(() => {
               api.log(result, 'spv.serverList');
-              api.writeLog(result);
               resolve(result);
             }, 1000);
           });
@@ -163,7 +158,6 @@ module.exports = (api) => {
             setTimeout(() => {
               api.log(result, 'spv.serverList');
               api.log(`kvElectrumServersCache.json file is created successfully at: ${api.paths.agamaDir}`, 'spv.serverList');
-              api.writeLog(`kvElectrumServersCache.json file is created successfully at: ${api.paths.agamaDir}`);
               resolve(result);
             }, 2000);
           });

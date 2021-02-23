@@ -346,7 +346,6 @@ module.exports = (api) => {
           // Status is 'open' if currently in use or 'closed' if available
           const portStatus = status === 'closed' ? 'AVAILABLE' : 'UNAVAILABLE'
           api.log(`port check on port ${port} returned: ${portStatus}`, 'native.checkPort');
-          api.writeLog(`port check on port ${port} returned: ${portStatus}`);
 
           resolve(status === 'closed' ? 'AVAILABLE' : 'UNAVAILABLE')
         })
@@ -360,12 +359,9 @@ module.exports = (api) => {
       const daemonChild = execFile(`${api.paths[daemon + 'Bin']}`, acOptions, {
         maxBuffer: 1024 * 1000000, // 1000 mb
       }, (error, stdout, stderr) => {
-        api.writeLog(`stdout: ${stdout}`, 'native.debug');
-        api.writeLog(`stderr: ${stderr}`, 'native.debug');
 
         if (error !== null) {
           api.log(`exec error: ${error}`, 'native.debug');
-          api.writeLog(`exec error: ${error}`, 'native.debug');
         }
       });
 
@@ -374,7 +370,6 @@ module.exports = (api) => {
 
         fs.appendFile(`${api.paths.agamaDir}/${coin}.log`, errMsg, (err) => {
           if (err) {
-            api.writeLog(errMsg);
             api.log(errMsg, 'native.debug');
           }
           api.log(errMsg, 'native.debug');
@@ -386,7 +381,6 @@ module.exports = (api) => {
 
         fs.appendFile(`${api.paths.agamaDir}/${coin}.log`, errMsg, (err) => {
           if (err) {
-            api.writeLog(errMsg);
             api.log(errMsg, 'native.debug');
           }
           api.log(errMsg, 'native.debug');

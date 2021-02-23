@@ -68,7 +68,6 @@ module.exports = (shepherd) => {
       const localElectrumServersList = fs.readFileSync(`${shepherd.agamaDir}/electrumServers.json`, 'utf8');
 
       shepherd.log('electrum servers list set from local file');
-      shepherd.writeLog('electrum servers list set from local file');
 
       try {
         shepherd.electrumServers = JSON.parse(localElectrumServersList);
@@ -78,7 +77,6 @@ module.exports = (shepherd) => {
       }
     } else {
       shepherd.log('local electrum servers list file is not found!');
-      shepherd.writeLog('local lectrum servers list file is not found!');
 
       shepherd.saveElectrumServersList();
     }
@@ -101,7 +99,6 @@ module.exports = (shepherd) => {
 
             setTimeout(() => {
               shepherd.log(result);
-              shepherd.writeLog(result);
               resolve(result);
             }, 1000);
           });
@@ -120,7 +117,6 @@ module.exports = (shepherd) => {
             setTimeout(() => {
               shepherd.log(result);
               shepherd.log(`electrumServers.json file is created successfully at: ${shepherd.agamaDir}`);
-              shepherd.writeLog(`electrumServers.json file is created successfully at: ${shepherd.agamaDir}`);
               resolve(result);
             }, 2000);
           });
@@ -145,7 +141,6 @@ module.exports = (shepherd) => {
 
             setTimeout(() => {
               shepherd.log(result);
-              shepherd.writeLog(result);
               resolve(result);
             }, 1000);
           });
@@ -164,7 +159,6 @@ module.exports = (shepherd) => {
             setTimeout(() => {
               shepherd.log(result);
               shepherd.log(`kvElectrumServersCache.json file is created successfully at: ${shepherd.agamaDir}`);
-              shepherd.writeLog(`kvElectrumServersCache.json file is created successfully at: ${shepherd.agamaDir}`);
               resolve(result);
             }, 2000);
           });
