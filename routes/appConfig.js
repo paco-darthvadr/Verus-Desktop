@@ -67,12 +67,13 @@ const appConfig = {
         syncServerListFromKv: false
       },
       native: {
+        passiveMode: false,
         rpc2cli: false,
         cliStopTimeout: 30000,
         failedRPCAttemptsThreshold: 10,
         stopNativeDaemonsOnQuit: true,
         dataDir: "",
-        maxTxListLength: 2147483647,
+        maxTxListLength: 10000,
         csvListtransactionsMaxLength: 1000,
         zcashParamsSrc: "verus.io",
         includeP2shAddrs: false,
@@ -168,6 +169,11 @@ const appConfig = {
           type: "number_input",
           displayName: "Max Transaction List Length",
           info: "The maximum number of transactions to fetch per call."
+        },
+        passiveMode: {
+          type: "checkbox",
+          displayName: "Passive Mode",
+          info: "Enabling passive mode greatly reduces the frequency of data fetch calls, and is best used for long term mining/staking wallets."
         },
         zcashParamsSrc: {
           type: "dropdown",

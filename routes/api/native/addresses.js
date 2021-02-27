@@ -131,39 +131,45 @@ module.exports = (api) => {
               const addrTag = api.native.getAddressType(address);
               const isZ = addrTag === "sapling" || addrTag === "sprout";
               let balanceObj = { native: 0, reserve: {} };
+              let balances = { [coin]: 0 }
 
-              try {
-                let balances = includePrivateBalances
-                  ? await api.native.get_addr_balance(
-                      coin,
-                      address,
-                      true,
-                      txcount,
-                      Number(totalBalance.total)
-                    )
-                  : { [coin]: 0 };
-
-                balanceObj.native = balances[coin]
-
-                balanceObj.reserve = {...balances, [coin]: null}
-
-                const addrObj = {
-                  address,
-                  tag: addrTag,
-                  balances: balanceObj
-                };
-
-                if (
-                  addrObj.tag !== "P2SH" ||
-                  (addrObj.tag === "P2SH" &&
-                    api.appConfig.general.native.includeP2shAddrs)
-                ) {
-                  isZ
-                    ? resObj.private.push(addrObj)
-                    : resObj.public.push(addrObj);
+              if (includePrivateBalances) {
+                try {
+                  balances = await api.native.get_addr_balance(
+                    coin,
+                    address,
+                    true,
+                    txcount,
+                    Number(totalBalance.total)
+                  );
+                } catch(e) {
+                  api.log('Failed to fetch balance for ' + address, 'get_addresses');
+                  
+                  if (e.code === 404) {
+                    api.log('Error implies daemon stopped, cancelling address fetch', 'get_addresses');
+                    throw e
+                  }
                 }
-              } catch (e) {
-                throw e;
+              }
+
+              balanceObj.native = balances[coin]
+
+              balanceObj.reserve = {...balances, [coin]: null}
+
+              const addrObj = {
+                address,
+                tag: addrTag,
+                balances: balanceObj
+              };
+
+              if (
+                addrObj.tag !== "P2SH" ||
+                (addrObj.tag === "P2SH" &&
+                  api.appConfig.general.native.includeP2shAddrs)
+              ) {
+                isZ
+                  ? resObj.private.push(addrObj)
+                  : resObj.public.push(addrObj);
               }
 
               pubAddrsSeen.push(address)
