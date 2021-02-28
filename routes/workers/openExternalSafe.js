@@ -66,6 +66,7 @@ const allowedOrigins = [
   'explorer.qtum.org',
   'denarius.name',
   'etherscan.io/tx/',
+  'etherscan.io',
   'live.blockcypher.com/ltc/tx/',
   'live.blockcypher.com/doge/tx/',
   'live.blockcypher.com/dash/tx/',
