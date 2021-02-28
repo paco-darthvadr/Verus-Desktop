@@ -1,9 +1,9 @@
 const {
-	dialog,
 	shell
 } = require('electron');
 const version_json = require('../../../version.json')
 const updateAvailable = require('../../workers/check_update')
+const { dialog } = require('../utils/dialog-shim');
 
 module.exports = (api) => {
   api.promptUpdate = (mainWindow, userInitiated) => {

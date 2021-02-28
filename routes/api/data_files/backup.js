@@ -40,11 +40,9 @@ module.exports = (api) => {
         `appdata backup created at ${backupPath}`,
         "backup"
       );
-      api.writeLog(`appdata backup created at ${backupPath}`);
       return
     } catch (e) {
       api.log(e, 'backup');
-      api.writeLog(e)
       throw e
     }
   };

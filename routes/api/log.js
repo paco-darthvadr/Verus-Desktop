@@ -1,5 +1,6 @@
 const fs = require('fs-extra');
 const Promise = require('bluebird');
+const path = require('path')
 const { secondsToString } = require('agama-wallet-lib/src/time');
 
 module.exports = (api) => {
@@ -14,6 +15,10 @@ module.exports = (api) => {
       }
     }
 
+    if (api.appConfig.general.main.livelog) {
+      api.writeLog(msg, type)
+    }
+
     api.appRuntimeLog.push({
       time: Date.now(),
       msg: msg,
@@ -21,25 +26,33 @@ module.exports = (api) => {
     });
   }
 
-  api.writeLog = (data) => {
-    const logLocation = `${api.paths.agamaDir}/shepherd`;
+  api.writeLog = (data, type) => {
+    const logLocation = api.paths.agamaDir;
     const timeFormatted = new Date(Date.now()).toLocaleString('en-US', { hour12: false });
+    const livelogPath = path.join(logLocation, 'Verus-Desktop.log')
 
-    if (api.appConfig.general.main.debug) {
-      if (fs.existsSync(`${logLocation}/agamalog.txt`)) {
-        fs.appendFile(`${logLocation}/agamalog.txt`, `${timeFormatted}  ${data}\r\n`, (err) => {
-          if (err) {
-            api.log('error writing log file');
-          }
-        });
-      } else {
-        fs.writeFile(`${logLocation}/agamalog.txt`, `${timeFormatted}  ${data}\r\n`, (err) => {
-          if (err) {
-            api.log('error writing log file');
-          }
-        });
-      }
+    if (fs.existsSync(livelogPath)) {
+      fs.appendFile(livelogPath, `${timeFormatted} [${type}] ${data}\r\n`, (err) => {
+        if (err) {
+          api.log('error appending live log file');
+        }
+      });
+    } else {
+      fs.writeFile(livelogPath, `${timeFormatted} [${type}] ${data}\r\n`, (err) => {
+        if (err) {
+          api.log('error writing live log file');
+        }
+      });
     }
+  }
+
+  api.clearWriteLog = () => {
+    const logLocation = api.paths.agamaDir;
+    const livelogPath = path.join(logLocation, 'Verus-Desktop.log')
+
+    if (fs.existsSync(livelogPath)) {
+      fs.writeFileSync(livelogPath, '');
+    } 
   }
 
   api.getAppRuntimeLog = () => {
@@ -50,10 +63,8 @@ module.exports = (api) => {
 
   api.printDirs = () => {
     api.log("DIR PATHS:", 'env')
-    api.writeLog("DIR PATHS:")
     for (const pathType in api.paths) {
       api.log(`${pathType}: ${api.paths[pathType]}`, 'env')
-      api.writeLog(`${pathType}: ${api.paths[pathType]}`);
     }
   }
 

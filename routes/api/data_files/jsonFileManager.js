@@ -4,7 +4,6 @@ const { ALLOWED_PATHS_ARR } = require('../utils/constants/index');
 module.exports = (api) => {
   api.handleFileProblem = (desc, throwError) => {
     api.log(desc, 'jsonFileManager');
-    api.writeLog(desc)
 
     if (throwError) {
       throw new Error(desc)
@@ -42,7 +41,6 @@ module.exports = (api) => {
         }
   
         api.log(`${path} set from local file`, 'loadJsonFile');
-        api.writeLog(`${path} set from local file`);
   
         return localJson
       } else {
@@ -97,7 +95,6 @@ module.exports = (api) => {
           `json file is created successfully at: ${path}`,
           "saveJsonFile"
         );
-        api.writeLog(`json file is created successfully at: ${path}`);
         return
       } catch (e) {
         api.handleFileProblem(e, !handleErrors)

@@ -1,7 +1,7 @@
 {
   "name": "verus-desktop",
   "productName": "Verus-Desktop",
-  "version": "0.7.2-8",
+  "version": "0.7.2-9",
   "description": "Verus Desktop Wallet App",
   "main": "main.js",
   "scripts": {
@@ -38,7 +38,7 @@
   "license": "MIT",
   "devDependencies": {
     "cross-env": "^5.2.1",
-    "electron": "^11.1.0",
+    "electron": "^11.3.0",
     "electron-builder": "22.9.1",
     "electron-devtools-installer": "^2.2.4",
     "electron-rebuild": "^1.11.0"
@@ -74,8 +74,8 @@
     "request": "^2.88.0",
     "semver-compare": "^1.0.0",
     "sha256": "^0.2.0",
-    "socket.io": "^2.1.1",
-    "systeminformation": "^4.34.7",
+    "socket.io": "^3.1.1",
+    "systeminformation": "^5.5.0",
     "wif": "^2.0.6"
   },
   "optionalDependencies": {
@@ -98,6 +98,7 @@
       "!gui/EasyDEX/react/src${/*}",
       "!gui/EasyDEX/react/www${/*}"
     ],
+    "includePdb": true,
     "asar": false,
     "mac": {
       "artifactName": "${productName}-v${version}.${ext}",

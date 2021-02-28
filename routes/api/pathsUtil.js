@@ -11,11 +11,13 @@ const pathsAgama = (api, home) => {
 
     api.paths.VerusDesktopDir = `${home}/Verus-Desktop`;
     api.paths.agamaDir = `${home}/Verus-Desktop/appdata`;
+    api.paths.crashesDir = `${home}/Verus-Desktop/crashes`;
     api.paths.backupDir = `${home}/Verus-Desktop/backups`;
 
     if (os.platform() === 'win32') {
       api.paths.VerusDesktopDir = path.normalize(api.paths.VerusDesktopDir);
       api.paths.agamaDir = path.normalize(api.paths.agamaDir);
+      api.paths.crashesDir = path.normalize(api.paths.crashesDir);
       api.paths.backupDir = path.normalize(api.paths.backupDir);
     }
 
@@ -27,6 +29,7 @@ const pathsAgama = (api, home) => {
         api.paths.VerusDesktopDir = `${home}/Library/Application Support/Verus-Desktop`;
 
         api.paths.agamaDir = `${home}/Library/Application Support/Verus-Desktop/appdata`;
+        api.paths.crashesDir = `${home}/Library/Application Support/Verus-Desktop/crashes`;
         api.paths.backupDir = `${home}/Library/Application Support/Verus-Desktop/backups`;
         return api;
         break;
@@ -35,6 +38,7 @@ const pathsAgama = (api, home) => {
         api.paths.VerusDesktopDir = `${home}/.verus-desktop`;
 
         api.paths.agamaDir = `${home}/.verus-desktop/appdata`;
+        api.paths.crashesDir = `${home}/.verus-desktop/crashes`;
         api.paths.backupDir = `${home}/.verus-desktop/backups`;
         return api;
         break;
@@ -45,6 +49,9 @@ const pathsAgama = (api, home) => {
 
         api.paths.agamaDir = `${home}/Verus-Desktop/appdata`;
         api.paths.agamaDir = path.normalize(api.paths.agamaDir);
+
+        api.paths.crashesDir = `${home}/Verus-Desktop/crashes`;
+        api.paths.crashesDir = path.normalize(api.paths.crashesDir);
 
         api.paths.backupDir = `${home}/Verus-Desktop/backups`;
         api.paths.backupDir = path.normalize(api.paths.backupDir);
