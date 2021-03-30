@@ -316,7 +316,6 @@ function createWindow(status) {
 				mainWindow = new BrowserWindow({
 					width: 500,
 					height: 355,
-					frame: false,
 					icon: agamaIcon,
 					show: false,
 					webPreferences: {

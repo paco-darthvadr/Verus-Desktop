@@ -148,6 +148,7 @@ api = require('./api/native/reservetransfers.js')(api);
 api = require('./api/native/nameRegistration.js')(api);
 api = require('./api/native/idRegistration.js')(api);
 api = require('./api/native/idRevocation.js')(api);
+api = require('./api/native/idUpdate.js')(api);
 api = require('./api/native/idInformation.js')(api);
 api = require('./api/native/getCurrencies.js')(api);
 api = require('./api/native/getCurrency.js')(api);
