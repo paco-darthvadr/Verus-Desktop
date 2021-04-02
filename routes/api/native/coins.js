@@ -59,9 +59,8 @@ module.exports = (api) => {
    * Function to activate coin daemon in native mode
    */
   api.setPost('/native/coins/activate', (req, res) => {
-    const { chainTicker, launchConfig } = req.body
+    const { chainTicker, launchConfig, startupOptions } = req.body
     let {
-      startupOptions,
       daemon,
       fallbackPort,
       dirNames,
@@ -69,17 +68,29 @@ module.exports = (api) => {
       tags,
     } = launchConfig;
 
+    let startupParams = [
+      ...(startupOptions == null ? [] : startupOptions),
+      ...(launchConfig.startupOptions == null ? [] : startupOptions),
+    ];
+
     if (
       api.appConfig.coin.native.stakeGuard[chainTicker] &&
       api.appConfig.coin.native.stakeGuard[chainTicker].length > 0
     ) {
-      startupOptions.push(`-cheatcatcher=${api.appConfig.coin.native.stakeGuard[chainTicker]}`)
+      startupParams.push(`-cheatcatcher=${api.appConfig.coin.native.stakeGuard[chainTicker]}`)
     }
+
+    // This removes any duplicates in startupParams, keeping the last index
+    startupParams = startupParams.filter((param, index) => {
+      return (index == (startupParams.length - 1)) || !startupParams.slice(index + 1).some(x => {
+        return x.split('=')[0] === param.split('=')[0]
+      }) 
+    })
 
     api.native
       .activateNativeCoin(
         chainTicker,
-        startupOptions,
+        startupParams,
         daemon,
         fallbackPort,
         dirNames,

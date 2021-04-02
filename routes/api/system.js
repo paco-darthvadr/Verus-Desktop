@@ -24,10 +24,10 @@ module.exports = (api) => {
    *  type: GET
    */
   api.setGet('/get_cpu_temp', (req, res, next) => {
-    const CPU_TEMP_UNSUPPORTED = -1
+    const CPU_TEMP_UNSUPPORTED = null
 
     si.cpuTemperature()
-    .then(data => {      
+    .then(data => {
       if (data.main && data.main === CPU_TEMP_UNSUPPORTED) throw new Error('unsupported_operation')
 
       res.send(JSON.stringify({
@@ -71,7 +71,7 @@ module.exports = (api) => {
         msg: 'success',
         result: si.time()
       }));
-    } catch (e) {      
+    } catch (e) {
       res.send(JSON.stringify({
         msg: 'error',
         result: e.message

@@ -1,5 +1,5 @@
 const Promise = require('bluebird');
-const request = require('request');
+const { randomBytes } = require('crypto');
 const {
   RPC_TIMEOUT,
   RPC_WORK_QUEUE_DEPTH_EXCEEDED,
@@ -7,12 +7,13 @@ const {
   RPC_OK,
   RPC_PARSE_ERROR
 } = require("../utils/rpc/rpcStatusCodes");
-const RpcError = require('../utils/rpc/rpcError')
+const RpcError = require('../utils/rpc/rpcError');
 
 module.exports = (api) => {
-  api.native.callDaemon = (coin, cmd, params) => {   
+  api.native.callDaemon = (coin, cmd, params) => {  
     return new Promise(async (resolve, reject) => {
       let _payload;
+      let req_id = randomBytes(8).toString('hex')
   
       if (params) {
         _payload = {
@@ -31,16 +32,33 @@ module.exports = (api) => {
         };
       }
 
-      try {
-        const rpcJsonParsed = api.native.convertRpcJson(await api.sendToCli(_payload))
-
-        if (rpcJsonParsed.msg === 'success') resolve(rpcJsonParsed.result);
-        else reject(new RpcError(rpcJsonParsed.code, rpcJsonParsed.result))
-      } catch(e) {
-        api.log("RPC Error", "callDaemon")
-        api.log(e, "callDaemon")
-        reject(new RpcError(-1, "RPC Error"))
+      if (api.appConfig.general.main.livelog) {
+        api.writeLog(`chain: ${coin}, cmd: ${cmd}`, `native.rpc.request.header ${req_id}`)
+        api.writeLog(params ? JSON.stringify(params) : "[]", `native.rpc.request.body ${req_id}`)
       }
+
+      setImmediate(async () => {
+        try {
+          const rpcJsonParsed = api.native.convertRpcJson(await api.sendToCli(_payload))
+  
+          if (rpcJsonParsed.msg === 'success') {
+            if (api.appConfig.general.main.livelog) {
+              api.writeLog(JSON.stringify(rpcJsonParsed, null, 2), `native.rpc.success.result ${req_id}`)
+            }
+
+            resolve(rpcJsonParsed.result);
+          } else {
+            if (api.appConfig.general.main.livelog) {
+              api.writeLog(JSON.stringify(rpcJsonParsed, null, 2), `native.rpc.error ${req_id}`)
+            }
+
+            reject(new RpcError(rpcJsonParsed.code, rpcJsonParsed.result))
+          }
+        } catch(e) {
+          api.log(e, `native.daemon.error ${req_id}`)
+          reject(new RpcError(-1, "RPC Error"))
+        }
+      });
     });
   }
 

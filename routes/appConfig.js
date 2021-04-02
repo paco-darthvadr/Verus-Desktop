@@ -36,6 +36,8 @@ const appConfig = {
           linux: 1000000
         },
         dev: false,
+        livelog: false,
+        uploadCrashReports: false,
         debug: false,
         roundValues: false,
         experimentalFeatures: false,
@@ -65,14 +67,15 @@ const appConfig = {
         syncServerListFromKv: false
       },
       native: {
+        passiveMode: false,
         rpc2cli: false,
         cliStopTimeout: 30000,
         failedRPCAttemptsThreshold: 10,
         stopNativeDaemonsOnQuit: true,
         dataDir: "",
-        maxTxListLength: 2147483647,
+        maxTxListLength: 10000,
         csvListtransactionsMaxLength: 1000,
-        zcashParamsSrc: "z.cash",
+        zcashParamsSrc: "verus.io",
         includeP2shAddrs: false,
         includeEmptyChangeAddrs: false,
         defaultShowEmptyAddrs: true,
@@ -86,6 +89,7 @@ const appConfig = {
         includePrivateAddrs: zCoins,
         includePrivateBalances: zCoins,
         includePrivateTransactions: zCoins,
+        includePrivateAddressBalances: zCoins,
         stakeGuard: nativeCoinStrings,
         dataDir: nativeCoinStrings
       }
@@ -108,12 +112,24 @@ const appConfig = {
           type: "number_input",
           displayName: "Verus Port",
           info:
-            "The port with which the Verus GUI will communcate with its back end."
+            "The port that the Verus GUI will use to communicate with its back end."
         },
         dev: {
           type: "checkbox",
           displayName: "Dev Mode",
           info: "Run Verus in devmode, where it will search for a running GUI instead of using the pre-compiled one.",
+          hidden: true
+        },
+        livelog: {
+          type: "checkbox",
+          displayName: "Live Logs",
+          info: "Save app behaviour to a log file while the app is running.",
+          hidden: true
+        },
+        uploadCrashReports: {
+          type: "checkbox",
+          displayName: "",
+          info: "",
           hidden: true
         },
         pbaasTestmode: {
@@ -124,7 +140,7 @@ const appConfig = {
         },
         alwaysPromptUpdates: {
           type: "checkbox",
-          displayName: "Notfy me about all app updates",
+          displayName: "Notify me about all app updates",
           info: "Enables update notifications on app start for all updates, including non-mandatory."
         },
         encryptApiPost: {
@@ -154,6 +170,11 @@ const appConfig = {
           displayName: "Max Transaction List Length",
           info: "The maximum number of transactions to fetch per call."
         },
+        passiveMode: {
+          type: "checkbox",
+          displayName: "Passive Mode",
+          info: "Enabling passive mode greatly reduces the frequency of data fetch calls, and is best used for long term mining/staking wallets."
+        },
         zcashParamsSrc: {
           type: "dropdown",
           options: Object.keys(zcashParamsSources),
@@ -176,7 +197,7 @@ const appConfig = {
           type: "checkbox",
           displayName: "Include Empty Change Addresses",
           info:
-            "Include automatically generated change adresses in your address list, even if they're empty."
+            "Include automatically generated change addresses in your address list, even if they're empty."
         },
         defaultShowEmptyAddrs: {
           type: "checkbox",

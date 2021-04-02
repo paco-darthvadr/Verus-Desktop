@@ -1,6 +1,6 @@
 const Promise = require('bluebird');
 
-module.exports = (api) => {    
+module.exports = (api) => {
   /**
    * Registers an ID given the information from a previous name commitment
    * @param {String} coin The chainTicker of the coin that the ID is based on
@@ -8,8 +8,8 @@ module.exports = (api) => {
    * @param {String} txid The txid of the name reservation transaction
    * @param {String} salt The salt given as a result from the name reservation
    * @param {String[]} primaryaddresses An array of the primary addresses for this id
-   * @param {Number} minimumsignatures The minimum signitures required to sign a tx for this ID
-   * @param {String[]} contenthashes The content to initially attach to this id
+   * @param {Number} minimumsignatures The minimum signatures required to sign a tx for this ID
+   * @param {Object} contentmap The content to initially attach to this id
    * @param {String} revocationauthority The ID that can revoke this ID
    * @param {String} recoveryauthority The ID that can recover this ID
    * @param {String} privateaddress The private address attached to this ID
@@ -23,7 +23,7 @@ module.exports = (api) => {
     salt,
     primaryaddresses,
     minimumsignatures = 1,
-    contenthashes = [],
+    contentmap = {},
     revocationauthority,
     recoveryauthority,
     privateaddress,
@@ -40,7 +40,7 @@ module.exports = (api) => {
         name,
         primaryaddresses,
         minimumsignatures,
-        contenthashes,
+        contentmap,
         revocationauthority,
         recoveryauthority,
         privateaddress
@@ -94,7 +94,7 @@ module.exports = (api) => {
     salt,
     primaryaddresses,
     minimumsignatures = 1,
-    contenthashes = [],
+    contentmap = {},
     revocationauthority,
     recoveryauthority,
     privateaddress,
@@ -112,7 +112,8 @@ module.exports = (api) => {
         recoveryauthority,
         privateaddress,
         idFee,
-        referral
+        referral,
+        contentmap
       })
     });
   };
@@ -125,7 +126,7 @@ module.exports = (api) => {
       salt,
       primaryaddresses,
       minimumsignatures,
-      contenthashes,
+      contentmap,
       revocationauthority,
       recoveryauthority,
       privateaddress,
@@ -141,7 +142,7 @@ module.exports = (api) => {
         salt,
         primaryaddresses,
         minimumsignatures,
-        contenthashes,
+        contentmap,
         revocationauthority,
         recoveryauthority,
         privateaddress,
@@ -174,7 +175,7 @@ module.exports = (api) => {
       salt,
       primaryaddresses,
       minimumsignatures,
-      contenthashes,
+      contentmap,
       revocationauthority,
       recoveryauthority,
       privateaddress,
@@ -190,7 +191,7 @@ module.exports = (api) => {
         salt,
         primaryaddresses,
         minimumsignatures,
-        contenthashes,
+        contentmap,
         revocationauthority,
         recoveryauthority,
         privateaddress,

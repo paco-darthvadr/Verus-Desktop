@@ -62,3 +62,6 @@ build
 #MacOSX hidden cache files
 __MACOSX
 react/package.json
+
+# Build files
+dist/*

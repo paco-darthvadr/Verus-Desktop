@@ -175,7 +175,7 @@ var getCoinObj = function getCoinObj(chainTicker) {
         'eth': false
       },
       options: {
-        explorer: https://explorer.veruscoin.io, // (Optional) Explorer URL.
+        explorer: https://explorer.verus.io, // (Optional) Explorer URL.
         saplingHeight: 10000,                    // (Optional) height at which sapling will be activated for the chain
         dustThreshold: 0.00001,                  // (Optional) Network threshold for dust values
         daemon: 'verusd',                        // (Optional) Specify a custom daemon for native mode

@@ -105,14 +105,14 @@ module.exports = (api) => {
 
   api.setPost('/electrum/coins/activate', async(req, res, next) => {
     const { chainTicker, launchConfig } = req.body
-    const { customServers, tags, txFee, startupOptions } = launchConfig
+    const { customServers, tags, txFee } = launchConfig
 
     const result = await api.addElectrumCoin(
       chainTicker,
       customServers || [],
       tags,
       txFee,
-      startupOptions && startupOptions.nspv
+      false
     );
 
     const retObj = {

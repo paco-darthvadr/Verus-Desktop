@@ -17,12 +17,10 @@ module.exports = (api) => {
       }
 
       api.log('users set from local file', 'users');
-      api.writeLog('users set from local file');
 
       return localUsers
     } else {
       api.log('local users file is not found, saving empty json file.', 'users');
-      api.writeLog('local users file is not found, saving empty json file.');
       api.saveLocalUsers({});
 
       return {};
@@ -49,7 +47,6 @@ module.exports = (api) => {
       
       api.log('users.json write file is done', 'users');
       api.log(`app users.json file is created successfully at: ${api.paths.agamaDir}`, 'users');
-      api.writeLog(`app users.json file is created successfully at: ${api.paths.agamaDir}`);
     } catch (e) {
       api.log('error writing users', 'users');
       api.log(e, 'users');
@@ -77,7 +74,6 @@ module.exports = (api) => {
       
       api.log(`${usersFileName} write file is done`, 'users');
       api.log(`app ${usersFileName} file is created successfully at: ${api.paths.agamaDir}`, 'users');
-      api.writeLog(`app ${usersFileName} file is created successfully at: ${api.paths.agamaDir}`);
     } catch (e) {
       api.log('error writing users', 'users');
       api.log(e, 'users');

@@ -17,10 +17,8 @@ module.exports = (api) => {
           fs.copySync(`${api.paths.VerusDesktopDir}/${dir}`, `${api.paths.agamaDir}/${dir}`)
 
           api.log(`copied ${api.paths.VerusDesktopDir}/${dir} to ${api.paths.agamaDir}/${dir}`, 'init');
-          api.writeLog(`copied ${api.paths.VerusDesktopDir}/${dir} to ${api.paths.agamaDir}/${dir}`);
         } catch(e) {
           api.log(`error copying ${api.paths.VerusDesktopDir}/${dir} to ${api.paths.agamaDir}/${dir}`, 'init');
-          api.writeLog(`error copying ${api.paths.VerusDesktopDir}/${dir} to ${api.paths.agamaDir}/${dir}`);
         }
       }
     })
@@ -51,7 +49,6 @@ module.exports = (api) => {
 
         if (fs.existsSync(api.paths.VerusDesktopDir)) {
           api.log(`created verus desktop main folder at ${api.paths.VerusDesktopDir}`, 'init');
-          api.writeLog(`created verus desktop main folder at ${api.paths.VerusDesktopDir}`);
         }
       } else {
         api.log('verus desktop main folder already exists', 'init');
@@ -96,11 +93,20 @@ module.exports = (api) => {
         fs.mkdirSync(api.paths.backupDir);
 
         if (fs.existsSync(api.paths.backupDir)) {
-          api.log(`created verus desktop backup folder at ${api.paths.agamaDir}`, 'init');
-          api.writeLog(`created verus desktop backup folder at ${api.paths.agamaDir}`);
+          api.log(`created verus desktop backup folder at ${api.paths.backupDir}`, 'init');
         }
       } else {
         api.log('verus desktop backup folder already exists', 'init');
+      }
+
+      if (!fs.existsSync(api.paths.crashesDir)) {
+        fs.mkdirSync(api.paths.crashesDir);
+
+        if (fs.existsSync(api.paths.crashesDir)) {
+          api.log(`created verus desktop crash report folder at ${api.paths.crashesDir}`, 'init');
+        }
+      } else {
+        api.log('verus desktop crash report folder already exists', 'init');
       }
 
       if (!fs.existsSync(`${api.paths.agamaDir}/shepherd`)) {
@@ -108,7 +114,6 @@ module.exports = (api) => {
 
         if (fs.existsSync(`${api.paths.agamaDir}/shepherd`)) {
           api.log(`created shepherd folder at ${api.paths.agamaDir}/shepherd`, 'init');
-          api.writeLog(`create shepherd folder at ${api.paths.agamaDir}/shepherd`);
         }
       } else {
         api.log('agama/shepherd folder already exists', 'init');
@@ -127,7 +132,6 @@ module.exports = (api) => {
 
           if (fs.existsSync(`${api.paths.agamaDir}/shepherd/${_subFolders[i]}`)) {
             api.log(`created ${_subFolders[i]} folder at ${api.paths.agamaDir}/shepherd/${_subFolders[i]}`, 'init');
-            api.writeLog(`create ${_subFolders[i]} folder at ${api.paths.agamaDir}/shepherd/${_subFolders[i]}`);
           }
         } else {
           api.log(`shepherd/${_subFolders[i]} folder already exists`, 'init');

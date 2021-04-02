@@ -82,6 +82,42 @@ module.exports = (api) => {
                   tag: "sapling"
                 }]
               }
+
+              const recoveryId = identities.find(
+                (listIdentityObject) => {
+                  return (
+                    listIdentityObject.identity.identityaddress ===
+                    formattedIds[i].identity.recoveryauthority
+                  );
+                }
+              );
+
+              formattedIds[i].canwriterecovery = recoveryId != null && recoveryId.status === 'active'
+              formattedIds[i].canwriterevocation = formattedIds[i].canwriterecovery
+
+              if (formattedIds[i].status === 'active') {
+                formattedIds[i].canrevoke = identities.some(
+                  (listIdentityObject) => {
+                    return (
+                      listIdentityObject.identity.identityaddress !==
+                        formattedIds[i].identity.identityaddress &&
+                      listIdentityObject.identity.identityaddress ===
+                      formattedIds[i].identity.revocationauthority && 
+                      listIdentityObject.status === 'active'
+                    );
+                  }
+                );
+              } else formattedIds[i].canrevoke = false
+
+              if (
+                formattedIds[i].status === "revoked" &&
+                recoveryId != null &&
+                recoveryId.status === "active"
+              ) {
+                formattedIds[i].canrecover =
+                  recoveryId.identity.identityaddress !==
+                  formattedIds[i].identity.identityaddress;
+              } else formattedIds[i].canrecover = false;
             } catch (e) {
               throw e;
             }

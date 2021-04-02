@@ -119,7 +119,6 @@ module.exports = (api) => {
 
             setTimeout(() => {
               api.log(result, 'spv.cache');
-              api.writeLog(result);
               resolve(result);
             }, 1000);
           });

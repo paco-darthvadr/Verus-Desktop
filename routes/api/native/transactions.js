@@ -7,19 +7,24 @@ const MAX_TRANSACTIONS = 2147483647 // Max # of transactions
 
 module.exports = api => {
   const getZTransactions = (coin, array, currentHeight) => {
-    let promiseArray = [];
-    for (let i = 0; i < array.length; i++) {
-      promiseArray.push(
-        new Promise((resolve, reject) => {
-          api.native
-            .get_transaction(coin, array[i].txid, true, currentHeight)
-            .then(__json => {
-              resolve(__json);
-            });
-        })
-      );
-    }
-    return Promise.all(promiseArray);
+    let txArray = [];
+
+    return new Promise(async (resolve, reject) => {
+      for (let i = 0; i < array.length; i++) {
+        try {
+          txArray.push(await api.native.get_transaction(coin, array[i].txid, true, currentHeight))
+        } catch(e) {
+          api.log('Failed to fetch transaction ' + array[i].txid, 'getZTransactions');
+                  
+          if (e.code === 404) {
+            api.log('Error implies daemon stopped, cancelling private txs fetch', 'getZTransactions');
+            reject(e)
+          }
+        }
+      }
+
+      resolve(txArray)
+    })
   };
 
   const getZTransactionGroups = (coin, array, results, currentHeight) => {
@@ -71,7 +76,7 @@ module.exports = api => {
         
 
       Promise.all(transactionPromises)
-        .then(jsonResults => {
+        .then(async jsonResults => {
           jsonResults.map((result, index) => {
             if (index === PUBLIC_TRANSACTIONS) {
               // Filter out extra two transactions associated with each stake
@@ -93,17 +98,16 @@ module.exports = api => {
             }
           });
 
-          return Promise.all(
-            privateAddresses.map(address => {
-              return api.native.callDaemon(
-                coin,
-                "z_listreceivedbyaddress",
-                [address, 0]
-              );
-            })
-          );
-        })
-        .then(receivedByAddressList => {
+          let receivedByAddressList = []
+
+          for (const address of privateAddresses) {
+            receivedByAddressList.push(await api.native.callDaemon(
+              coin,
+              "z_listreceivedbyaddress",
+              [address, 0]
+            ))
+          }
+
           const privateTxs = receivedByAddressList
             .map((receivedByAddressArray, addressIndex) => {
               return receivedByAddressArray.map(privTx => {

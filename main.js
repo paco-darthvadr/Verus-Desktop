@@ -1,4 +1,5 @@
 const electron = require('electron');
+const { crashReporter } = require('electron')
 const {
 	Menu,
 } = require('electron');
@@ -20,6 +21,7 @@ global.HOME = os.platform() === "win32" ? process.env.APPDATA : process.env.HOME
 
 // GUI APP settings and starting gui on address http://120.0.0.1:17777
 let api = require('./routes/api');
+api.clearWriteLog()
 const { MasterSecret, BuiltinSecret } = require('./routes/preloads/keys');
 
 const guiapp = express();
@@ -35,6 +37,16 @@ const appBasicInfo = {
 
 app.setName(appBasicInfo.name);
 app.setVersion(appBasicInfo.version);
+
+if (appConfig.general.main.uploadCrashReports) {
+	app.setPath('crashDumps', api.paths.crashesDir)
+	crashReporter.start({
+		productName: 'Dev-Testing',
+		companyName: 'devtesting',
+		submitURL: 'https://submit.backtrace.io/devtesting/f127b8ff9b6701ef2269f63233cc31792cf581843a804cfd0945103ee575d05b/minidump',
+		uploadToServer: true,
+	})
+}
 
 // parse argv
 let _argv = {};
@@ -129,7 +141,12 @@ guiapp.use('/gui', express.static(guipath));
 guiapp.use('/api', api);
 
 const server = require('http').createServer(guiapp);
-let io = require('socket.io').listen(server);
+let io = require('socket.io')(server, {
+	cors: {
+		origin: appConfig.general.main.dev || process.argv.indexOf('devmode') > -1 ? 'http://127.0.0.1:3000' : null,
+		methods: ["GET", "POST"]
+	}
+})
 
 // Set httpServer timeout to 10 minutes
 io.httpServer.timeout = 600000

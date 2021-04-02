@@ -19,6 +19,12 @@ module.exports = (api) => {
     const { id, builtin } = app_info
     var hash = blake2b(64)
 
+    if (api.seenTimes.includes(time)) throw new Error("Cannot repeat call");
+    else if (Math.abs(new Date().valueOf() - time) > 600000) throw new Error("Cannot make expired call.");
+    else {
+      let newSeenTimes = [...api.seenTimes, time]
+      newSeenTimes = newSeenTimes.filter(x => (x > time - 600000 && x < time + 600000))
+
     if (builtin) {
       const token = api.BuiltinSecret
   
@@ -28,23 +34,7 @@ module.exports = (api) => {
       hash.update(Buffer.from(id))
     }
 
-    const hashString = hash.digest('hex')
-
-    if (hashString !== validity_key) return false 
-    else {
-      if (api.seenTimes[id] == null) api.seenTimes[id] = []
-
-      if (api.seenTimes[id].includes(time)) throw new Error("Cannot repeat call");
-      else if (Math.abs(new Date().valueOf() - time) > 60000) throw new Error("Cannot make expired call.");
-      else {
-        let newSeenTimes = [...api.seenTimes[id], time]
-        newSeenTimes = newSeenTimes.filter(x => (x > time - 60000 && x < time + 60000))
-
-        api.seenTimes[id] = newSeenTimes
-      }
-
-      return true
-    }
+    return hash.digest('hex') === validity_key
   };
 
   api.setPost = (url, handler, forceEncryption = false) => {

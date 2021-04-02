@@ -105,7 +105,7 @@ const template = [
       {
         label: 'Verus Wiki',
         click (item, focusedWindow) {
-          shell.openExternal('https://wiki.veruscoin.io/#!index.md');
+          shell.openExternal('https://wiki.verus.io/#!index.md');
         }
       },
       // ref: https://github.com/sindresorhus/new-github-issue-url
