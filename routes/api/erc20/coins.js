@@ -1,16 +1,30 @@
 const { ETH_HOMESTEAD, ETH_ROPSTEN } = require('../utils/constants/eth_networks');
 const createInterface = require('../utils/web3/provider');
+const ethers = require('ethers')
 
 module.exports = (api) => {  
-  api.setPost('/eth/coins/activate', (req, res, next) => {
+  api.setPost('/erc20/coins/activate', async (req, res, next) => {
+    // chainTicker represents contract ID
     const { chainTicker, network } = req.body;
-  
+
     try {
-      if (chainTicker && chainTicker === 'ETH') {
-        if (api.eth.interface == null) {
-          api.eth.interface = createInterface(
+      if (chainTicker) {
+        if (api.erc20.contracts[chainTicker] == null) {
+          const interface = createInterface(
             network == null ? ETH_ROPSTEN : network
           );
+          const contractData = await interface.initContract(chainTicker)
+
+          const contract = interface.getContract(...contractData)
+  
+          api.erc20.contracts[chainTicker] = {
+            interface,
+            contract,
+            decimals: contract.decimals != null
+              ? await contract.decimals()
+              : ethers.BigNumber.from("18"),
+            symbol: await contract.symbol(),
+          };
   
           const retObj = {
             msg: 'success',
@@ -20,14 +34,14 @@ module.exports = (api) => {
         } else {
           const retObj = {
             msg: 'error',
-            result: 'ETH already active!',
+            result: `${chainTicker} already active!`,
           };
           res.send(JSON.stringify(retObj));
         }
       } else {
         const retObj = {
           msg: 'error',
-          result: 'cannot activate non-eth coin on ETH network',
+          result: 'no contract id provided to activate',
         };
         res.send(JSON.stringify(retObj));
       }
@@ -40,8 +54,8 @@ module.exports = (api) => {
     }
   });
 
-  api.setPost('/eth/remove_coin', (req, res) => {
-    api.eth.interface = null
+  api.setPost('/erc20/remove_coin', (req, res) => {
+    api.erc20.contracts[req.body.chainTicker] = null
 
     const retObj = {
       msg: 'success',

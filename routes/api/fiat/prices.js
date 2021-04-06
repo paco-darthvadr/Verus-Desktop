@@ -93,10 +93,15 @@ module.exports = (api) => {
       res.send(JSON.stringify(priceObj)); 
     })
     .catch(e => {
-      res.send(JSON.stringify({
-        msg: 'error',
-        result: e.message
-      })); 
+      res.send(
+        JSON.stringify({
+          msg: "error",
+          result:
+            e.message != null && e.message.includes("No fiat value found")
+              ? ("No fiat value found for " + coin)
+              : e.message,
+        })
+      ); 
     })
   });
 
@@ -111,9 +116,41 @@ module.exports = (api) => {
     .catch(e => {
       res.send(JSON.stringify({
         msg: 'error',
-        result: e.message
+        result:
+            e.message != null && e.message.includes("No fiat value found")
+              ? ("No fiat value found for " + coin)
+              : e.message,
       })); 
     })
+  });
+
+  api.setGet('/erc20/get_fiatprice', async (req, res, next) => {
+    const chainTicker = req.query.chainTicker
+    const currency = req.query.currency
+
+    if (api.erc20.contracts[chainTicker] != null) {
+      api.fiat
+        .get_fiatprice(api.erc20.contracts[chainTicker].symbol, currency)
+        .then((priceObj) => {
+          res.send(JSON.stringify(priceObj));
+        })
+        .catch((e) => {
+          res.send(
+            JSON.stringify({
+              msg: "error",
+              result:
+                e.message != null && e.message.includes("No fiat value found")
+                  ? ("No fiat value found for " + chainTicker)
+                  : e.message,
+            })
+          );
+        });
+    } else {
+      res.send(JSON.stringify({
+        msg: 'error',
+        result: `No interface for ${chainTicker}`
+      })); 
+    }
   });
 
   api.setGet('/electrum/get_fiatprice', (req, res, next) => {
@@ -125,10 +162,15 @@ module.exports = (api) => {
       res.send(JSON.stringify(priceObj)); 
     })
     .catch(e => {
-      res.send(JSON.stringify({
-        msg: 'error',
-        result: e.message
-      })); 
+      res.send(
+        JSON.stringify({
+          msg: "error",
+          result:
+            e.message != null && e.message.includes("No fiat value found")
+              ? "No fiat value found for " + coin
+              : e.message,
+        })
+      ); 
     })
   });
 

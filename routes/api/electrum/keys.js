@@ -1,6 +1,5 @@
 const sha256 = require('js-sha256');
 const buggySha256 = require('sha256');
-const bip39 = require('bip39');
 const bigi = require('bigi');
 const bitcoin = require('bitgo-utxo-lib');
 const bs58check = require('bs58check');

@@ -1,184 +1,136 @@
 const ethers = require('ethers');
-const Promise = require('bluebird');
-const request = require('request');
-const fees = require('agama-wallet-lib/src/fees');
-const { maxSpend } = require('agama-wallet-lib/src/eth');
-const erc20ContractId = require('agama-wallet-lib/src/eth-erc20-contract-id');
-const standardABI = require('agama-wallet-lib/src/erc20-standard-abi');
-const decimals = require('agama-wallet-lib/src/eth-erc20-decimals');
-
-// TODO: error handling, input vars check
+const { scientificToDecimal } = require('../numbers');
 
 // speed: slow, average, fast
 module.exports = (api) => {  
-  api.eth.createPreflightObj = (chainTicker, toAddress, fromAddress, balance, amount, gasLimit, gasPrice, numberOfTokens) => {
-    const fee = Number(ethers.utils.formatEther(ethers.utils.bigNumberify(gasLimit).mul(ethers.utils.bigNumberify(gasPrice))));
-    let spendAmount = Number(amount)
-    let deductedAmount = (spendAmount + fee).toFixed(8)
-    let warnings = []
-    
-    if (deductedAmount > balance) {
-      warnings.push({field: "value", message: `Original amount + fee (${deductedAmount}) is larger than balance, amount has been changed.`})
-      spendAmount = Number((spendAmount - fee).toFixed(8));
-      deductedAmount = Number((spendAmount + fee).toFixed(8));
+  /**
+   * Preflights an ETH tx
+   * @param {String} address 
+   * @param {String} amount 
+   * @param {Object} params 
+   * @returns Object
+   */
+  api.eth.txPreflight = async (address, amount, params = {}) => {
+    if (api.eth.interface == null) {
+      throw new Error('No interface to connect to ETH for tx preflight call')
+    } else if (api.eth.wallet == null) {
+      throw new Error('No ETH wallet authenticated to use for tx preflight call')
     }
 
-    return ({
-      chainTicker,
-      to: toAddress,
+    const fromAddress = api.eth.wallet.address
+    const signer = new ethers.VoidSigner(fromAddress, api.eth.interface.EtherscanProvider)
+    const balance = await signer.getBalance()
+    const value = ethers.utils.parseEther(scientificToDecimal(amount))
+
+    const transaction = await signer.populateTransaction({
+      to: address,
       from: fromAddress,
-      balance,
-      value: spendAmount,
-      fee,
-      total: deductedAmount,
-      remainingBalance: balance - deductedAmount,
-      gasPrice: ethers.utils.bigNumberify(gasPrice),
-      gasLimit,
-      warnings,
-      numberOfTokens
-    })
+      value,
+      chainId: api.eth.interface.network.id,
+    });
+
+    if (transaction.to == null) {
+      throw new Error(`"${address}" is not a valid ETH destination.`)
+    }
+
+    const maxFee = transaction.gasLimit.mul(transaction.gasPrice)
+    const maxValue = maxFee.add(value)
+
+    if (maxValue.gt(balance)) {
+      const adjustedValue = value.sub(maxFee)
+
+      if (adjustedValue.lt(ethers.BigNumber.from(0)))
+        throw new Error(
+          `Insufficient funds, cannot cover fee costs of at least ${maxFee} ETH.`
+        );
+      else
+        return await api.eth.txPreflight(
+          address,
+          ethers.utils.formatEther(adjustedValue),
+          {
+            feeTakenFromAmount: true,
+          }
+        );
+    }
+    
+    return {
+      chainTicker: "ETH",
+      to: transaction.to,
+      from: transaction.from,
+      balance: ethers.utils.formatEther(balance),
+      value: ethers.utils.formatEther(transaction.value),
+      fee: ethers.utils.formatEther(
+        transaction.gasLimit.mul(transaction.gasPrice)
+      ),
+      total: ethers.utils.formatEther(maxValue),
+      remainingBalance: ethers.utils.formatEther(balance.sub(maxValue)),
+      gasPrice: ethers.utils.formatEther(transaction.gasPrice),
+      gasLimit: ethers.utils.formatEther(transaction.gasLimit),
+      warnings: params.feeTakenFromAmount
+        ? [
+            {
+              field: "value",
+              message: `Original amount + fee is larger than balance, amount has been changed.`,
+            },
+          ]
+        : [],
+      transaction
+    };
   }
 
-  api.eth.txPreflight = (chainTicker, toAddress, amount, speed = 'average', network = 'homestead') => {
-    let gasPrice = {}
-    let maxBalance = {}
-    const fromAddress = api.eth.wallet.signingKey.address
+  api.eth.sendTx = async (address, amount) => {
+    const preflight = await api.eth.txPreflight(address, amount)
+    let { transaction } = preflight
 
-    return new Promise((resolve, reject) => {
-      Promise.all([
-        chainTicker === "ETH"
-          ? api.eth._balanceEtherscan(fromAddress, network)
-          : api.eth._balanceERC20(fromAddress, chainTicker),
-        api._getGasPrice(),
-      ])
-        .then((ethNetworkInfo) => {
-          maxBalance = ethNetworkInfo[0];
-          gasPrice = ethNetworkInfo[1][speed];
+    // Change tx format to fit with ethers version used in agama-wallet-lib for standardization
+    delete transaction.from
 
-          try {
-            ethers.utils.getAddress(toAddress);
-          } catch (e) {
-            throw new Error(
-              `"${toAddress}" is not a valid ${chainTicker} address.`
-            );
-          }
+    const signedTx = await api.eth.wallet.signer.sign(transaction)
+    const response = await api.eth.interface.EtherscanProvider.sendTransaction(signedTx);
 
-          if (chainTicker === "ETH") {
-            const gasLimit = fees[chainTicker.toLowerCase()];
-            const preflightObj = api.eth.createPreflightObj(
-              chainTicker,
-              toAddress,
-              fromAddress,
-              maxBalance,
-              amount,
-              gasLimit,
-              gasPrice
-            );
-
-            if (preflightObj.remainingBalance < 0)
-              throw new Error("Insufficient funds");
-
-            resolve(preflightObj);
-          } else {
-            const contractAddress = erc20ContractId[chainTicker.toUpperCase()];
-
-            const contract = new ethers.Contract(
-              contractAddress,
-              standardABI,
-              api.eth.connect[chainTicker.toUpperCase()]
-            );
-            const numberOfDecimals = decimals[chainTicker.toUpperCase()] || 18;
-            const numberOfTokens = ethers.utils.parseUnits(
-              amount.toString(),
-              numberOfDecimals
-            );
-
-            return contract.estimate
-              .transfer(contractAddress, numberOfTokens)
-              .then((gasLimit) => {
-                const preflightObj = api.eth.createPreflightObj(
-                  chainTicker,
-                  toAddress,
-                  fromAddress,
-                  maxBalance,
-                  amount,
-                  gasLimit,
-                  gasPrice,
-                  numberOfTokens,
-                  contract
-                );
-
-                if (preflightObj.remainingBalance < 0)
-                  throw new Error("Insufficient funds");
-
-                resolve(preflightObj);
-              });
-          }
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    })
+    return {
+      to: response.to,
+      from: response.from,
+      value: ethers.utils.formatEther(response.value),
+      txid: response.hash,
+      fee: ethers.utils.formatEther(
+        transaction.gasLimit.mul(transaction.gasPrice)
+      )
+    }
   }
 
-  api.setPost('/eth/sendtx', (req, res, next) => {
-    const { toAddress, amount, chainTicker, speed, network } = req.body
-    let txResult = {}
+  api.setPost('/eth/sendtx', async (req, res, next) => {
+    const { toAddress, amount } = req.body
 
-    api.eth.txPreflight(chainTicker, toAddress, amount, speed, network)
-    .then(preflightObj => {
-      txResult = preflightObj
-      const { to, value, gasPrice, gasLimit, numberOfTokens } = txResult;
-      
-      return chainTicker === "ETH"
-        ? api.eth.connect[chainTicker].sendTransaction({
-            to,
-            value: ethers.utils.parseEther(Number(value).toPrecision(8)),
-            gasPrice: Number(gasPrice),
-            gasLimit: Number(gasLimit)
-          })
-        : new ethers.Contract(
-          erc20ContractId[chainTicker.toUpperCase()],
-          standardABI,
-          api.eth.connect[chainTicker.toUpperCase()]
-        ).transfer(to, numberOfTokens, { gasPrice });
-    })
-    .then(tx => {
-      const retObj = {
-        msg: 'success',
-        result: {
-          ...txResult,
-          txid: tx.hash
-        },
-      };
-      res.send(JSON.stringify(retObj));
-    })
-    .catch(e => {
-      const retObj = {
-        msg: 'error',
-        result: e.message,
-      };
-      res.send(JSON.stringify(retObj));
-    })
-  });
-
-  api.setPost('/eth/tx_preflight', (req, res, next) => {
-    const { toAddress, amount, chainTicker, speed, network } = req.body
-
-    api.eth.txPreflight(chainTicker, toAddress, amount, speed, network)
-    .then(preflightObj => {
+    try {
       res.send(JSON.stringify({
         msg: 'success',
-        result: preflightObj,
+        result: await api.eth.sendTx(toAddress, amount.toString()),
       }));
-    })
-    .catch(e => {
+    } catch(e) {
       const retObj = {
         msg: 'error',
         result: e.message,
       };
       res.send(JSON.stringify(retObj));
-    })
+    }
+  });
+
+  api.setPost('/eth/tx_preflight', async (req, res, next) => {
+    const { toAddress, amount } = req.body
+
+    try {
+      res.send(JSON.stringify({
+        msg: 'success',
+        result: await api.eth.txPreflight(toAddress, amount.toString()),
+      }));
+    } catch(e) {
+      const retObj = {
+        msg: 'error',
+        result: e.message,
+      };
+      res.send(JSON.stringify(retObj));
+    }
   });
     
   return api;

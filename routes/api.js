@@ -191,25 +191,35 @@ api = require('./api/kv.js')(api);
 
 // eth
 api.eth = {
-  coins: {},
-  connect: {},
-  gasPrice: {},
-  tokenInfo: {},
-  abi: {},
+  wallet: null,
+  interface: null,
+  cache: {
+    tx_cache: {}
+  }
 };
-api = require('./api/eth/contracts/contracts.js')(api);
+
+// erc20
+api.erc20 = {
+  wallet: null,
+  contracts: {}
+}
+
 api = require('./api/eth/auth.js')(api);
 api = require('./api/eth/keys.js')(api);
-api = require('./api/eth/network.js')(api);
 api = require('./api/eth/balances.js')(api);
 api = require('./api/eth/addresses')(api);
 api = require('./api/eth/info')(api);
 api = require('./api/eth/transactions.js')(api);
 api = require('./api/eth/coins.js')(api);
-api = require('./api/eth/gasPrice.js')(api);
-api = require('./api/eth/remove')(api);
 api = require('./api/eth/send.js')(api);
-api = require('./api/eth/contracts/rfox/migration')(api);
+
+api = require('./api/erc20/auth.js')(api);
+api = require('./api/erc20/balances.js')(api);
+api = require('./api/erc20/addresses')(api);
+api = require('./api/erc20/info')(api);
+api = require('./api/erc20/transactions.js')(api);
+api = require('./api/erc20/coins.js')(api);
+api = require('./api/erc20/send.js')(api);
 
 api.printDirs();
 
