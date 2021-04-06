@@ -1,4 +1,4 @@
-const { ETH_HOMESTEAD, ETH_ROPSTEN } = require('../utils/constants/eth_networks');
+const { ETH_HOMESTEAD } = require('../utils/constants/eth_networks');
 const createInterface = require('../utils/web3/provider');
 const ethers = require('ethers')
 
@@ -11,7 +11,7 @@ module.exports = (api) => {
       if (chainTicker) {
         if (api.erc20.contracts[chainTicker] == null) {
           const interface = createInterface(
-            network == null ? ETH_ROPSTEN : network
+            network == null ? ETH_HOMESTEAD : network
           );
           const contractData = await interface.initContract(chainTicker)
 

@@ -1,4 +1,4 @@
-const { ETH_HOMESTEAD, ETH_ROPSTEN } = require('../utils/constants/eth_networks');
+const { ETH_HOMESTEAD } = require('../utils/constants/eth_networks');
 const createInterface = require('../utils/web3/provider');
 
 module.exports = (api) => {  
@@ -9,7 +9,7 @@ module.exports = (api) => {
       if (chainTicker && chainTicker === 'ETH') {
         if (api.eth.interface == null) {
           api.eth.interface = createInterface(
-            network == null ? ETH_ROPSTEN : network
+            network == null ? ETH_HOMESTEAD : network
           );
   
           const retObj = {
