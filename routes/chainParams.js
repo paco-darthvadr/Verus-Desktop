@@ -290,9 +290,9 @@ const chainParams = {
 		ac_cc: 3,
 		addnode: ['138.201.136.145'],
 	},
-	VOTE2020: {
-		ac_name: "VOTE2020",
-		ac_supply: 123651638,
+	VOTE2021: {
+		ac_name: "VOTE2021",
+		ac_supply: 129848152,
 		ac_public: 1,
 		addnode: ['95.213.238.98'],
 	},

@@ -54,7 +54,8 @@ const assetChainPorts = {
   VRSCTEST: 18184,
   VRSC: 27486,
   ZEC: 11192,
-  VOTE2020: 44249
+  VOTE2020: 44249,
+  VOTE2021: 55638
 };
 
 module.exports = assetChainPorts;
