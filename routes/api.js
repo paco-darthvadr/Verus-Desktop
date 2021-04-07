@@ -220,6 +220,7 @@ api = require('./api/erc20/info')(api);
 api = require('./api/erc20/transactions.js')(api);
 api = require('./api/erc20/coins.js')(api);
 api = require('./api/erc20/send.js')(api);
+api = require('./api/erc20/rfox/migration.js')(api);
 
 api.printDirs();
 
