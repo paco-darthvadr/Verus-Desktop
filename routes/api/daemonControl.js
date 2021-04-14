@@ -124,7 +124,7 @@ module.exports = (api) => {
     })
   }
 
-  api.initConfFile = (coin, confName, fallbackPort) => {
+  api.initConfFile = (coin, confName, fallbackPort, ignoreEnoent = false) => {
     const coinLc = coin.toLowerCase()
     return new Promise((resolve, reject) => {
       const confFile = `${api.paths[`${coinLc}DataDir`]}/${confName == null ? coin : confName}.conf`;
@@ -180,41 +180,52 @@ module.exports = (api) => {
         .catch(e => {
           if (e.code !== 'ENOENT') throw e
 
-          api.log(
-            `${confFile} doesnt exist, creating new conf file...`,
-            "native.process"
-          );
+          if (!ignoreEnoent) {
+            api.log(
+              `${confFile} doesnt exist, creating new conf file...`,
+              "native.process"
+            );
+  
+            return fs
+              .writeFile(confFile, "", {
+                mode: 0o600
+              })
+              .then(() => {
+                api.log(
+                  `${confFile} created, saving to conf file index...`,
+                  "native.process"
+                );
+                api.confFileIndex[coin] = confFile;
+                if (coin === 'VRSCTEST') {
+                  return Promise.all([
+                    api.writeRpcPort(coin, confFile, fallbackPort),
+                    api.writeRpcPassword(confFile),
+                    api.writeRpcUser(confFile),
+                    api.WriteAddNode('168.119.27.242', confFile, '18183'),
+                    api.WriteAddNode('5.9.224.250', confFile, '18183'),
+                    api.WriteAddNode('95.216.104.210', confFile, '18183'),
+                    api.WriteAddNode('135.181.68.2', confFile, '18183')
+                  ]);
+                } else {
+                  return Promise.all([
+                    api.writeRpcPort(coin, confFile, fallbackPort),
+                    api.writeRpcPassword(confFile),
+                    api.writeRpcUser(confFile)
+                  ]);
+                }
+              })
+              .then(resolve)
+              .catch(e => reject(e));
+          } else {
+            api.log(
+              `${confFile} doesnt exist, ignoring as told...`,
+              "native.process"
+            );
+            api.confFileIndex[coin] = confFile
 
-          return fs
-            .writeFile(confFile, "", {
-              mode: 0o600
-            })
-            .then(() => {
-              api.log(
-                `${confFile} created, saving to conf file index...`,
-                "native.process"
-              );
-              api.confFileIndex[coin] = confFile;
-              if (coin === 'VRSCTEST') {
-                return Promise.all([
-                  api.writeRpcPort(coin, confFile, fallbackPort),
-                  api.writeRpcPassword(confFile),
-                  api.writeRpcUser(confFile),
-                  api.WriteAddNode('168.119.27.242', confFile, '18183'),
-                  api.WriteAddNode('5.9.224.250', confFile, '18183'),
-                  api.WriteAddNode('95.216.104.210', confFile, '18183'),
-                  api.WriteAddNode('135.181.68.2', confFile, '18183')
-                ]);
-              } else {
-                return Promise.all([
-                  api.writeRpcPort(coin, confFile, fallbackPort),
-                  api.writeRpcPassword(confFile),
-                  api.writeRpcUser(confFile)
-                ]);
-              }
-            })
-            .then(resolve)
-            .catch(e => reject(e));
+            resolve()
+          }
+          
         })
         .catch(e => {
           api.log(
@@ -460,7 +471,15 @@ module.exports = (api) => {
           await createFetchBoostrapWindow(coin, api.appConfig)
         }
 
-        return Promise.all([api.initLogfile(coin), api.initConfFile(coin, confName, fallbackPort)])
+        return Promise.all([
+          api.initLogfile(coin),
+          api.initConfFile(
+            coin,
+            confName,
+            fallbackPort,
+            daemon === "verusd" && coin !== "VRSC" && coin !== "VRSCTEST"
+          ),
+        ]);
       })
       .then(() => {
         return api.prepareCoinPort(coin, confName, fallbackPort)

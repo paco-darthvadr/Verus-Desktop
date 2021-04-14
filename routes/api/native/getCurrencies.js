@@ -2,9 +2,9 @@
 const Promise = require('bluebird');
 
 module.exports = (api) => {
-  api.native.get_all_currencies = (coin, includeExpired = false) => {
+  api.native.get_all_currencies = (coin, query = {}) => {
     return new Promise((resolve, reject) => {
-      api.native.callDaemon(coin, 'listcurrencies', [includeExpired])
+      api.native.callDaemon(coin, 'listcurrencies', [query])
       .then((allcurrencies) => {
         //TODO: Change getcurrency instead of listcurrencies so they are the same
         resolve(
@@ -57,9 +57,9 @@ module.exports = (api) => {
 
   api.setPost('/native/get_all_currencies', (req, res, next) => {
     const coin = req.body.chainTicker;
-    const includeExpired = req.body.includeExpired;
+    const query = req.body.query;
 
-    api.native.get_all_currencies(coin, includeExpired)
+    api.native.get_all_currencies(coin, query)
     .then((currencies) => {
       const retObj = {
         msg: 'success',

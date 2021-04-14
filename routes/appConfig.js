@@ -1,14 +1,14 @@
 const coinDataTranslated = require('./coinDataTranslated')
 const zcashParamsSources = require('./zcashParamsSources')
 
-let zCoins = {}
+let nonZCoins = {}
 let nativeCoinStrings = {}
 
 const coinObjArray = coinDataTranslated.getSimpleCoinArray().map(simpleCoinObj => {
   const coinObj = coinDataTranslated.getCoinObj(simpleCoinObj.id, false)
 
-  if (coinObj.tags.includes('is_zcash')) zCoins[coinObj.id] = true
-  else zCoins[coinObj.id] = false
+  if (coinObj.tags.includes('is_zcash')) nonZCoins[coinObj.id] = false
+  else nonZCoins[coinObj.id] = true
 
   if (coinObj.available_modes.native === true) {
     nativeCoinStrings[coinObj.id] = ''
@@ -86,10 +86,10 @@ const appConfig = {
     },
     coin: {
       native: {
-        includePrivateAddrs: zCoins,
-        includePrivateBalances: zCoins,
-        includePrivateTransactions: zCoins,
-        includePrivateAddressBalances: zCoins,
+        excludePrivateAddrs: nonZCoins,
+        excludePrivateBalances: nonZCoins,
+        excludePrivateTransactions: nonZCoins,
+        excludePrivateAddressBalances: nonZCoins,
         stakeGuard: nativeCoinStrings,
         dataDir: nativeCoinStrings
       }
