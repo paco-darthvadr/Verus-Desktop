@@ -1,38 +1,54 @@
-const Promise = require('bluebird');
+const { IS_PBAAS_FLAG } = require("../utils/constants/currency_flags");
+const checkFlag = require("../utils/flags");
 
-module.exports = (api) => {    
-  api.native.get_currency = (chain, name) => {
-    return new Promise((resolve, reject) => {      
-      api.native.callDaemon(chain, 'getcurrency', [name])
-      .then((currency) => {
-        resolve({ ...currency, parent_name: chain })
-      })
-      .catch(err => {
-        reject(err)
-      })
-    });
+module.exports = (api) => {
+  api.native.get_currency = async (chain, name, systemid) => {
+    const system = systemid == null ? chain : systemid
+
+    try {
+      const parent = await api.native.callDaemon(chain, 'getcurrency', [system])
+
+      try {
+        const current = await api.native.callDaemon(chain, 'getcurrency', [name])
+
+        if (
+          current.systemid === parent.currencyid ||
+          checkFlag(current.options, IS_PBAAS_FLAG)
+        ) {
+          return {
+            ...current,
+            parent_name: parent.name,
+          };
+        }
+      } catch(e) {}
+
+      return {
+        ...await api.native.callDaemon(chain, 'getcurrency', [`${name}.${parent.name}`]),
+        parent_name: parent.name
+      }
+    } catch(e) {
+      throw e
+    }
   };
 
-  api.setPost('/native/get_currency', (req, res, next) => {
-    const { chainTicker, name } = req.body
+  api.setPost('/native/get_currency', async (req, res, next) => {
+    const { chainTicker, name, systemid } = req.body
 
-    api.native.get_currency(chainTicker, name)
-    .then((currency) => {
+    try {
       const retObj = {
         msg: 'success',
-        result: currency,
+        result:  await api.native.get_currency(chainTicker, name, systemid),
       };
   
       res.send(JSON.stringify(retObj));  
-    })
-    .catch(error => {
+    } catch(e) {
       const retObj = {
         msg: 'error',
-        result: error.message,
+        result: e.message,
       };
   
-      res.send(JSON.stringify(retObj));  
-    })
+      res.send(JSON.stringify(retObj)); 
+    }
   });
  
   return api;
