@@ -142,6 +142,7 @@ api = require('./api/native/getTransaction.js')(api);
 api = require('./api/native/transactions')(api);
 api = require('./api/native/zoperations')(api);
 api = require('./api/native/remove')(api);
+api = require('./api/native/restart')(api);
 api = require('./api/native/send.js')(api);
 api = require('./api/native/sendcurrency.js')(api);
 api = require('./api/native/reservetransfers.js')(api);

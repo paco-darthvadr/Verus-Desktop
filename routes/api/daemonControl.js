@@ -415,34 +415,59 @@ module.exports = (api) => {
    * @param {Object} dirNames An object containing the names of the coin data
    * directory, from the home directory of the system, on each different OS { darwin, linux, win32 }
    * @param {Number} fallbackPort (optional) The port that will be used if none if found for the coin
+   * @param {Boolean} bootstrap (optional) Whether or not to try and bootstrap the coin from a bootstrap download
    */
-  api.startDaemon = (coin, acOptions, daemon = 'verusd', dirNames, confName, fallbackPort) => {
-    const coinLc = coin.toLowerCase()
+  api.startDaemon = (
+    coin,
+    acOptions,
+    daemon = "verusd",
+    dirNames,
+    confName,
+    fallbackPort,
+    bootstrap = false
+  ) => {
+    const coinLc = coin.toLowerCase();
     let port = null;
 
-    api.log(`${coin} daemon activation requested with ${daemon} binary...`, 'native.process');
+    api.log(
+      `${coin} daemon activation requested with ${daemon} binary...`,
+      "native.process"
+    );
 
     return new Promise((resolve, reject) => {
       // Set coin daemon bin location into memory if it doesn't exist there yet
       if (api.paths[`${daemon}Bin`] == null) {
-        api.log(`${daemon} binaries not used yet this session, saving their path...`, 'native.process');
-        api.setDaemonPath(daemon)
-        api.log(`${daemon} binary path set to ${api.paths[`${daemon}Bin`]}`, 'native.process');
+        api.log(
+          `${daemon} binaries not used yet this session, saving their path...`,
+          "native.process"
+        );
+        api.setDaemonPath(daemon);
+        api.log(
+          `${daemon} binary path set to ${api.paths[`${daemon}Bin`]}`,
+          "native.process"
+        );
       }
 
       if (
         api.appConfig.coin.native.dataDir[coin] &&
         api.appConfig.coin.native.dataDir[coin].length > 0
       ) {
-        api.log(`custom data dir detected, setting coin dir to ${api.appConfig.coin.native.dataDir[coin]}`, 'native.process');
+        api.log(
+          `custom data dir detected, setting coin dir to ${api.appConfig.coin.native.dataDir[coin]}`,
+          "native.process"
+        );
 
-        api.setCoinDir(coinLc, {
-          linux: api.appConfig.coin.native.dataDir[coin],
-          darwin: api.appConfig.coin.native.dataDir[coin],
-          win32: api.appConfig.coin.native.dataDir[coin]
-        }, true)
+        api.setCoinDir(
+          coinLc,
+          {
+            linux: api.appConfig.coin.native.dataDir[coin],
+            darwin: api.appConfig.coin.native.dataDir[coin],
+            win32: api.appConfig.coin.native.dataDir[coin],
+          },
+          true
+        );
 
-        acOptions.push(`-datadir=${api.appConfig.coin.native.dataDir[coin]}`)
+        acOptions.push(`-datadir=${api.appConfig.coin.native.dataDir[coin]}`);
       } else {
         // if (global.USB_MODE) {
         //   acOptions.push(`-datadir=${api.paths[`${coin.toLowerCase()}DataDir`]}`)
@@ -450,60 +475,83 @@ module.exports = (api) => {
 
         // Set coin data directory into memory if it doesnt exist yet
         if (api.paths[`${coinLc}DataDir`] == null) {
-          api.log(`${coin} data directory not already saved in memory...`, 'native.process');
+          api.log(
+            `${coin} data directory not already saved in memory...`,
+            "native.process"
+          );
 
           if (dirNames != null) {
-            api.log(`saving ${coin} data directory as custom specified dir...`, 'native.process');
+            api.log(
+              `saving ${coin} data directory as custom specified dir...`,
+              "native.process"
+            );
           } else {
-            reject(new Error(`Could not start ${coin} daemon, no data directory found or specified!`))
+            reject(
+              new Error(
+                `Could not start ${coin} daemon, no data directory found or specified!`
+              )
+            );
           }
 
-          api.setCoinDir(coinLc, dirNames)
-          api.log(`${coin} dir path set to ${api.paths[`${coinLc}DataDir`]}...`, 'native.process');
-        } else api.log(`${coin} data directory retrieved...`, 'native.process');
+          api.setCoinDir(coinLc, dirNames);
+          api.log(
+            `${coin} dir path set to ${api.paths[`${coinLc}DataDir`]}...`,
+            "native.process"
+          );
+        } else api.log(`${coin} data directory retrieved...`, "native.process");
       }
 
-      api.log(`selected data: ${JSON.stringify(acOptions, null, '\t')}`, 'native.confd');
+      api.log(
+        `selected data: ${JSON.stringify(acOptions, null, "\t")}`,
+        "native.confd"
+      );
 
-      api.initCoinDir(coinLc)
-      .then(async existed => {
-        if (!existed && coin === 'VRSC') {
-          await createFetchBoostrapWindow(coin, api.appConfig)
-        }
+      api
+        .initCoinDir(coinLc)
+        .then(async (existed) => {
+          if (bootstrap || (!existed && coin === "VRSC")) {
+            await createFetchBoostrapWindow(coin, api.appConfig);
+          }
 
-        return Promise.all([
-          api.initLogfile(coin),
-          api.initConfFile(
-            coin,
-            confName,
-            fallbackPort,
-            daemon === "verusd" && coin !== "VRSC" && coin !== "VRSCTEST"
-          ),
-        ]);
-      })
-      .then(() => {
-        return api.prepareCoinPort(coin, confName, fallbackPort)
-      })
-      .then(() => {
-        port = api.assetChainPorts[coin]
-        return api.checkPort(port)
-      })
-      .then(status => {
-        if (status === 'AVAILABLE') {
-          api.log(`port ${port} available, starting daemon...`, 'native.process');
-          api.startedDaemonRegistry[coin] = true;
+          return Promise.all([
+            api.initLogfile(coin),
+            api.initConfFile(
+              coin,
+              confName,
+              fallbackPort,
+              daemon === "verusd" && coin !== "VRSC" && coin !== "VRSCTEST"
+            ),
+          ]);
+        })
+        .then(() => {
+          return api.prepareCoinPort(coin, confName, fallbackPort);
+        })
+        .then(() => {
+          port = api.assetChainPorts[coin];
+          return api.checkPort(port);
+        })
+        .then((status) => {
+          if (status === "AVAILABLE") {
+            api.log(
+              `port ${port} available, starting daemon...`,
+              "native.process"
+            );
+            api.startedDaemonRegistry[coin] = true;
 
-          api.spawnDaemonChild(daemon, coin, acOptions)
-          resolve()
-        } else {
-          api.log(`port ${port} not available, assuming coin has already been started...`, 'native.process');
+            api.spawnDaemonChild(daemon, coin, acOptions);
+            resolve();
+          } else {
+            api.log(
+              `port ${port} not available, assuming coin has already been started...`,
+              "native.process"
+            );
 
-          resolve()
-        }
-      })
-      .catch(err => reject(err))
-    })
-  }
+            resolve();
+          }
+        })
+        .catch((err) => reject(err));
+    });
+  };
 
   api.getAssetChainPorts = () => {
     return api.assetChainPorts;
