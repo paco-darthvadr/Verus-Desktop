@@ -1,5 +1,6 @@
 const ethers = require('ethers');
 const { scientificToDecimal } = require('../numbers');
+const Web3Interface = require('../utils/web3/web3Interface');
 
 // speed: slow, average, fast
 module.exports = (api) => {  
@@ -29,12 +30,19 @@ module.exports = (api) => {
       scientificToDecimal(amount),
       web3Provider.decimals
     );
-    const gasEst = await contract.estimateGas.transfer(address, amountBn)
-    const transaction = await contract.callStatic.transfer(
-      address,
-      amountBn
-    );
+    let gasEst = null
+    let transaction = null 
 
+    try {
+      gasEst = await contract.estimateGas.transfer(address, amountBn)
+      transaction = await contract.callStatic.transfer(
+        address,
+        amountBn
+      );
+    } catch(e) {      
+      throw new Error(Web3Interface.decodeWeb3Error(e.message).message)
+    }
+    
     const maxFee = gasEst.mul(gasPrice)
     
     return {
@@ -78,7 +86,7 @@ module.exports = (api) => {
     const signableContract = contract.connect(
       new ethers.Wallet(
         ethers.utils.hexlify(privKey),
-        web3Provider.interface.DefaultProvider
+        web3Provider.interface.InfuraProvider
       )
     );
     const gasEst = await contract.estimateGas.transfer(address, amountBn)

@@ -1,5 +1,6 @@
 const ethers = require('ethers');
 const { scientificToDecimal } = require('../numbers');
+const Web3Interface = require('../utils/web3/web3Interface');
 
 // speed: slow, average, fast
 module.exports = (api) => {  
@@ -22,12 +23,19 @@ module.exports = (api) => {
     const balance = await signer.getBalance()
     const value = ethers.utils.parseEther(scientificToDecimal(amount))
 
-    const transaction = await signer.populateTransaction({
-      to: address,
-      from: fromAddress,
-      value,
-      chainId: api.eth.interface.network.id,
-    });
+    let transaction = {}
+
+    try {
+      transaction = await signer.populateTransaction({
+        to: address,
+        from: fromAddress,
+        value,
+        chainId: api.eth.interface.network.id,
+        gasLimit: ethers.BigNumber.from(21000)
+      });
+    } catch(e) {      
+      throw new Error(Web3Interface.decodeWeb3Error(e.message).message)
+    }
 
     if (transaction.to == null) {
       throw new Error(`"${address}" is not a valid ETH destination.`)
@@ -82,11 +90,11 @@ module.exports = (api) => {
     const preflight = await api.eth.txPreflight(address, amount)
     let { transaction } = preflight
 
-    // Change tx format to fit with ethers version used in agama-wallet-lib for standardization
-    delete transaction.from
-
-    const signedTx = await api.eth.wallet.signer.sign(transaction)
-    const response = await api.eth.interface.EtherscanProvider.sendTransaction(signedTx);
+    const signer = new ethers.Wallet(
+      api.eth.wallet.signer.signingKey.privateKey,
+      api.eth.interface.InfuraProvider
+    );
+    const response = await signer.sendTransaction(transaction);
 
     return {
       to: response.to,

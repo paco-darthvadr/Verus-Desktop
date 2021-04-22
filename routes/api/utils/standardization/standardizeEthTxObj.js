@@ -1,5 +1,5 @@
 const ethers = require("ethers")
-const { formatEther, formatUnits, bigNumberify } = ethers.utils
+const { formatEther, formatUnits } = ethers.utils
 
 const standardizeEthTxObj = (transactions, address, decimals = 18) => {
   let _txs = [];
@@ -50,8 +50,8 @@ const standardizeEthTxObj = (transactions, address, decimals = 18) => {
           transactions[i].gasPrice != null &&
           transactions[i].gasUsed != null
             ? formatEther(
-                bigNumberify(transactions[i].gasPrice)
-                  .mul(bigNumberify(transactions[i].gasUsed))
+                ethers.BigNumber.from(transactions[i].gasPrice)
+                  .mul(ethers.BigNumber.from(transactions[i].gasUsed))
                   .toString()
               )
             : null,

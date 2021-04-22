@@ -20,10 +20,12 @@ module.exports = (api) => {
           api.erc20.contracts[chainTicker] = {
             interface,
             contract,
-            decimals: contract.decimals != null
-              ? await contract.decimals()
-              : ethers.BigNumber.from("18"),
-            symbol: await contract.symbol(),
+            decimals:
+              contract.decimals != null
+                ? await contract.decimals()
+                : ethers.BigNumber.from("18"),
+            symbol:
+              contract.symbol != null ? await contract.symbol() : chainTicker,
           };
   
           const retObj = {
