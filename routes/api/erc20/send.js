@@ -39,7 +39,8 @@ module.exports = (api) => {
         address,
         amountBn
       );
-    } catch(e) {      
+    } catch(e) {   
+      api.log(e.message, 'erc20_preflight')   
       throw new Error(Web3Interface.decodeWeb3Error(e.message).message)
     }
     
@@ -89,14 +90,37 @@ module.exports = (api) => {
         web3Provider.interface.InfuraProvider
       )
     );
-    const gasEst = await contract.estimateGas.transfer(address, amountBn)
-    const response = await signableContract.transfer(
-      address,
-      amountBn
-    );
+    let gasEst = null
+    let response = null
+
+    try {
+      gasEst = await contract.estimateGas.transfer(address, amountBn)
+      response = await signableContract.transfer(
+        address,
+        amountBn
+      );
+    } catch(e) {    
+      api.log(e.message, 'erc20_sendtx')  
+      throw new Error(Web3Interface.decodeWeb3Error(e.message).message)
+    }
 
     const maxFee = gasEst.mul(gasPrice)
 
+    if (!api.erc20.contracts[contractId].cache.pending_txs[response.hash]) {
+      api.erc20.contracts[contractId].cache.pending_txs[response.hash] = {
+        hash: response.hash,
+        confirmations: 0,
+        from: response.from,
+        gasPrice: response.gasPrice,
+        gasLimit: response.gasLimit,
+        to: address,
+        value: amountBn,
+        nonce: response.nonce,
+        data: response.data,
+        chainId: response.data
+      }
+    }
+    
     return {
       to: address,
       from: response.from,

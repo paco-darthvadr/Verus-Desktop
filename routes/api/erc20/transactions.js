@@ -22,7 +22,7 @@ module.exports = (api) => {
   
   api.erc20.get_transactions = async (contractId, address) => {
     if (api.erc20.contracts[contractId] != null) {
-      return await api.erc20.contracts[
+      let txs = await api.erc20.contracts[
         contractId
       ].interface.EtherscanProvider.getHistory(
         address,
@@ -30,6 +30,14 @@ module.exports = (api) => {
         null,
         contractId
       );
+
+      Object.values(api.erc20.contracts[contractId].cache.pending_txs).forEach(pendingTx => {
+        if (!(txs.some(tx => tx.hash === pendingTx.hash))) {
+          txs.unshift(pendingTx)
+        } else delete api.erc20.contracts[contractId].cache.pending_txs[pendingTx.hash]
+      })
+
+      return txs
     } else {
       throw new Error(`Cannot get transaction list for inactive coin ${contractId}`)
     }
@@ -38,31 +46,11 @@ module.exports = (api) => {
   api.erc20.get_standardized_wallet_transactions = async (contractId) => {
     if (api.erc20.contracts[contractId] != null) {
       if (api.erc20.wallet != null) {
-        let processedTxs = standardizeEthTxObj(
+        return standardizeEthTxObj(
           await api.erc20.get_transactions(contractId, api.erc20.wallet.address),
           api.erc20.wallet.address,
           api.erc20.contracts[contractId].decimals
         );
-
-        for (let i = 0; i < processedTxs.length; i++) {
-          let tx = processedTxs[i];
-
-          if (tx.type === "self") {
-            const txReceipt = await api.erc20.get_transaction(
-              contractId,
-              tx.txid
-            );
-            const fee = ethers.utils
-              .formatEther(
-                txReceipt.gasUsed.mul(ethers.utils.parseEther(tx.gasPrice))
-              )
-              .toString();
-
-            processedTxs[i] = { ...tx, ...txReceipt, amount: fee, fee };
-          }
-        }
-
-        return processedTxs;
       } else {
         throw new Error(
           `No wallet authenticated, cannot get wallet transactions for ${contractId}`

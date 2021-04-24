@@ -33,7 +33,8 @@ module.exports = (api) => {
         chainId: api.eth.interface.network.id,
         gasLimit: ethers.BigNumber.from(21000)
       });
-    } catch(e) {      
+    } catch(e) {  
+      api.log(e.message, 'eth_preflight')    
       throw new Error(Web3Interface.decodeWeb3Error(e.message).message)
     }
 
@@ -94,16 +95,37 @@ module.exports = (api) => {
       api.eth.wallet.signer.signingKey.privateKey,
       api.eth.interface.InfuraProvider
     );
-    const response = await signer.sendTransaction(transaction);
 
-    return {
-      to: response.to,
-      from: response.from,
-      value: ethers.utils.formatEther(response.value),
-      txid: response.hash,
-      fee: ethers.utils.formatEther(
-        transaction.gasLimit.mul(transaction.gasPrice)
-      )
+    try {
+      const response = await signer.sendTransaction(transaction);
+
+      if (!api.eth.cache.pending_txs[response.hash]) {
+        api.eth.cache.pending_txs[response.hash] = {
+          hash: response.hash,
+          confirmations: 0,
+          from: response.from,
+          gasPrice: response.gasPrice,
+          gasLimit: response.gasLimit,
+          to: response.to,
+          value: response.value,
+          nonce: response.nonce,
+          data: response.data,
+          chainId: response.data
+        }
+      }
+
+      return {
+        to: response.to,
+        from: response.from,
+        value: ethers.utils.formatEther(response.value),
+        txid: response.hash,
+        fee: ethers.utils.formatEther(
+          transaction.gasLimit.mul(transaction.gasPrice)
+        )
+      }
+    } catch(e) {
+      api.log(e.message, 'eth_sendtx')
+      throw new Error(Web3Interface.decodeWeb3Error(e.message).message)
     }
   }
 

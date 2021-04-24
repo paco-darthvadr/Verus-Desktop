@@ -40,6 +40,7 @@ class Web3Interface {
       const errorObject = JSON.parse(JSON.parse(errorJsonString).body).error;
       return {
         code: errorObject.code,
+        unparsed: errorString,
         message:
           errorObject.message.charAt(0).toUpperCase() +
           errorObject.message.slice(1),
@@ -47,6 +48,7 @@ class Web3Interface {
     } catch (e) {            
       return {
         code: -32000,
+        unparsed: errorString,
         message: "Unknown error",
       };
     }

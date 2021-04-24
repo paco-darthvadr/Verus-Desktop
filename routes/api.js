@@ -195,7 +195,8 @@ api.eth = {
   wallet: null,
   interface: null,
   cache: {
-    tx_cache: {}
+    tx_cache: {},
+    pending_txs: {}
   }
 };
 

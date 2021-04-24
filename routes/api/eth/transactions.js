@@ -17,8 +17,16 @@ module.exports = (api) => {
   });
   
   api.eth.get_transactions = async (address) => {
-    if (api.eth.interface != null) {
-      return await api.eth.interface.EtherscanProvider.getHistory(address)
+    if (api.eth.interface != null && api.eth.cache != null) {
+      let txs = await api.eth.interface.EtherscanProvider.getHistory(address)
+
+      Object.values(api.eth.cache.pending_txs).forEach(pendingTx => {
+        if (!(txs.some(tx => tx.hash === pendingTx.hash))) {
+          txs.unshift(pendingTx)
+        } else delete api.eth.cache.pending_txs[pendingTx.hash]
+      })
+      
+      return txs
     } else {
       throw new Error("Cannot get transaction list for inactive coin ETH")
     }
@@ -26,27 +34,10 @@ module.exports = (api) => {
 
   api.eth.get_standardized_wallet_transactions = async () => {
     if (api.eth.wallet != null) {
-      let processedTxs = standardizeEthTxObj(
+      return standardizeEthTxObj(
         await api.eth.get_transactions(api.eth.wallet.address),
         api.eth.wallet.address
       );
-    
-      for (let i = 0; i < processedTxs.length; i++) {
-        let tx = processedTxs[i]
-    
-        if (tx.type === 'self') {
-          const txReceipt = await api.eth.get_transaction(tx.txid)
-          const fee = ethers.utils
-            .formatEther(
-              txReceipt.gasUsed.mul(ethers.utils.parseEther(tx.gasPrice))
-            )
-            .toString();
-    
-          processedTxs[i] = { ...tx, ...txReceipt, amount: fee, fee }
-        }
-      }
-
-      return processedTxs
     } else {
       throw new Error("No wallet authenticated, cannot get wallet transactions for ETH")
     }
