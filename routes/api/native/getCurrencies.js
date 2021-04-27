@@ -4,22 +4,45 @@ const Promise = require('bluebird');
 module.exports = (api) => {
   api.native.get_all_currencies = (coin, query = {}) => {
     return new Promise((resolve, reject) => {
-      api.native.callDaemon(coin, 'listcurrencies', [query])
-      .then((allcurrencies) => {
-        //TODO: Change getcurrency instead of listcurrencies so they are the same
-        resolve(
-          allcurrencies.map((currency) => ({
-            parent_name: coin,
-            ...currency.currencydefinition,
-            bestheight: currency.bestheight,
-            lastconfirmedheight: currency.lastconfirmedheight,
-            bestcurrencystate: currency.bestcurrencystate
-          }))
-        );
-      })
-      .catch(err => {
-        reject(err)
-      })
+      api.native
+        .callDaemon(coin, "listcurrencies", [query])
+        .then(async (allcurrencies) => {
+          // Run through to cache
+          allcurrencies.map((currency) => {
+            const definition = currency.currencydefinition;
+
+            if (
+              !api.native.cache.currency_definition_cache[definition.currencyid]
+            ) {
+              api.native.cache.currency_definition_cache[
+                definition.currencyid
+              ] = definition;
+            }
+          });
+
+          const currencyObjects = [];
+
+          for (currency of allcurrencies) {
+            const { systemid } = currency.currencydefinition;
+            const parent_name = (
+              await api.native.get_currency_definition(coin, systemid)
+            ).name.toUpperCase();
+
+            currencyObjects.push({
+              parent_name,
+              ...currency.currencydefinition,
+              bestheight: currency.bestheight,
+              lastconfirmedheight: currency.lastconfirmedheight,
+              bestcurrencystate: currency.bestcurrencystate,
+            });
+          }
+
+          //TODO: Change getcurrency instead of listcurrencies so they are the same
+          resolve(currencyObjects);
+        })
+        .catch((err) => {
+          reject(err);
+        });
     });
   };
 
@@ -42,7 +65,7 @@ module.exports = (api) => {
             fullCurrencyObj.currencyid != null &&
             fullCurrencyObj.name != null
           ) {
-            res.currencyData[currency] = fullCurrencyObj
+            res.currencyData[fullCurrencyObj.name] = fullCurrencyObj
             res.currencyNames[fullCurrencyObj.currencyid] = fullCurrencyObj.name
           }
         } catch(err) {

@@ -1,30 +1,29 @@
-const { IS_PBAAS_FLAG } = require("../utils/constants/currency_flags");
-const checkFlag = require("../utils/flags");
-
 module.exports = (api) => {
-  api.native.get_currency = async (chain, name, systemid) => {
-    const system = systemid == null ? chain : systemid
+  // The only difference between this and get_currency is that this cannot
+  // be used to derive non-static properties of a currency like bestcurrencystate
+  api.native.get_currency_definition = async (chain, currencyid) => {
+    if (api.native.cache.currency_definition_cache[currencyid]) {
+      return api.native.cache.currency_definition_cache[currencyid]
+    } else {
+      const definition = await api.native.callDaemon(chain, 'getcurrency', [currencyid])
 
+      api.native.cache.currency_definition_cache[currencyid] = definition
+      return definition
+    }
+  }
+
+  api.native.get_currency = async (chain, currencyid) => {
     try {
-      const parent = await api.native.callDaemon(chain, 'getcurrency', [system])
+      const currencyObject = await api.native.callDaemon(chain, 'getcurrency', [currencyid])
+      const parent = await api.native.get_currency_definition(chain, currencyObject.systemid)
 
-      try {
-        const current = await api.native.callDaemon(chain, 'getcurrency', [name])
-
-        if (
-          current.systemid === parent.currencyid ||
-          checkFlag(current.options, IS_PBAAS_FLAG)
-        ) {
-          return {
-            ...current,
-            parent_name: parent.name,
-          };
-        }
-      } catch(e) {}
+      if (!api.native.cache.currency_definition_cache[currencyid]) {
+        api.native.cache.currency_definition_cache[currencyid] = currencyObject
+      }
 
       return {
-        ...await api.native.callDaemon(chain, 'getcurrency', [`${name}.${parent.name}`]),
-        parent_name: parent.name
+        ...currencyObject,
+        parent_name: parent.name.toUpperCase()
       }
     } catch(e) {
       throw e

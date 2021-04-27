@@ -90,7 +90,8 @@ api.native = {
   startParams: {},
   cache: {
     tx_cache: {},
-    addr_balance_cache: {}
+    addr_balance_cache: {},
+    currency_definition_cache: {}
   }
 };
 
