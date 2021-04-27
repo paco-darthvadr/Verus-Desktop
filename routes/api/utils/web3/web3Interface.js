@@ -37,17 +37,16 @@ class Web3Interface {
         index++;
       }
 
-      const errorObject = JSON.parse(JSON.parse(errorJsonString).body).error;
+      const firstJson = JSON.parse(errorJsonString)
+      const secondJson = JSON.parse(firstJson.body != null ? firstJson.body : firstJson.result)
+      const errorMessage = secondJson.error != null ? secondJson.error.message : secondJson.result
+
       return {
-        code: errorObject.code,
         unparsed: errorString,
-        message:
-          errorObject.message.charAt(0).toUpperCase() +
-          errorObject.message.slice(1),
+        message: errorMessage.charAt(0).toUpperCase() + errorMessage.slice(1),
       };
-    } catch (e) {            
+    } catch (e) {        
       return {
-        code: -32000,
         unparsed: errorString,
         message: "Unknown error",
       };
@@ -62,8 +61,7 @@ class Web3Interface {
 
       return [contractAddress, abi];
     } catch (e) {
-      console.error(e);
-      throw e;
+      throw new Error(Web3Interface.decodeWeb3Error(e.message).message)
     }
   };
 

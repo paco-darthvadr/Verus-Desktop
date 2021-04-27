@@ -12,7 +12,7 @@ api.assetChainPortsDefault = require('./ports.js');
 api._appConfig = require('./appConfig.js');
 api.chainParams = require('./chainParams')
 
-api.coinsInitializing = [];
+api.coinsInitializing = {};
 api.startedDaemonRegistry = {};
 api.confFileIndex = {};
 api.logFileIndex = {};

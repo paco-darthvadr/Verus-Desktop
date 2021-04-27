@@ -32,13 +32,10 @@ module.exports = (api) => {
         .then(() => {
           // Set timeout for "No running daemon message" to be
           // "Initializing daemon" for a few seconds
-          api.coinsInitializing.push(coin);
+          api.coinsInitializing[coin] = true;
 
           setTimeout(() => {
-            api.coinsInitializing.splice(
-              api.coinsInitializing.indexOf(coin),
-              1
-            );
+            api.coinsInitializing[coin] = false;
           }, 20000);
 
           api.log(

@@ -1,32 +1,39 @@
 module.exports = (api) => {
   api.native.restartCoin = async (chainTicker, launchConfig, startupOptions, bootstrap = false) => {
-    api.log('initiating restart for ' + chainTicker, 'restartCoin')
-
-    await api.quitDaemon(chainTicker === 'KMD' ? 'komodod' : chainTicker, 30000)
-
-    return new Promise((resolve, reject) => {
-      const intervalId = setInterval(async () => {
-        api.log('checking if ' + launchConfig.daemon + " process has finished", 'restartCoin')
-        let tries = 0
-
-        const resolveInterval = async () => {
-          clearInterval(intervalId)
-          try {
-            resolve(await api.native.addCoin(chainTicker, launchConfig, startupOptions, bootstrap))
-          } catch(e) {
-            reject(e)
-          }
-        }
+    if (!api.coinsInitializing[chainTicker]) {
+      api.log('initiating restart for ' + chainTicker, 'restartCoin')
+      api.coinsInitializing[chainTicker] = true
   
-        if (!(await api.isDaemonRunning(launchConfig.daemon))) {
-          api.log(`${launchConfig.daemon} no longer running, starting ${launchConfig.daemon}`, 'restartCoin')
-          await resolveInterval()
-        } else if (tries >= 20) {
-          api.log(`${tries * 2} seconds have passed, trying to launch daemon anyways`, 'restartCoin')
-          await resolveInterval()
-        } else tries++
-      }, 1000)
-    })
+      await api.quitDaemon(chainTicker === 'KMD' ? 'komodod' : chainTicker, 30000)
+  
+      return new Promise((resolve, reject) => {
+        let tries = 0
+  
+        const intervalId = setInterval(async () => {
+          api.log('checking if ' + launchConfig.daemon + " process has finished", 'restartCoin')
+          
+          const resolveInterval = async () => {
+            clearInterval(intervalId)
+            try {
+              resolve(await api.native.addCoin(chainTicker, launchConfig, startupOptions, bootstrap))
+            } catch(e) {
+              reject(e)
+            }
+          }
+    
+          if (!(await api.isDaemonRunning(launchConfig.daemon))) {
+            api.log(`${launchConfig.daemon} no longer running, starting ${launchConfig.daemon}`, 'restartCoin')
+            await resolveInterval()
+          } else if (tries >= 20) {
+            api.log(`${tries * 2} seconds have passed, trying to launch daemon anyways`, 'restartCoin')
+            await resolveInterval()
+          } else tries++
+        }, 1000)
+      })
+    } else {
+      api.log('cannot restart ' + chainTicker + ' while it is being initialized', 'restartCoin')
+      return Promise.reject(new Error(`Cannot restart ${chainTicker} daemon while it is being initialized`))
+    }
   }
 
   api.setPost('/native/coins/restart', (req, res) => {

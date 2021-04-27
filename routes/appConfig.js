@@ -5,7 +5,7 @@ let nonZCoins = {}
 let nativeCoinStrings = {}
 
 const coinObjArray = coinDataTranslated.getSimpleCoinArray().map(simpleCoinObj => {
-  const coinObj = coinDataTranslated.getCoinObj(simpleCoinObj.id, false)
+  const coinObj = coinDataTranslated.getCoinObj(simpleCoinObj.id)
 
   if (coinObj.tags.includes('is_zcash')) nonZCoins[coinObj.id] = false
   else nonZCoins[coinObj.id] = true
