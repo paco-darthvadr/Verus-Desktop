@@ -6,9 +6,25 @@ module.exports = (api) => {
       return api.native.cache.currency_definition_cache[currencyid]
     } else {
       const definition = await api.native.callDaemon(chain, 'getcurrency', [currencyid])
+      let { name } = definition
 
-      api.native.cache.currency_definition_cache[currencyid] = definition
-      return definition
+      if (
+        definition.currencyid !== definition.systemid &&
+        definition.parent !== "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq"
+      ) {
+        name = `${name}.${
+          (await api.native.get_currency_definition(chain, definition.systemid))
+            .name
+        }`;
+      }
+
+      const processedDefinition = {
+        ...definition,
+        name,
+      }
+
+      api.native.cache.currency_definition_cache[currencyid] = processedDefinition
+      return processedDefinition
     }
   }
 
@@ -17,14 +33,22 @@ module.exports = (api) => {
       const currencyObject = await api.native.callDaemon(chain, 'getcurrency', [currencyid])
       const parent = await api.native.get_currency_definition(chain, currencyObject.systemid)
 
+      const processedCurrencyObject = {
+        ...currencyObject,
+        systemname: parent.name.toUpperCase(),
+        spotterid: chain,
+        name:
+          currencyObject.systemid !== currencyObject.currencyid &&
+          currencyObject.parent !== "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq"
+            ? `${currencyObject.name}.${parent.name}`
+            : currencyObject.name,
+      };
+
       if (!api.native.cache.currency_definition_cache[currencyid]) {
-        api.native.cache.currency_definition_cache[currencyid] = currencyObject
+        api.native.cache.currency_definition_cache[currencyid] = processedCurrencyObject
       }
 
-      return {
-        ...currencyObject,
-        parent_name: parent.name.toUpperCase()
-      }
+      return processedCurrencyObject
     } catch(e) {
       throw e
     }

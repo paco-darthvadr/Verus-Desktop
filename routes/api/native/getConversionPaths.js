@@ -34,6 +34,16 @@ module.exports = (api) => {
 
             for (const path of paths) {
               const currencyName = Object.keys(path)[0];
+              const system = (
+                await api.native.get_currency_definition(chain, path[currencyName].systemid)
+              )
+              const displayName =
+                path[currencyName].systemid === path[currencyName].currencyid ||
+                path[currencyName].systemid ===
+                  "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq"
+                  ? currencyName
+                  : `${currencyName}.${system.name}`;
+              
               let pricingCurrencyState;
               let price;
 
@@ -74,7 +84,10 @@ module.exports = (api) => {
 
               convertables[path[currencyName].currencyid] = {
                 via,
-                destination: path[currencyName],
+                destination: {
+                  ...path[currencyName],
+                  name: displayName
+                },
                 exportto:
                   (via == null &&
                     path[currencyName].systemid === source.systemid) ||

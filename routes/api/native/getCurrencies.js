@@ -2,48 +2,57 @@
 const Promise = require('bluebird');
 
 module.exports = (api) => {
-  api.native.get_all_currencies = (coin, query = {}) => {
-    return new Promise((resolve, reject) => {
-      api.native
-        .callDaemon(coin, "listcurrencies", [query])
-        .then(async (allcurrencies) => {
-          // Run through to cache
-          allcurrencies.map((currency) => {
-            const definition = currency.currencydefinition;
+  api.native.get_all_currencies = async (coin, query = {}) => {
+    let allCurrencies = []
 
-            if (
-              !api.native.cache.currency_definition_cache[definition.currencyid]
-            ) {
-              api.native.cache.currency_definition_cache[
-                definition.currencyid
-              ] = definition;
-            }
-          });
+    if (query.systemtype == null) {
+      allCurrencies = [
+        ...(await api.native.callDaemon(coin, "listcurrencies", [{ ...query, systemtype: "pbaas" }])),
+        ...(await api.native.callDaemon(coin, "listcurrencies", [{ ...query, systemtype: "local" }])),
+      ];
+    } else {
+      allCurrencies = await api.native.callDaemon(coin, "listcurrencies", [query])
+    }
 
-          const currencyObjects = [];
+    // Run through to cache
+    // TODO: Implement cache size limit
+    allCurrencies.map((currency) => {
+      const definition = currency.currencydefinition;
 
-          for (currency of allcurrencies) {
-            const { systemid } = currency.currencydefinition;
-            const parent_name = (
-              await api.native.get_currency_definition(coin, systemid)
-            ).name.toUpperCase();
-
-            currencyObjects.push({
-              parent_name,
-              ...currency.currencydefinition,
-              bestheight: currency.bestheight,
-              lastconfirmedheight: currency.lastconfirmedheight,
-              bestcurrencystate: currency.bestcurrencystate,
-            });
-          }
-
-          //TODO: Change getcurrency instead of listcurrencies so they are the same
-          resolve(currencyObjects);
-        })
-        .catch((err) => {
-          reject(err);
-        });
+      if (
+        !api.native.cache.currency_definition_cache[definition.currencyid]
+      ) {
+        api.native.cache.currency_definition_cache[
+          definition.currencyid
+        ] = definition;
+      }
     });
+
+    const currencyObjects = [];
+
+    for (currency of allCurrencies) {
+      const { systemid, name, currencyid, parent } = currency.currencydefinition;
+      const systemname = (
+        await api.native.get_currency_definition(coin, systemid)
+      ).name.toUpperCase();
+
+      currencyObjects.push({
+        systemname,
+        spotterid: coin,
+        ...currency.currencydefinition,
+        name:
+          (currencyid === systemid ||
+          parent === "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq")
+            ? name
+            : `${name}.${systemname}`,
+        bestheight: currency.bestheight,
+        lastconfirmedheight: currency.lastconfirmedheight,
+        bestcurrencystate: currency.bestcurrencystate,
+      });
+    }
+
+    //TODO: Change getcurrency instead of listcurrencies so they are the same
+    return currencyObjects
   };
 
   // Returns an object with key = currency name and value = currency object
