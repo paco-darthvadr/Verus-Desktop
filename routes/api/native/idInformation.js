@@ -95,6 +95,24 @@ module.exports = (api) => {
               formattedIds[i].canwriterecovery = recoveryId != null && recoveryId.status === 'active'
               formattedIds[i].canwriterevocation = formattedIds[i].canwriterecovery
 
+              if (
+                formattedIds[i].identity.parent !==
+                  "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV" &&
+                formattedIds[i].identity.parent !==
+                  "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq"
+              ) {
+                formattedIds[i].identity.name = `${
+                  formattedIds[i].identity.name
+                }.${
+                  (
+                    await api.native.get_currency_definition(
+                      coin,
+                      formattedIds[i].identity.parent
+                    )
+                  ).name
+                }`;
+              }
+
               if (formattedIds[i].status === 'active') {
                 formattedIds[i].canrevoke = identities.some(
                   (listIdentityObject) => {
@@ -157,7 +175,23 @@ module.exports = (api) => {
   api.native.get_identity = (coin, name) => {
     return new Promise((resolve, reject) => {      
       api.native.callDaemon(coin, 'getidentity', [name])
-      .then((identity) => {
+      .then(async (identity) => {
+        if (
+          identity.identity.parent !==
+            "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV" &&
+            identity.identity.parent !==
+            "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq"
+        ) {
+          identity.identity.name = `${identity.identity.name}.${
+            (
+              await api.native.get_currency_definition(
+                coin,
+                identity.identity.parent
+              )
+            ).name
+          }`;
+        }
+
         resolve(identity)
       })
       .catch(err => {

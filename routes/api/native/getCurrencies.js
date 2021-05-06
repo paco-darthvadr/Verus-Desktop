@@ -6,9 +6,21 @@ module.exports = (api) => {
     let allCurrencies = []
 
     if (query.systemtype == null) {
+      const pbaasCurrencies = await api.native.callDaemon(coin, "listcurrencies", [{ ...query, systemtype: "pbaas" }])
       allCurrencies = [
-        ...(await api.native.callDaemon(coin, "listcurrencies", [{ ...query, systemtype: "pbaas" }])),
-        ...(await api.native.callDaemon(coin, "listcurrencies", [{ ...query, systemtype: "local" }])),
+        ...pbaasCurrencies,
+        ...(
+          await api.native.callDaemon(coin, "listcurrencies", [
+            { ...query, systemtype: "local" },
+          ])
+        ).filter(
+          (currency) =>
+            !pbaasCurrencies.some(
+              (pbaasCurrency) =>
+                pbaasCurrency.currencydefinition.currencyid ===
+                currency.currencydefinition.currencyid
+            )
+        ),
       ];
     } else {
       allCurrencies = await api.native.callDaemon(coin, "listcurrencies", [query])
