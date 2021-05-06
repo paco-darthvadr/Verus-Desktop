@@ -31,10 +31,10 @@ module.exports = (api) => {
         contractId
       );
 
-      Object.values(api.erc20.contracts[contractId].cache.pending_txs).forEach(pendingTx => {
+      Object.values(api.erc20.contracts[contractId].temp.pending_txs).forEach(pendingTx => {
         if (!(txs.some(tx => tx.hash === pendingTx.hash))) {
           txs.unshift(pendingTx)
-        } else delete api.erc20.contracts[contractId].cache.pending_txs[pendingTx.hash]
+        } else delete api.erc20.contracts[contractId].temp.pending_txs[pendingTx.hash]
       })
 
       return txs

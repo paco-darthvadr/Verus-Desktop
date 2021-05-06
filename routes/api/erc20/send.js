@@ -106,8 +106,8 @@ module.exports = (api) => {
 
     const maxFee = gasEst.mul(gasPrice)
 
-    if (!api.erc20.contracts[contractId].cache.pending_txs[response.hash]) {
-      api.erc20.contracts[contractId].cache.pending_txs[response.hash] = {
+    if (!api.erc20.contracts[contractId].temp.pending_txs[response.hash]) {
+      api.erc20.contracts[contractId].temp.pending_txs[response.hash] = {
         hash: response.hash,
         confirmations: 0,
         from: response.from,

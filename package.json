@@ -67,6 +67,7 @@
     "graceful-fs": "^4.1.11",
     "iocane": "^1.0.0",
     "js-sha256": "^0.7.1",
+    "node-cache": "^5.1.2",
     "nodejs-aes256": "^1.0.1",
     "passwd-strength": "https://github.com/michaeltout/passwd-strength.git",
     "portscanner": "^2.1.1",

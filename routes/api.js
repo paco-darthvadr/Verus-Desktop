@@ -83,6 +83,8 @@ api = require('./api/utility_apis/checkUpdates')(api);
 api.createAgamaDirs();
 api.appConfig = api.loadLocalConfig();
 
+api = require('./api/utility_apis/cache')(api);
+
 api.appConfigSchema = api._appConfig.schema;
 api.defaultAppConfig = Object.assign({}, api.appConfig);
 api.kmdMainPassiveMode = false;
@@ -91,7 +93,7 @@ api.native = {
   cache: {
     tx_cache: {},
     addr_balance_cache: {},
-    currency_definition_cache: {}
+    currency_definition_cache: api.create_sub_cache("native.cache.currency_definition_cache"),
   }
 };
 
@@ -195,8 +197,7 @@ api = require('./api/kv.js')(api);
 api.eth = {
   wallet: null,
   interface: null,
-  cache: {
-    tx_cache: {},
+  temp: {
     pending_txs: {}
   }
 };
@@ -240,12 +241,6 @@ api.setIO = (io) => {
 api.setVar = (_name, _body) => {
   api[_name] = _body;
 };
-
-// spv
-if (((api.appConfig.general.main.dev || process.argv.indexOf('devmode') > -1) && api.appConfig.general.electrum.cache) ||
-    (!api.appConfig.general.main.dev && process.argv.indexOf('devmode') === -1)) {
-  api.loadLocalSPVCache();
-}
 
 if (api.appConfig.general.electrum &&
     api.appConfig.general.electrum.customServers) {

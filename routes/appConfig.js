@@ -36,6 +36,7 @@ const appConfig = {
           linux: 1000000
         },
         dev: false,
+        cacheMbLimit: 30,
         livelog: false,
         uploadCrashReports: false,
         debug: false,
@@ -79,7 +80,6 @@ const appConfig = {
         includeP2shAddrs: false,
         includeEmptyChangeAddrs: false,
         defaultShowEmptyAddrs: true,
-        nativeCacheMbLimit: 30,
         filterGenerateTransactions: true,
         showAddressCurrencyBalances: true
       }
@@ -113,6 +113,12 @@ const appConfig = {
           displayName: "Verus Port",
           info:
             "The port that the Verus GUI will use to communicate with its back end."
+        },
+        cacheMbLimit: {
+          type: "decimal_input",
+          displayName: "Cache Size Limit (in Mb)",
+          info:
+            "Set the cache size limit (in megabytes). (Improves performance by storing blockchain data in local memory)"
         },
         dev: {
           type: "checkbox",
@@ -186,12 +192,6 @@ const appConfig = {
           displayName: "Include Pay to Script Hash Addresses",
           info:
             "Include Pay to Script Hash addresses in your address list (ONLY SEND TO THESE IF YOU KNOW WHAT YOU ARE DOING)."
-        },
-        nativeCacheMbLimit: {
-          type: "decimal_input",
-          displayName: "Native Cache Size Limit (in Mb)",
-          info:
-            "Set the native cache size limit (in megabytes). (Improves performance by storing blockchain data in local memory)"
         },
         includeEmptyChangeAddrs: {
           type: "checkbox",

@@ -20,11 +20,9 @@ module.exports = (api) => {
       const definition = currency.currencydefinition;
 
       if (
-        !api.native.cache.currency_definition_cache[definition.currencyid]
+        !api.native.cache.currency_definition_cache.has(definition.currencyid)
       ) {
-        api.native.cache.currency_definition_cache[
-          definition.currencyid
-        ] = definition;
+        api.native.cache.currency_definition_cache.set(definition.currencyid, definition)
       }
     });
 
@@ -35,10 +33,14 @@ module.exports = (api) => {
       const systemname = (
         await api.native.get_currency_definition(coin, systemid)
       ).name.toUpperCase();
+      const spotterid = (
+        await api.native.get_currency_definition(coin, coin)
+      ).currencyid
 
       currencyObjects.push({
         systemname,
-        spotterid: coin,
+        spottername: coin,
+        spotterid,
         ...currency.currencydefinition,
         name:
           (currencyid === systemid ||

@@ -20,7 +20,7 @@ module.exports = (api) => {
           api.erc20.contracts[chainTicker] = {
             interface,
             contract,
-            cache: {
+            temp: {
               pending_txs: {}
             },
             decimals:

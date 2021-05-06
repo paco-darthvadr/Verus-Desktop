@@ -119,10 +119,6 @@ module.exports = (api) => {
             toCurrency = await api.native.get_currency(chainTicker, convertto)            
             currentHeight = await api.native.get_info(chainTicker).longestchain
 
-            if (currentHeight < toCurrency.startblock && !preconvert) {
-              throw new Error("Preconvert expired! You can no longer preconvert this currency.")
-            }
-
             if (
               toCurrency.bestcurrencystate != null &&
               toCurrency.bestcurrencystate.currencies[

@@ -20,10 +20,10 @@ module.exports = (api) => {
     if (api.eth.interface != null && api.eth.cache != null) {
       let txs = await api.eth.interface.EtherscanProvider.getHistory(address)
 
-      Object.values(api.eth.cache.pending_txs).forEach(pendingTx => {
+      Object.values(api.eth.temp.pending_txs).forEach(pendingTx => {
         if (!(txs.some(tx => tx.hash === pendingTx.hash))) {
           txs.unshift(pendingTx)
-        } else delete api.eth.cache.pending_txs[pendingTx.hash]
+        } else delete api.eth.temp.pending_txs[pendingTx.hash]
       })
       
       return txs

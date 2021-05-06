@@ -99,8 +99,8 @@ module.exports = (api) => {
     try {
       const response = await signer.sendTransaction(transaction);
 
-      if (!api.eth.cache.pending_txs[response.hash]) {
-        api.eth.cache.pending_txs[response.hash] = {
+      if (!api.eth.temp.pending_txs[response.hash]) {
+        api.eth.temp.pending_txs[response.hash] = {
           hash: response.hash,
           confirmations: 0,
           from: response.from,
