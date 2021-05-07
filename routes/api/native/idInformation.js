@@ -99,18 +99,25 @@ module.exports = (api) => {
                 formattedIds[i].identity.parent !==
                   "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV" &&
                 formattedIds[i].identity.parent !==
-                  "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq"
+                  "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq" && 
+                formattedIds[i].identity.parent !==
+                  "i3UXS5QPRQGNRDDqVnyWTnmFCTHDbzmsYk"
               ) {
-                formattedIds[i].identity.name = `${
-                  formattedIds[i].identity.name
-                }.${
-                  (
-                    await api.native.get_currency_definition(
-                      coin,
-                      formattedIds[i].identity.parent
-                    )
-                  ).name
-                }`;
+                try {
+                  formattedIds[i].identity.name = `${
+                    formattedIds[i].identity.name
+                  }.${
+                    (
+                      await api.native.get_currency_definition(
+                        coin,
+                        formattedIds[i].identity.parent
+                      )
+                    ).name
+                  }`;
+                } catch(e) {
+                  api.log('Failed to get parent for ' + formattedIds[i].identity.name, 'get_identities')
+                  api.log(e, 'get_identities')
+                }
               }
 
               if (formattedIds[i].status === 'active') {
