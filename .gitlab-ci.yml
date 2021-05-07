@@ -8,8 +8,8 @@ stages:
 variables:
   DOCKER_DRIVER: overlay2
   DEFAULT_VERUSCOIN_BRANCH: release
-  VERUS_VERSION: 0.7.2-9
-  VERUSCOIN_VERSION: 0.7.2-8
+  VERUS_VERSION: 0.7.3
+  VERUSCOIN_VERSION: 0.7.3
   KOMODO_VERSION: 0.6.1
   BINARY_SOURCE: VerusCoin
   VERUS_APPIMAGE_X64: Verus-Desktop-v${VERUS_VERSION}-x86_64.AppImage
@@ -54,6 +54,7 @@ build:linux:
     - tar -xzvf Verus-CLI-Linux-v${VERUSCOIN_VERSION}-x86_64.tar.gz --strip=1 --directory assets/bin/linux64/verusd
     - rm Verus-CLI-Linux-v${VERUSCOIN_VERSION}-x86_64.tar.gz
     - mkdir -p assets/bin/linux64/komodod
+    - mkdir -p assets/bin/linux64/pirated
     - wget https://github.com/KomodoPlatform/komodo/releases/download/${KOMODO_VERSION}/komodo_linux_${KOMODO_VERSION}.tar.gz
     - tar -xzvf komodo_linux_${KOMODO_VERSION}.tar.gz --strip=1 --directory assets/bin/linux64/komodod
     - rm komodo_linux_${KOMODO_VERSION}.tar.gz
@@ -61,6 +62,10 @@ build:linux:
     - gsutil cp $STAGING/VerusCoin/Zcash/zcashd-linux-x86_64.tar.gz .
     - tar -xzvf zcashd-linux-x86_64.tar.gz --directory assets/bin/linux64/
     - rm zcashd-linux-x86_64.tar.gz
+    - wget https://github.com/PirateNetwork/pirate/releases/download/v5.0.0/pirate-cli-ubuntu1804-v5.0.0.zip
+    - unzip pirate-cli-ubuntu1804-v5.0.0.zip -d assets/bin/linux64/pirated
+    - rm pirate-cli-ubuntu1804-v5.0.0.zip
+    - sed -i "s/process.env.INFURA_PROJECT_ID/'${INFURA_PROJECT_ID}'/g" keys/infura.js
     - sed -i "s/process.env.ETHERSCAN_API_KEY/'${ETHERSCAN_KEY}'/g" keys/etherscan.js
     - yarn install
   script:
@@ -93,12 +98,17 @@ build:linux:arm64:
     - yarn run build
     - cd ../../..
     - mkdir -p assets/bin/linux64/verusd
+    - mkdir -p assets/bin/linux64/pirated
     - gsutil cp $STAGING/$VERUS_CLI_LINUX .
     - tar -xzvf Verus-CLI-Linux-v${VERUSCOIN_VERSION}-arm64.tar.gz --strip=1 --directory assets/bin/linux64/verusd
     - rm Verus-CLI-Linux-v${VERUSCOIN_VERSION}-arm64.tar.gz
     - gsutil cp $STAGING/VerusCoin/Zcash/zcashd-linux-arm64.tar.gz .
     - tar -xzvf zcashd-linux-arm64.tar.gz --directory assets/bin/linux64/
     - rm zcashd-linux-arm64.tar.gz
+    - wget https://github.com/PirateNetwork/pirate/releases/download/v5.0.0/pirate-cli-aarch64-v5.0.0.zip
+    - unzip pirate-cli-aarch64-v5.0.0.zip -d assets/bin/linux64/pirated
+    - rm  pirate-cli-aarch64-v5.0.0.zip
+    - sed -i "s/process.env.INFURA_PROJECT_ID/'${INFURA_PROJECT_ID}'/g" keys/infura.js
     - sed -i "s/process.env.ETHERSCAN_API_KEY/'${ETHERSCAN_KEY}'/g" keys/etherscan.js
     - yarn install
   script:
@@ -134,6 +144,7 @@ build:windows:
     - yarn run build
     - cd ../../..
     - mkdir -p assets/bin/win64/komodod
+    - mkdir -p assets/bin/win64/pirated
     - wget https://github.com/KomodoPlatform/komodo/releases/download/${KOMODO_VERSION}/komodo_windows_${KOMODO_VERSION}.zip
     - unzip komodo_windows_${KOMODO_VERSION}.zip
     - mv win64/komodod.exe win64/komodo-cli.exe assets/bin/win64/komodod
@@ -147,6 +158,10 @@ build:windows:
     - gsutil cp $STAGING/VerusCoin/Zcash/zcashd-win.tar.gz .
     - tar -xzvf zcashd-win.tar.gz --directory assets/bin/win64/
     - rm zcashd-win.tar.gz
+    - wget https://github.com/PirateNetwork/pirate/releases/download/v5.0.0/pirate-cli-windows-v5.0.0.zip
+    - unzip pirate-cli-windows-v5.0.0.zip -d assets/bin/win64/pirated
+    - rm  pirate-cli-windows-v5.0.0.zip
+    - sed -i "s/process.env.INFURA_PROJECT_ID/'${INFURA_PROJECT_ID}'/g" keys/infura.js
     - sed -i "s/process.env.ETHERSCAN_API_KEY/'${ETHERSCAN_KEY}'/g" keys/etherscan.js
     - yarn install
   script:
@@ -169,6 +184,10 @@ build:mac:
   stage: build
   tags: ["Mojave"]
   before_script:
+    - echo "$AUTH_KEY" > AUTH_KEY.json &&
+      gcloud auth activate-service-account
+      --key-file AUTH_KEY.json &&
+      rm AUTH_KEY.json
     - if [ -z "${UPSTREAM_CLI_BRANCH}" ]; then export
       VERUS_CLI_MACOS="${BINARY_SOURCE}/${DEFAULT_VERUSCOIN_BRANCH}/MacOS/Verus-CLI-MacOS-v${VERUSCOIN_VERSION}.tar.gz";
       POST_COMMENT="${POST_COMMENT}Using ${BINARY_SOURCE}/${DEFAULT_VERUSCOIN_BRANCH} binaries.";
@@ -182,6 +201,7 @@ build:mac:
     - wget https://github.com/KomodoPlatform/komodo/releases/download/${KOMODO_VERSION}/komodo_macos_${KOMODO_VERSION}.tar.gz
     - mkdir -p assets/bin/osx/verusd
     - mkdir -p assets/bin/osx/komodod
+    - mkdir -p assets/bin/osx/pirated
     - tar -xzf Verus-CLI-MacOS-v${VERUSCOIN_VERSION}.tar.gz --strip=1 --directory assets/bin/osx/verusd
     - tar -xzvf komodo_macos_${KOMODO_VERSION}.tar.gz  --strip=1 --directory assets/bin/osx/komodod
     - rm komodo_macos_${KOMODO_VERSION}.tar.gz
@@ -189,6 +209,10 @@ build:mac:
     - gsutil cp $STAGING/VerusCoin/Zcash/zcashd-macos.tar.gz .
     - tar -xzvf zcashd-macos.tar.gz --directory assets/bin/osx/
     - rm zcashd-macos.tar.gz
+    - wget https://github.com/PirateNetwork/pirate/releases/download/v5.0.0/pirate-cli-MacOS-v5.0.0.zip
+    - unzip pirate-cli-MacOS-v5.0.0.zip -d assets/bin/osx/pirated
+    - rm pirate-cli-MacOS-v5.0.0.zip
+    - sed -i -e "s/process.env.INFURA_PROJECT_ID/'${INFURA_PROJECT_ID}'/g" keys/infura.js
     - sed -i -e "s/process.env.ETHERSCAN_API_KEY/'${ETHERSCAN_KEY}'/g" keys/etherscan.js
     - yarn install
   script:
