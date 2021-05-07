@@ -70,8 +70,7 @@ module.exports = (api) => {
                   pricingCurrencyState = (
                     await api.native.get_currency(
                       chain,
-                      path[currencyName].currencyid,
-                      path[currencyName].systemid
+                      path[currencyName].currencyid
                     )
                   ).bestcurrencystate;
                 }
@@ -86,14 +85,18 @@ module.exports = (api) => {
                 via,
                 destination: {
                   ...path[currencyName],
-                  name: displayName
+                  name: displayName,
                 },
                 exportto:
                   (via == null &&
                     path[currencyName].systemid === source.systemid) ||
                   (via != null && path[currencyName].systemid === root.systemid)
                     ? null
-                    : (via == null ? path[currencyName].currencyid : via.currencyid),
+                    : via == null
+                    ? path[currencyName].currencyid
+                    : (via.systemid === source.systemid
+                    ? path[currencyName].currencyid
+                    : via.currencyid),
                 price,
               };
             }
@@ -111,7 +114,7 @@ module.exports = (api) => {
                       pricingCurrencyState = via.bestcurrencystate;
                     } else {
                       pricingCurrencyState = (
-                        await api.native.get_currency(chain, via.currencyid, via.systemid)
+                        await api.native.get_currency(chain, via.currencyid)
                       ).bestcurrencystate;
                     }
 
@@ -128,8 +131,7 @@ module.exports = (api) => {
                       pricingCurrencyState = (
                         await api.native.get_currency(
                           chain,
-                          src,
-                          source.systemid
+                          src
                         )
                       ).bestcurrencystate;
                     }
@@ -141,8 +143,7 @@ module.exports = (api) => {
 
                   const _destination = await api.native.get_currency(
                     chain,
-                    reserve,
-                    pricingCurrencyState.currencies[reserve].systemid
+                    reserve
                   )
 
                   convertables[reserve] = {
@@ -153,7 +154,9 @@ module.exports = (api) => {
                         _destination.systemid === source.systemid) ||
                       (via != null && _destination.systemid === root.systemid)
                         ? null
-                        : (via == null
+                        : via == null
+                        ? _destination.currencyid
+                        : (via.systemid === source.systemid
                         ? _destination.currencyid
                         : via.currencyid),
                     price,
