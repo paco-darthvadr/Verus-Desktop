@@ -82,6 +82,67 @@ module.exports = (api) => {
                   tag: "sapling"
                 }]
               }
+
+              const recoveryId = identities.find(
+                (listIdentityObject) => {
+                  return (
+                    listIdentityObject.identity.identityaddress ===
+                    formattedIds[i].identity.recoveryauthority
+                  );
+                }
+              );
+
+              formattedIds[i].canwriterecovery = recoveryId != null && recoveryId.status === 'active'
+              formattedIds[i].canwriterevocation = formattedIds[i].canwriterecovery
+
+              if (
+                formattedIds[i].identity.parent !==
+                  "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV" &&
+                formattedIds[i].identity.parent !==
+                  "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq" && 
+                formattedIds[i].identity.parent !==
+                  "i3UXS5QPRQGNRDDqVnyWTnmFCTHDbzmsYk"
+              ) {
+                try {
+                  formattedIds[i].identity.name = `${
+                    formattedIds[i].identity.name
+                  }.${
+                    (
+                      await api.native.get_currency_definition(
+                        coin,
+                        formattedIds[i].identity.parent
+                      )
+                    ).name
+                  }`;
+                } catch(e) {
+                  api.log('Failed to get parent for ' + formattedIds[i].identity.name, 'get_identities')
+                  api.log(e, 'get_identities')
+                }
+              }
+
+              if (formattedIds[i].status === 'active') {
+                formattedIds[i].canrevoke = identities.some(
+                  (listIdentityObject) => {
+                    return (
+                      listIdentityObject.identity.identityaddress !==
+                        formattedIds[i].identity.identityaddress &&
+                      listIdentityObject.identity.identityaddress ===
+                      formattedIds[i].identity.revocationauthority && 
+                      listIdentityObject.status === 'active'
+                    );
+                  }
+                );
+              } else formattedIds[i].canrevoke = false
+
+              if (
+                formattedIds[i].status === "revoked" &&
+                recoveryId != null &&
+                recoveryId.status === "active"
+              ) {
+                formattedIds[i].canrecover =
+                  recoveryId.identity.identityaddress !==
+                  formattedIds[i].identity.identityaddress;
+              } else formattedIds[i].canrecover = false;
             } catch (e) {
               throw e;
             }
@@ -121,7 +182,23 @@ module.exports = (api) => {
   api.native.get_identity = (coin, name) => {
     return new Promise((resolve, reject) => {      
       api.native.callDaemon(coin, 'getidentity', [name])
-      .then((identity) => {
+      .then(async (identity) => {
+        if (
+          identity.identity.parent !==
+            "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV" &&
+            identity.identity.parent !==
+            "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq"
+        ) {
+          identity.identity.name = `${identity.identity.name}.${
+            (
+              await api.native.get_currency_definition(
+                coin,
+                identity.identity.parent
+              )
+            ).name
+          }`;
+        }
+
         resolve(identity)
       })
       .catch(err => {

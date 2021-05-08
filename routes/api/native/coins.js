@@ -6,11 +6,13 @@ module.exports = (api) => {
     fallbackPort,
     dirNames,
     confName,
-    tags = []
+    tags = [],
+    bootstrap = false
   ) => {
-    let acOptions = []
+    let acOptions = [];
     const chainParams = api.chainParams[coin];
-    if (tags.includes('is_komodo')) api.customKomodoNetworks[coin.toLowerCase()] = true
+    if (tags.includes("is_komodo"))
+      api.customKomodoNetworks[coin.toLowerCase()] = true;
 
     for (let key in chainParams) {
       if (typeof chainParams[key] === "object") {
@@ -26,17 +28,14 @@ module.exports = (api) => {
 
     return new Promise((resolve, reject) => {
       api
-        .startDaemon(coin, acOptions, daemon, dirNames, confName, fallbackPort)
+        .startDaemon(coin, acOptions, daemon, dirNames, confName, fallbackPort, bootstrap)
         .then(() => {
           // Set timeout for "No running daemon message" to be
           // "Initializing daemon" for a few seconds
-          api.coinsInitializing.push(coin);
+          api.coinsInitializing[coin] = true;
 
           setTimeout(() => {
-            api.coinsInitializing.splice(
-              api.coinsInitializing.indexOf(coin),
-              1
-            );
+            api.coinsInitializing[coin] = false;
           }, 20000);
 
           api.log(
@@ -44,62 +43,81 @@ module.exports = (api) => {
             "native.confd"
           );
 
-          resolve()
+          resolve();
         })
-        .catch(err => {
+        .catch((err) => {
           api.log(`${coin} failed to activate, error:`, "native.confd");
           api.log(err.message, "native.confd");
 
-          reject(err)
+          reject(err);
         });
     });
   };
 
-  /**
-   * Function to activate coin daemon in native mode
-   */
-  api.setPost('/native/coins/activate', (req, res) => {
-    const { chainTicker, launchConfig } = req.body
-    let {
-      startupOptions,
+  api.native.addCoin = (chainTicker, launchConfig, startupOptions, bootstrap = false) => {
+    let { daemon, fallbackPort, dirNames, confName, tags } = launchConfig;
+
+    let startupParams = [
+      ...(startupOptions == null ? [] : startupOptions),
+      ...(launchConfig.startupOptions == null
+        ? []
+        : launchConfig.startupOptions),
+    ];
+
+    // TODO: Remove
+    if (
+      api.appConfig.coin.native.stakeGuard[chainTicker] &&
+      api.appConfig.coin.native.stakeGuard[chainTicker].length > 0
+    ) {
+      startupParams.push(
+        `-cheatcatcher=${api.appConfig.coin.native.stakeGuard[chainTicker]}`
+      );
+    }
+
+    // This removes any duplicates in startupParams, keeping the last index
+    startupParams = startupParams.filter((param, index) => {
+      return (
+        index == startupParams.length - 1 ||
+        !startupParams.slice(index + 1).some((x) => {
+          return x.split("=")[0] === param.split("=")[0];
+        })
+      );
+    });
+
+    return api.native.activateNativeCoin(
+      chainTicker,
+      startupParams,
       daemon,
       fallbackPort,
       dirNames,
       confName,
       tags,
-    } = launchConfig;
+      bootstrap
+    );
+  };
 
-    if (
-      api.appConfig.coin.native.stakeGuard[chainTicker] &&
-      api.appConfig.coin.native.stakeGuard[chainTicker].length > 0
-    ) {
-      startupOptions.push(`-cheatcatcher=${api.appConfig.coin.native.stakeGuard[chainTicker]}`)
-    }
+  /**
+   * Function to activate coin daemon in native mode
+   */
+  api.setPost("/native/coins/activate", (req, res) => {
+    const { chainTicker, launchConfig, startupOptions } = req.body;
 
     api.native
-      .activateNativeCoin(
-        chainTicker,
-        startupOptions,
-        daemon,
-        fallbackPort,
-        dirNames,
-        confName,
-        tags
-      )
-      .then(result => {
+      .addCoin(chainTicker, launchConfig, startupOptions)
+      .then((result) => {
         const retObj = {
           msg: "success",
-          result
+          result,
         };
 
         res.send(JSON.stringify(retObj));
       })
-      .catch(e => {
+      .catch((e) => {
         const retObj = {
           msg: "error",
-          result: e.message
+          result: e.message,
         };
-        
+
         res.send(JSON.stringify(retObj));
       });
   });

@@ -1,12 +1,12 @@
 module.exports = (api) => {  
-  api.setPost('/eth/auth', (req, res, next) => {
+  api.setPost('/erc20/auth', (req, res, next) => {
     let seed = req.body.seed;
 
     if (!api.seed) {
       api.seed = seed;
     }
 
-    api.eth.wallet = api.eth._keys(seed, true);
+    api.erc20.wallet = api.eth._keys(seed, true);
 
     const retObj = {
       msg: 'success',
@@ -16,9 +16,9 @@ module.exports = (api) => {
     res.send(JSON.stringify(retObj));
   }, true);
 
-  api.setPost('/eth/logout', (req, res, next) => {
-    api.eth.wallet = null
-    api.eth.interface = null
+  api.setPost('/erc20/logout', (req, res, next) => {
+    api.erc20.wallet = null
+    api.erc20.interface = null
 
     const retObj = {
       msg: 'success',

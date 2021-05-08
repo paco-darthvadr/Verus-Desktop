@@ -1,58 +1,54 @@
+const { ETH_HOMESTEAD } = require('../utils/constants/eth_networks');
+const createInterface = require('../utils/web3/provider');
+
 module.exports = (api) => {  
   api.setPost('/eth/coins/activate', (req, res, next) => {
-    const _coin = req.body.chainTicker;
+    const { chainTicker, network } = req.body;
   
-    if (_coin) {
-      const _coinuc = _coin.toUpperCase();
-
-      if (!api.eth.wallet) {
-        api.eth.wallet = {};
-      }
-
-      if (api.seed) {
-        const mnemonicWallet = api.eth._keys(api.seed);
-
-        api.eth.wallet = mnemonicWallet;
-      }
-
-      if (!api.eth.coins) {
-        api.eth.coins = {};
-      }
-
-      if (_coin &&
-          !api.eth.coins[_coinuc]) {
-        if (api.eth.wallet.signingKey &&
-            api.eth.wallet.signingKey.address) {
-          const network = _coin.toLowerCase().indexOf('ropsten') > -1 ? 'ropsten' : 'homestead';
-          api.eth._connect(_coin, network);
-          
-          api.eth.coins[_coinuc] = {
-            pub: api.eth.wallet.signingKey.address,
-            network,
+    try {
+      if (chainTicker && chainTicker === 'ETH') {
+        if (api.eth.interface == null) {
+          api.eth.interface = createInterface(
+            network == null ? ETH_HOMESTEAD : network
+          );
+  
+          const retObj = {
+            msg: 'success',
+            result: 'true',
           };
+          res.send(JSON.stringify(retObj));
         } else {
-          api.eth.coins[_coinuc] = {};
+          const retObj = {
+            msg: 'error',
+            result: 'ETH already active!',
+          };
+          res.send(JSON.stringify(retObj));
         }
-
-        const retObj = {
-          msg: 'success',
-          result: 'true',
-        };
-        res.send(JSON.stringify(retObj));
       } else {
         const retObj = {
           msg: 'error',
-          result: _coinuc + ' is active',
+          result: 'cannot activate non-eth coin on ETH network',
         };
         res.send(JSON.stringify(retObj));
       }
-    } else {
+    } catch(e) {
       const retObj = {
         msg: 'error',
-        result: 'coin param is empty',
+        result: e.message,
       };
       res.send(JSON.stringify(retObj));
     }
+  });
+
+  api.setPost('/eth/remove_coin', (req, res) => {
+    api.eth.interface = null
+
+    const retObj = {
+      msg: 'success',
+      result: true,
+    };
+
+    res.send(JSON.stringify(retObj));
   });
 
   return api; 

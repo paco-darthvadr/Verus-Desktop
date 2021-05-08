@@ -34,6 +34,16 @@ module.exports = (api) => {
 
             for (const path of paths) {
               const currencyName = Object.keys(path)[0];
+              const system = (
+                await api.native.get_currency_definition(chain, path[currencyName].systemid)
+              )
+              const displayName =
+                path[currencyName].systemid === path[currencyName].currencyid ||
+                path[currencyName].systemid ===
+                  "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq"
+                  ? currencyName
+                  : `${currencyName}.${system.name}`;
+              
               let pricingCurrencyState;
               let price;
 
@@ -58,7 +68,10 @@ module.exports = (api) => {
                   pricingCurrencyState = path[currencyName].bestcurrencystate;
                 } else {
                   pricingCurrencyState = (
-                    await api.native.get_currency(chain, currencyName)
+                    await api.native.get_currency(
+                      chain,
+                      path[currencyName].currencyid
+                    )
                   ).bestcurrencystate;
                 }
 
@@ -70,7 +83,20 @@ module.exports = (api) => {
 
               convertables[path[currencyName].currencyid] = {
                 via,
-                destination: path[currencyName],
+                destination: {
+                  ...path[currencyName],
+                  name: displayName,
+                },
+                exportto:
+                  (via == null &&
+                    path[currencyName].systemid === source.systemid) ||
+                  (via != null && path[currencyName].systemid === root.systemid)
+                    ? null
+                    : via == null
+                    ? path[currencyName].currencyid
+                    : (via.systemid === source.systemid
+                    ? path[currencyName].currencyid
+                    : via.currencyid),
                 price,
               };
             }
@@ -103,7 +129,10 @@ module.exports = (api) => {
                       pricingCurrencyState = source.bestcurrencystate;
                     } else {
                       pricingCurrencyState = (
-                        await api.native.get_currency(chain, src)
+                        await api.native.get_currency(
+                          chain,
+                          src
+                        )
                       ).bestcurrencystate;
                     }
 
@@ -112,9 +141,24 @@ module.exports = (api) => {
                         .lastconversionprice;
                   }
 
+                  const _destination = await api.native.get_currency(
+                    chain,
+                    reserve
+                  )
+
                   convertables[reserve] = {
                     via,
-                    destination: await api.native.get_currency(chain, reserve),
+                    destination: _destination,
+                    exportto:
+                      (via == null &&
+                        _destination.systemid === source.systemid) ||
+                      (via != null && _destination.systemid === root.systemid)
+                        ? null
+                        : via == null
+                        ? _destination.currencyid
+                        : (via.systemid === source.systemid
+                        ? _destination.currencyid
+                        : via.currencyid),
                     price,
                   };
                 }
@@ -122,7 +166,7 @@ module.exports = (api) => {
             }
 
             if (includeVia) {
-              for (const key in convertables) {
+              for (const key in convertables) {                
                 if (
                   checkFlag(
                     convertables[key].destination.options,
@@ -134,7 +178,7 @@ module.exports = (api) => {
                     ...convertables,
                     ...(await api.native.get_conversion_paths(
                       chain,
-                      key,
+                      convertables[key].destination,
                       dest,
                       false,
                       Object.keys(convertables),

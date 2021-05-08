@@ -1,5 +1,4 @@
 const portscanner = require('portscanner');
-const execFile = require('child_process').execFile;
 
 module.exports = (api) => {
   api.quitDaemon = (key, timeout) => {
@@ -106,6 +105,14 @@ module.exports = (api) => {
         result: 'daemon stopped',
       }));
     })
+    .catch(e => {
+      const retObj = {
+        msg: "error",
+        result: e.message,
+      };
+
+      res.send(JSON.stringify(retObj));
+    }) 
   });
 
   return api;

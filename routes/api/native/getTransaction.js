@@ -1,8 +1,6 @@
 const Promise = require('bluebird');
-const getObjBytes = require('../utils/objectUtil/getBytes')
 
 const TX_CONFIRMATION_CACHE_THRESHOLD = 100
-const BYTES_PER_MB = 1000000
 
 module.exports = (api) => {      
   // Gets a transaction, with the option of compacting it to to be 
@@ -11,14 +9,17 @@ module.exports = (api) => {
   // cached transactions. Without it, confirmations will be returned as null.
   // (in this case tx height will be appended to tx obj)
   api.native.get_transaction = async (coin, txid, compact, currentHeight) => {
-    if (api.native.cache.tx_cache[coin] == null) api.native.cache.tx_cache[coin] = {}
+    if (api.native.cache.tx_cache[coin] == null)
+      api.native.cache.tx_cache[coin] = api.create_sub_cache(
+        `native.cache.tx_cache.${coin}`
+      );
 
-    if (compact && api.native.cache.tx_cache[coin][txid] != null) {
+    if (compact && api.native.cache.tx_cache[coin].has(txid)) {
       return new Promise((resolve, reject) => {
-        const cachedTx = api.native.cache.tx_cache[coin][txid]
+        const cachedTx = api.native.cache.tx_cache[coin].get(txid)
         const { blockheight } = cachedTx
 
-        api.native.cache.tx_cache[coin][txid] = {
+        api.native.cache.tx_cache[coin].set(txid, {
           ...cachedTx,
           confirmations:
             currentHeight == null ||
@@ -26,9 +27,9 @@ module.exports = (api) => {
             currentHeight - blockheight < 0
               ? null
               : currentHeight - blockheight
-        }
+        })
 
-        resolve(api.native.cache.tx_cache[coin][txid]);
+        resolve(cachedTx);
       })
     }
 
@@ -36,7 +37,6 @@ module.exports = (api) => {
       api.native.callDaemon(coin, 'gettransaction', [txid])
       .then(async (tx) => {
         if (compact) {
-          const cacheSize = getObjBytes(api.native.cache)
           const {
             amount,
             fee,
@@ -67,23 +67,16 @@ module.exports = (api) => {
           }
 
           if (tx.confirmations > TX_CONFIRMATION_CACHE_THRESHOLD) {
-            if (
-              !isNaN(api.appConfig.general.native.nativeCacheMbLimit) &&
-              cacheSize <
-                api.appConfig.general.native.nativeCacheMbLimit * BYTES_PER_MB
-            ) {
-              let txBlock = await api.native.callDaemon(
-                coin,
-                "getblock",
-                [blockhash]
-              )
-              
-              api.native.cache.tx_cache[coin][txid] = {
-                ...compactTx,
-                blockheight: txBlock.height
-              };
-            }
-            //TODO: Add in smart caching here
+            let txBlock = await api.native.callDaemon(
+              coin,
+              "getblock",
+              [blockhash]
+            )
+            
+            api.native.cache.tx_cache[coin].set(txid, {
+              ...compactTx,
+              blockheight: txBlock.height
+            })
           }
          
           resolve(compactTx)

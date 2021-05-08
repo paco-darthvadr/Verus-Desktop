@@ -2,7 +2,7 @@ const Promise = require('bluebird');
 
 module.exports = (api) => {
   /**
-   * Recovers an ID given the information
+   * Updates an ID given information
    * @param {String} coin The chainTicker of the coin that the ID is based on
    * @param {String} name The name of the ID to reserve
    * @param {String[]} primaryaddresses An array of the primary addresses for this id
@@ -12,7 +12,7 @@ module.exports = (api) => {
    * @param {String} recoveryauthority The ID that can recover this ID
    * @param {String} privateaddress The private address attached to this ID
    */
-  api.native.recover_id = (
+  api.native.update_id = (
     coin,
     name,
     primaryaddresses,
@@ -50,20 +50,18 @@ module.exports = (api) => {
         idJson.version = idObj.identity.version
         idJson.contentmap = contentmap == null ? idObj.contentmap : contentmap;
 
-        //idJson.flags = idObj.identity.flags
-
         return api.native
         .callDaemon(
           coin,
-          "recoveridentity",
+          "updateidentity",
           [idJson]
         )
       })
-      .then(idRecoveryResult => {
+      .then(idUpdateResult => {
         resolve({
           chainTicker: coin,
           ...idJson,
-          resulttxid: idRecoveryResult
+          resulttxid: idUpdateResult
         })
       })
       .catch(err => {
@@ -73,7 +71,7 @@ module.exports = (api) => {
   };
 
   //TODO: Add more checks in here as well
-  api.native.recover_id_preflight = (
+  api.native.update_id_preflight = (
     coin,
     name,
     primaryaddresses,
@@ -86,7 +84,7 @@ module.exports = (api) => {
     return new Promise((resolve, reject) => {
       resolve({
         chainTicker: coin,
-        name: name.split('@')[0].split('.')[0],
+        name,
         primaryaddresses,
         minimumsignatures,
         contentmap,
@@ -97,7 +95,7 @@ module.exports = (api) => {
     });
   };
 
-  api.setPost('/native/recover_id', (req, res, next) => {
+  api.setPost('/native/update_id', (req, res, next) => {
     const {
       chainTicker,
       name,
@@ -110,7 +108,7 @@ module.exports = (api) => {
     } = req.body;
 
     api.native
-      .recover_id(
+      .update_id(
         chainTicker,
         name,
         primaryaddresses,
@@ -120,10 +118,10 @@ module.exports = (api) => {
         recoveryauthority,
         privateaddress,
       )
-      .then(recoveryObj => {
+      .then(updateObj => {
         const retObj = {
           msg: "success",
-          result: recoveryObj
+          result: updateObj
         };
 
         res.send(JSON.stringify(retObj));
@@ -138,7 +136,7 @@ module.exports = (api) => {
       });
   });
 
-  api.setPost('/native/recover_id_preflight', (req, res, next) => {
+  api.setPost('/native/update_id_preflight', (req, res, next) => {
     const {
       chainTicker,
       name,
@@ -151,7 +149,7 @@ module.exports = (api) => {
     } = req.body;
 
     api.native
-      .recover_id_preflight(
+      .update_id_preflight(
         chainTicker,
         name,
         primaryaddresses,
@@ -161,10 +159,10 @@ module.exports = (api) => {
         recoveryauthority,
         privateaddress,
       )
-      .then(idRecoveryResult => {
+      .then(idUpdateResult => {
         const retObj = {
           msg: "success",
-          result: idRecoveryResult
+          result: idUpdateResult
         };
 
         res.send(JSON.stringify(retObj));

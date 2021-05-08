@@ -51,10 +51,11 @@ const assetChainPorts = {
   ZEXO: 33970,
   LABS: 40265,
   DP: 28388,
-  VRSCTEST: 18184,
+  VRSCTEST: 20903,
   VRSC: 27486,
   ZEC: 11192,
-  VOTE2020: 44249
+  VOTE2020: 44249,
+  VOTE2021: 55638
 };
 
 module.exports = assetChainPorts;

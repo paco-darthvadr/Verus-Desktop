@@ -1,6 +1,7 @@
 const passwdStrength = require('passwd-strength');
 const CryptoJS = require("crypto-js");
-var blake2b = require('blake2b')
+var blake2b = require('blake2b');
+const { randomBytes } = require('crypto');
 
 const decrypt = (data, key) => CryptoJS.AES.decrypt(data, key).toString(CryptoJS.enc.Utf8);
 const encrypt = (data, key) => CryptoJS.AES.encrypt(data, key).toString()
@@ -31,6 +32,10 @@ module.exports = (api) => {
 
   api.setPost = (url, handler, forceEncryption = false) => {
     api.post(url, async (req, res, next) => {
+      if (api.appConfig.general.main.livelog) {
+        api.writeLog(`POST, url: ${url}, forceEncryption: ${forceEncryption}`, 'api.http.request')
+      }
+
       const encrypted = req.body.encrypted || forceEncryption
 
       try {
@@ -81,7 +86,7 @@ module.exports = (api) => {
 
   api.setGet = (url, handler) => {
     api.get(url, async (req, res, next) => {
-      try {        
+      try {  
         if (
           !api.checkToken(
             req.query.validity_key,
@@ -90,6 +95,21 @@ module.exports = (api) => {
           )
         )
           throw new Error("Incorrect API validity key");
+
+        if (api.appConfig.general.main.livelog) {
+          let req_id = randomBytes(8).toString('hex')
+          
+          handler(req, {
+            send: (jsonString) => {
+              api.writeLog(
+                JSON.stringify(JSON.parse(jsonString), null, 2),
+                `api.http.response ${req_id}`
+              );
+            }
+          }, next)
+          
+          api.writeLog(`GET, url: ${url}`, `api.http.request ${req_id}`)
+        }
         
         handler(req, res, next)
       } catch(e) {  

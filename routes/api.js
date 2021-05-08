@@ -12,7 +12,7 @@ api.assetChainPortsDefault = require('./ports.js');
 api._appConfig = require('./appConfig.js');
 api.chainParams = require('./chainParams')
 
-api.coinsInitializing = [];
+api.coinsInitializing = {};
 api.startedDaemonRegistry = {};
 api.confFileIndex = {};
 api.logFileIndex = {};
@@ -83,6 +83,8 @@ api = require('./api/utility_apis/checkUpdates')(api);
 api.createAgamaDirs();
 api.appConfig = api.loadLocalConfig();
 
+api = require('./api/utility_apis/cache')(api);
+
 api.appConfigSchema = api._appConfig.schema;
 api.defaultAppConfig = Object.assign({}, api.appConfig);
 api.kmdMainPassiveMode = false;
@@ -90,7 +92,8 @@ api.native = {
   startParams: {},
   cache: {
     tx_cache: {},
-    addr_balance_cache: {}
+    addr_balance_cache: {},
+    currency_definition_cache: api.create_sub_cache("native.cache.currency_definition_cache"),
   }
 };
 
@@ -142,12 +145,14 @@ api = require('./api/native/getTransaction.js')(api);
 api = require('./api/native/transactions')(api);
 api = require('./api/native/zoperations')(api);
 api = require('./api/native/remove')(api);
+api = require('./api/native/restart')(api);
 api = require('./api/native/send.js')(api);
 api = require('./api/native/sendcurrency.js')(api);
 api = require('./api/native/reservetransfers.js')(api);
 api = require('./api/native/nameRegistration.js')(api);
 api = require('./api/native/idRegistration.js')(api);
 api = require('./api/native/idRevocation.js')(api);
+api = require('./api/native/idUpdate.js')(api);
 api = require('./api/native/idInformation.js')(api);
 api = require('./api/native/getCurrencies.js')(api);
 api = require('./api/native/getCurrency.js')(api);
@@ -190,25 +195,36 @@ api = require('./api/kv.js')(api);
 
 // eth
 api.eth = {
-  coins: {},
-  connect: {},
-  gasPrice: {},
-  tokenInfo: {},
-  abi: {},
+  wallet: null,
+  interface: null,
+  temp: {
+    pending_txs: {}
+  }
 };
-api = require('./api/eth/contracts/contracts.js')(api);
+
+// erc20
+api.erc20 = {
+  wallet: null,
+  contracts: {}
+}
+
 api = require('./api/eth/auth.js')(api);
 api = require('./api/eth/keys.js')(api);
-api = require('./api/eth/network.js')(api);
 api = require('./api/eth/balances.js')(api);
 api = require('./api/eth/addresses')(api);
 api = require('./api/eth/info')(api);
 api = require('./api/eth/transactions.js')(api);
 api = require('./api/eth/coins.js')(api);
-api = require('./api/eth/gasPrice.js')(api);
-api = require('./api/eth/remove')(api);
 api = require('./api/eth/send.js')(api);
-api = require('./api/eth/contracts/rfox/migration')(api);
+
+api = require('./api/erc20/auth.js')(api);
+api = require('./api/erc20/balances.js')(api);
+api = require('./api/erc20/addresses')(api);
+api = require('./api/erc20/info')(api);
+api = require('./api/erc20/transactions.js')(api);
+api = require('./api/erc20/coins.js')(api);
+api = require('./api/erc20/send.js')(api);
+api = require('./api/erc20/rfox/migration.js')(api);
 
 api.printDirs();
 
@@ -225,12 +241,6 @@ api.setIO = (io) => {
 api.setVar = (_name, _body) => {
   api[_name] = _body;
 };
-
-// spv
-if (((api.appConfig.general.main.dev || process.argv.indexOf('devmode') > -1) && api.appConfig.general.electrum.cache) ||
-    (!api.appConfig.general.main.dev && process.argv.indexOf('devmode') === -1)) {
-  api.loadLocalSPVCache();
-}
 
 if (api.appConfig.general.electrum &&
     api.appConfig.general.electrum.customServers) {

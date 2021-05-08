@@ -1,14 +1,14 @@
 const coinDataTranslated = require('./coinDataTranslated')
 const zcashParamsSources = require('./zcashParamsSources')
 
-let zCoins = {}
+let nonZCoins = {}
 let nativeCoinStrings = {}
 
 const coinObjArray = coinDataTranslated.getSimpleCoinArray().map(simpleCoinObj => {
-  const coinObj = coinDataTranslated.getCoinObj(simpleCoinObj.id, false)
+  const coinObj = coinDataTranslated.getCoinObj(simpleCoinObj.id)
 
-  if (coinObj.tags.includes('is_zcash')) zCoins[coinObj.id] = true
-  else zCoins[coinObj.id] = false
+  if (coinObj.tags.includes('is_zcash')) nonZCoins[coinObj.id] = false
+  else nonZCoins[coinObj.id] = true
 
   if (coinObj.available_modes.native === true) {
     nativeCoinStrings[coinObj.id] = ''
@@ -36,6 +36,7 @@ const appConfig = {
           linux: 1000000
         },
         dev: false,
+        cacheMbLimit: 30,
         livelog: false,
         uploadCrashReports: false,
         debug: false,
@@ -51,7 +52,7 @@ const appConfig = {
         defaultUserId: "",
         reservedChains: coinObjArray
           .map(coinObj => coinObj.id)
-          .concat(["KOMODO", "zcashd", "komodod", "chipsd"]),
+          .concat(["KOMODO", "zcashd", "pirated", "komodod", "chipsd"]),
         pbaasChains: [],
         pbaasTestmode: true,
         alwaysPromptUpdates: true,
@@ -79,17 +80,16 @@ const appConfig = {
         includeP2shAddrs: false,
         includeEmptyChangeAddrs: false,
         defaultShowEmptyAddrs: true,
-        nativeCacheMbLimit: 30,
         filterGenerateTransactions: true,
         showAddressCurrencyBalances: true
       }
     },
     coin: {
       native: {
-        includePrivateAddrs: zCoins,
-        includePrivateBalances: zCoins,
-        includePrivateTransactions: zCoins,
-        includePrivateAddressBalances: zCoins,
+        excludePrivateAddrs: nonZCoins,
+        excludePrivateBalances: nonZCoins,
+        excludePrivateTransactions: nonZCoins,
+        excludePrivateAddressBalances: nonZCoins,
         stakeGuard: nativeCoinStrings,
         dataDir: nativeCoinStrings
       }
@@ -113,6 +113,12 @@ const appConfig = {
           displayName: "Verus Port",
           info:
             "The port that the Verus GUI will use to communicate with its back end."
+        },
+        cacheMbLimit: {
+          type: "decimal_input",
+          displayName: "Cache Size Limit (in Mb)",
+          info:
+            "Set the cache size limit (in megabytes). (Improves performance by storing blockchain data in local memory)"
         },
         dev: {
           type: "checkbox",
@@ -186,12 +192,6 @@ const appConfig = {
           displayName: "Include Pay to Script Hash Addresses",
           info:
             "Include Pay to Script Hash addresses in your address list (ONLY SEND TO THESE IF YOU KNOW WHAT YOU ARE DOING)."
-        },
-        nativeCacheMbLimit: {
-          type: "decimal_input",
-          displayName: "Native Cache Size Limit (in Mb)",
-          info:
-            "Set the native cache size limit (in megabytes). (Improves performance by storing blockchain data in local memory)"
         },
         includeEmptyChangeAddrs: {
           type: "checkbox",

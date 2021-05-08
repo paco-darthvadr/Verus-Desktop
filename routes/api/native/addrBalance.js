@@ -4,58 +4,49 @@ const {
   RPC_INVALID_ADDRESS_OR_KEY
 } = require("../utils/rpc/rpcStatusCodes");
 const RpcError = require("../utils/rpc/rpcError");
-const { fromSats } = require("agama-wallet-lib/src/utils");
-
-const BYTES_PER_MB = 1000000
 
 module.exports = (api) => {      
   // Gets an address balance (z_getbalance), txCount and zTotalBalance are used 
   // to check if the cache needs to be cleared and re-built
   api.native.get_addr_balance = async (coin, address, useCache, txCount = -1, zTotalBalance = -1) => {
     const cacheAddrBalanceResult = (result) => {
-      const cacheSize = getObjBytes(api.native.cache);
+      let data = api.native.cache.addr_balance_cache[coin].get("data")
+      data[address] = result
 
-      if (
-        !isNaN(api.appConfig.general.native.nativeCacheMbLimit) &&
-        cacheSize <
-          api.appConfig.general.native.nativeCacheMbLimit * BYTES_PER_MB
-      ) {
-        api.native.cache.addr_balance_cache[coin].data[address] = result;
-      } 
+      api.native.cache.addr_balance_cache[coin].set("data", data)
     }
 
     if (useCache) {
       if (
         api.native.cache.addr_balance_cache[coin] != null
       ) {  
-        if (txCount !== api.native.cache.addr_balance_cache[coin].tx_count) {
-          api.native.cache.addr_balance_cache[coin].tx_count = txCount;
-          delete api.native.cache.addr_balance_cache[coin].data;
+        if (txCount !== api.native.cache.addr_balance_cache[coin].get("tx_count")) {
+          api.native.cache.addr_balance_cache[coin].set("tx_count", txCount)
+          api.native.cache.addr_balance_cache[coin].del("data");
         }
 
-        if (zTotalBalance !== api.native.cache.addr_balance_cache[coin].total_balance) {
-          api.native.cache.addr_balance_cache[coin].total_balance = zTotalBalance;
-          if (api.native.cache.addr_balance_cache[coin].data != null) {
-            delete api.native.cache.addr_balance_cache[coin].data;
+        if (zTotalBalance !== api.native.cache.addr_balance_cache[coin].get('total_balance')) {
+          api.native.cache.addr_balance_cache[coin].set("total_balance", zTotalBalance)
+          if (api.native.cache.addr_balance_cache[coin].get("data") != null) {
+            api.native.cache.addr_balance_cache[coin].del("data");
           }
         }
       }
         
       if (api.native.cache.addr_balance_cache[coin] == null) {
-        api.native.cache.addr_balance_cache[coin] = {
-          tx_count: -1,
-          total_balance: -1,
-          data: {}
-        };
-      } else if (api.native.cache.addr_balance_cache[coin].data == null) {
-        api.native.cache.addr_balance_cache[coin].data = {}
+        api.native.cache.addr_balance_cache[coin] = api.create_sub_cache(`native.cache.addr_balance_cache.${coin}`)
+        api.native.cache.addr_balance_cache[coin].set("tx_count", -1)
+        api.native.cache.addr_balance_cache[coin].set("total_balance", -1)
+        api.native.cache.addr_balance_cache[coin].set("data", {})
+      } else if (api.native.cache.addr_balance_cache[coin].get('data') == null) {
+        api.native.cache.addr_balance_cache[coin].set("data", {})
       }
   
-      if (api.native.cache.addr_balance_cache[coin].data[address] != null) {  
+      if (api.native.cache.addr_balance_cache[coin].get('data')[address] != null) {  
         return new Promise((resolve, reject) => {
-          if (api.native.cache.addr_balance_cache[coin].data[address] instanceof RpcError) {
-            reject(api.native.cache.addr_balance_cache[coin].data[address])
-          } else resolve(api.native.cache.addr_balance_cache[coin].data[address])
+          if (api.native.cache.addr_balance_cache[coin].get('data')[address] instanceof RpcError) {
+            reject(api.native.cache.addr_balance_cache[coin].get('data')[address])
+          } else resolve(api.native.cache.addr_balance_cache[coin].get('data')[address])
         })
       }
     }

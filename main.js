@@ -316,7 +316,6 @@ function createWindow(status) {
 				mainWindow = new BrowserWindow({
 					width: 500,
 					height: 355,
-					frame: false,
 					icon: agamaIcon,
 					show: false,
 					webPreferences: {
@@ -379,11 +378,6 @@ function createWindow(status) {
 			});
 
 			function appExit() {
-				if (((api.appConfig.general.main.dev || process.argv.indexOf('devmode') > -1) && api.appConfig.general.electrum.cache) ||
-						(!api.appConfig.general.main.dev && process.argv.indexOf('devmode') === -1)) {
-					api.saveLocalSPVCache();
-				}
-
 				const CloseDaemons = () => {
 					return new Promise((resolve, reject) => {
 						api.log('Closing Main Window...', 'quit');

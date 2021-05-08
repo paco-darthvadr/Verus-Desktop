@@ -1,38 +1,79 @@
-const Promise = require('bluebird');
+module.exports = (api) => {
+  // The only difference between this and get_currency is that this cannot
+  // be used to derive non-static properties of a currency like bestcurrencystate
+  api.native.get_currency_definition = async (chain, currencyid) => {
+    if (api.native.cache.currency_definition_cache.has(currencyid)) {
+      return api.native.cache.currency_definition_cache.get(currencyid)
+    } else {
+      const definition = await api.native.callDaemon(chain, 'getcurrency', [currencyid])
+      let { name } = definition
 
-module.exports = (api) => {    
-  api.native.get_currency = (chain, name) => {
-    return new Promise((resolve, reject) => {      
-      api.native.callDaemon(chain, 'getcurrency', [name])
-      .then((currency) => {
-        resolve({ ...currency, parent_name: chain })
-      })
-      .catch(err => {
-        reject(err)
-      })
-    });
+      if (
+        definition.currencyid !== definition.systemid &&
+        definition.parent !== "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq"
+      ) {
+        name = `${name}.${
+          (await api.native.get_currency_definition(chain, definition.systemid))
+            .name
+        }`;
+      }
+
+      const processedDefinition = {
+        ...definition,
+        name,
+      }
+
+      api.native.cache.currency_definition_cache.set(currencyid, processedDefinition)
+      return processedDefinition
+    }
+  }
+
+  api.native.get_currency = async (chain, currencyid) => {
+    try {
+      const currencyObject = await api.native.callDaemon(chain, 'getcurrency', [currencyid])
+      const parent = await api.native.get_currency_definition(chain, currencyObject.systemid)
+      const spotter = await api.native.get_currency_definition(chain, chain)
+
+      const processedCurrencyObject = {
+        ...currencyObject,
+        systemname: parent.name.toUpperCase(),
+        spottername: chain,
+        spotterid: spotter.currencyid,
+        name:
+          currencyObject.systemid !== currencyObject.currencyid &&
+          currencyObject.parent !== "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq"
+            ? `${currencyObject.name}.${parent.name}`
+            : currencyObject.name,
+      };
+
+      if (!api.native.cache.currency_definition_cache.has(currencyid)) {
+        api.native.cache.currency_definition_cache.set(currencyid, processedCurrencyObject)
+      }
+
+      return processedCurrencyObject
+    } catch(e) {
+      throw e
+    }
   };
 
-  api.setPost('/native/get_currency', (req, res, next) => {
-    const { chainTicker, name } = req.body
+  api.setPost('/native/get_currency', async (req, res, next) => {
+    const { chainTicker, name, systemid } = req.body
 
-    api.native.get_currency(chainTicker, name)
-    .then((currency) => {
+    try {
       const retObj = {
         msg: 'success',
-        result: currency,
+        result:  await api.native.get_currency(chainTicker, name, systemid),
       };
   
       res.send(JSON.stringify(retObj));  
-    })
-    .catch(error => {
+    } catch(e) {
       const retObj = {
         msg: 'error',
-        result: error.message,
+        result: e.message,
       };
   
-      res.send(JSON.stringify(retObj));  
-    })
+      res.send(JSON.stringify(retObj)); 
+    }
   });
  
   return api;
