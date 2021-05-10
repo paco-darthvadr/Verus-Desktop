@@ -17,7 +17,7 @@ module.exports = (api) => {
   });
   
   api.eth.get_transactions = async (address) => {
-    if (api.eth.interface != null && api.eth.cache != null) {
+    if (api.eth.interface != null) {
       let txs = await api.eth.interface.EtherscanProvider.getHistory(address)
 
       Object.values(api.eth.temp.pending_txs).forEach(pendingTx => {

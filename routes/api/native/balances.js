@@ -1,14 +1,26 @@
-const Promise = require('bluebird');
-
-const PRIVATE = 1
-const PUBLIC = 0
-
 module.exports = (api) => {    
-  api.native.get_balances = (coin, includePrivate) => {
+  api.native.get_currency_balances = async (coin, address = "*", minconfs = 1) => {
+    const iAddrBalances = await api.native.callDaemon(
+      coin,
+      "getcurrencybalance",
+      [address, minconfs, false]
+    );
+    let formattedBalances = {}
+
+    for (const iAddr in iAddrBalances) {
+      const currencyDefinition = await api.native.get_currency_definition(coin, iAddr)
+
+      formattedBalances[currencyDefinition.name] = iAddrBalances[iAddr]
+    }
+
+    return formattedBalances
+  }
+
+  api.native.get_balances = async (coin, includePrivate) => {
     const getBalanceSchema = () => {
       return {
         public: {
-          confirmed: null,
+          confirmed: 0,
           unconfirmed: null,
           immature: null,
           interest: null,
@@ -20,62 +32,84 @@ module.exports = (api) => {
       }
     }
     
-    return new Promise((resolve, reject) => {
-      let balancePromises = [api.native.callDaemon(coin, 'getwalletinfo', [])]
-      if (includePrivate || coin === 'KMD') balancePromises.push(api.native.callDaemon(coin, 'z_gettotalbalance', []))
-      //KMD Interest is only found in z_gettotalbalance
+    let publicBalances, privateBalances;
 
-      Promise.all(balancePromises)
-      .then((jsonResults) => {
-        let balances = {
-          native: getBalanceSchema(),
-          reserve: {}
+    publicBalances = await api.native.callDaemon(coin, 'getwalletinfo', [])
+    if (includePrivate || coin === 'KMD') privateBalances = await api.native.callDaemon(coin, 'z_gettotalbalance', [])
+    //KMD Interest is only found in z_gettotalbalance
+
+    let balances = {
+      native: getBalanceSchema(),
+      reserve: {}
+    }
+
+    balances.native.public.confirmed = Number(publicBalances['balance'])
+    balances.native.public.unconfirmed = Number(publicBalances['unconfirmed_balance'])
+    balances.native.public.immature = Number(publicBalances['immature_balance'])
+    balances.native.public.staking = Number(publicBalances['eligible_staking_balance'])
+
+    if (publicBalances["reserve_balance"] != null || publicBalances["unconfirmed_reserve_balance"] != null) {
+      const confirmedReserveBalances = await api.native.get_currency_balances(coin, "*", 1)
+      const unconfirmedReserveBalances = await (async () => {
+        const allIAddrBalances = await api.native.callDaemon(coin, 'getcurrencybalance', ["*", 0, false])
+        let formattedReserveBalances = {}
+
+        for (const iAddr in allIAddrBalances) {
+          const currencyDefinition = await api.native.get_currency_definition(coin, iAddr)
+
+          formattedReserveBalances[currencyDefinition.name] =
+            allIAddrBalances[iAddr] -
+            (confirmedReserveBalances[currencyDefinition.name]
+              ? confirmedReserveBalances[currencyDefinition.name]
+              : 0);
         }
 
-        jsonResults.map((balanceObj, index) => {
-          if (index === PUBLIC) {
-            balances.native.public.confirmed = Number(balanceObj['balance'])
-            balances.native.public.unconfirmed = Number(balanceObj['unconfirmed_balance'])
-            balances.native.public.immature = Number(balanceObj['immature_balance'])
-            balances.native.public.staking = Number(balanceObj['eligible_staking_balance'])
+        return formattedReserveBalances
+      })()
 
-            const immature_reserve_balance = {
-              key: "immature",
-              balance: balanceObj["immature_reserve_balance"] || {},
-            };
-            const reserve_balance = {
-              key: "confirmed",
-              balance: balanceObj["reserve_balance"] || {},
-            };
-            const unconfirmed_reserve_balance = {
-              key: "unconfirmed",
-              balance: balanceObj["unconfirmed_reserve_balance"] || {},
-            };
+      // TODO: Implement
+      const immature_reserve_balance = {
+        key: "immature",
+        balance: {},
+      };
 
-            const reserve_balances = {immature_reserve_balance, reserve_balance, unconfirmed_reserve_balance}
+      const reserve_balance = {
+        key: "confirmed",
+        balance: confirmedReserveBalances
+      };
+      const unconfirmed_reserve_balance = {
+        key: "unconfirmed",
+        balance: unconfirmedReserveBalances
+      };
 
-            Object.keys(reserve_balances).map(reserve_balance_key => {
-              Object.keys(reserve_balances[reserve_balance_key].balance).map(currency => {
-                if (balances.reserve[currency] == null) balances.reserve[currency] = getBalanceSchema()
+      const reserve_balances = {
+        immature_reserve_balance,
+        reserve_balance,
+        unconfirmed_reserve_balance,
+      };
 
-                balances.reserve[currency].public[
-                  reserve_balances[reserve_balance_key].key
-                ] = reserve_balances[reserve_balance_key].balance[currency];
-              })
-            })
+      Object.keys(reserve_balances).map((reserve_balance_key) => {
+        Object.keys(reserve_balances[reserve_balance_key].balance).map(
+          (currency) => {
+            if (currency.toUpperCase() !== coin.toUpperCase()) {
+              if (balances.reserve[currency] == null)
+              balances.reserve[currency] = getBalanceSchema();
 
-          } else if (index === PRIVATE) {
-            balances.native.private.confirmed = Number(balanceObj['private'])
-            balances.native.public.interest = Number(balanceObj['interest'])
+              balances.reserve[currency].public[
+                reserve_balances[reserve_balance_key].key
+              ] = reserve_balances[reserve_balance_key].balance[currency];
+            }
           }
-        })
+        );
+      });
+    }
+    
+    if (privateBalances != null) {
+      balances.native.private.confirmed = Number(privateBalances['private'])
+      balances.native.public.interest = Number(privateBalances['interest'])
+    }
 
-        resolve(balances)
-      })
-      .catch(err => {
-        reject(err)
-      })
-    });
+    return balances
   };
 
   api.setPost('/native/get_balances', (req, res, next) => {

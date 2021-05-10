@@ -90,6 +90,7 @@ api.defaultAppConfig = Object.assign({}, api.appConfig);
 api.kmdMainPassiveMode = false;
 api.native = {
   startParams: {},
+  launchConfigs: {},
   cache: {
     tx_cache: {},
     addr_balance_cache: {},
@@ -189,6 +190,7 @@ api = require('./api/system.js')(api);
 
 // Utility APIs
 api = require('./api/utility_apis/csvExport.js')(api);
+api = require('./api/utility_apis/pbaas')(api);
 
 // kv
 api = require('./api/kv.js')(api);
