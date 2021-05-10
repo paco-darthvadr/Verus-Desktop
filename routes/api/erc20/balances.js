@@ -10,8 +10,9 @@ module.exports = (api) => {
             native: {
               public: {
                 //TODO: Return string instead
-                confirmed: Number(ethers.utils.formatEther(
-                  await api.erc20.get_wallet_balance(req.query.chainTicker)
+                confirmed: Number(ethers.utils.formatUnits(
+                  await api.erc20.get_wallet_balance(req.query.chainTicker),
+                  api.erc20.contracts[req.query.chainTicker].decimals
                 )),
                 unconfirmed: null,
                 immature: null,
