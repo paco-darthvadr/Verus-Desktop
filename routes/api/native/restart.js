@@ -15,6 +15,9 @@ module.exports = (api) => {
           const resolveInterval = async () => {
             clearInterval(intervalId)
             try {
+              delete api.native.launchConfigs[chainTicker]
+              api.native.launchConfigs[chainTicker] = launchConfig
+              
               resolve(await api.native.addCoin(chainTicker, launchConfig, startupOptions, bootstrap))
             } catch(e) {
               reject(e)

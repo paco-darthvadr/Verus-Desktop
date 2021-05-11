@@ -1,5 +1,4 @@
 const Promise = require('bluebird');
-const getObjBytes = require('../utils/objectUtil/getBytes')
 const {
   RPC_INVALID_ADDRESS_OR_KEY
 } = require("../utils/rpc/rpcStatusCodes");
@@ -50,29 +49,32 @@ module.exports = (api) => {
         })
       }
     }
-    
-    // Optimization, TODO: Apply to all verusd coins
-    const useGetCurrencyBalance = (coin === 'VRSC' || coin === 'VRSCTEST') && address[0] !== 'z'
 
-    return new Promise((resolve, reject) => {
-      api.native
-        .callDaemon(coin, useGetCurrencyBalance ? "getcurrencybalance" : "z_getbalance", [address])
-        .then(balance => {    
-          let balanceObj = useGetCurrencyBalance ? balance : {
-            [coin]: Number(balance)
-          }  
+    const useGetCurrencyBalance =
+      api.is_pbaas(coin) &&
+      !(address[0] === "z" && address[address.length - 1] !== "@");
 
-          if (balanceObj[coin] == null) balanceObj[coin] = 0
+    try {
+      if (useGetCurrencyBalance) {
+        let balance = await api.native.get_currency_balances(coin, address)
+        if (balance[coin] == null) balance[coin] = 0
 
-          if (useCache) cacheAddrBalanceResult(balanceObj)
-          resolve(balanceObj);
-        })
-        .catch(err => {
-          if (err.code === RPC_INVALID_ADDRESS_OR_KEY) cacheAddrBalanceResult(err)
+        if (useCache) cacheAddrBalanceResult(balance)
+        return balance
+      } else {
+        const balanceResult = await api.native.callDaemon(coin, "z_getbalance", [address])
+        const balance = {
+          [coin]: balanceResult == null ? 0 : Number(balanceResult)
+        }
+
+        if (useCache) cacheAddrBalanceResult(balance)
+        return balance
+      }
+    } catch(e) {
+      if (e.code === RPC_INVALID_ADDRESS_OR_KEY) cacheAddrBalanceResult(e)
           
-          reject(err);
-        });
-    });
+      throw e
+    }
   };
 
   return api;

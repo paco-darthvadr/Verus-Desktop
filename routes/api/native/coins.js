@@ -84,7 +84,7 @@ module.exports = (api) => {
       );
     });
 
-    return api.native.activateNativeCoin(
+    const returnResult = api.native.activateNativeCoin(
       chainTicker,
       startupParams,
       daemon,
@@ -94,6 +94,11 @@ module.exports = (api) => {
       tags,
       bootstrap
     );
+
+    delete api.native.launchConfigs[chainTicker]
+    api.native.launchConfigs[chainTicker] = launchConfig
+
+    return returnResult
   };
 
   /**
