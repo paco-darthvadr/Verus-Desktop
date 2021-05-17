@@ -1,7 +1,7 @@
 {
   "name": "verus-desktop",
   "productName": "Verus-Desktop",
-  "version": "0.7.3-3",
+  "version": "0.7.3-4",
   "description": "Verus Desktop Wallet App",
   "main": "main.js",
   "scripts": {
@@ -38,7 +38,7 @@
   "license": "MIT",
   "devDependencies": {
     "cross-env": "^5.2.1",
-    "electron": "^11.3.0",
+    "electron": "^12.0.6",
     "electron-builder": "22.9.1",
     "electron-devtools-installer": "^2.2.4",
     "electron-rebuild": "^1.11.0"
