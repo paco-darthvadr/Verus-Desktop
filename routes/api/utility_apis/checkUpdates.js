@@ -48,11 +48,11 @@ module.exports = (api) => {
                 const openLink = () => dialog.showMessageBox(mainWindow, {
                   title: "Opening Releases Page",
                   message: "Verus Desktop will now open the Verus Desktop GitHub releases page in your browser.",
-                  checkboxLabel: "I will ensure my URL matches \"https://github.com/VerusCoin/Verus-Desktop/releases\" exactly.",
+                  checkboxLabel: "I will ensure my URL matches \"https://verus.io/wallet/desktop-wallet\" exactly.",
                   buttons: ["OK", "Cancel"]
                 }, (init, checked) => {
                   if (init === 0) {
-                    if (checked) shell.openExternal("https://github.com/VerusCoin/Verus-Desktop/releases")
+                    if (checked) shell.openExternal("https://verus.io/wallet/desktop-wallet")
                     else openLink()
                   }
                 })
