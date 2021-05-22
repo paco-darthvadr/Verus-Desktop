@@ -359,6 +359,12 @@ function createWindow(status) {
 					
 					api.promptUpdate(mainWindow)
 		    }, 40);
+
+				if (appConfig.general.main.periodicallyCheckUpdates) {
+					setInterval(() => {
+						api.promptUpdate(mainWindow)
+					}, 86400000)
+				}
 		  });
 
 			mainWindow.webContents.on('context-menu', (e, params) => { // context-menu returns params

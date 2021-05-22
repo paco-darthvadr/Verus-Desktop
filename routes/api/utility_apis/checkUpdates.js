@@ -6,7 +6,14 @@ const updateAvailable = require('../../workers/check_update')
 const { dialog } = require('../utils/dialog-shim');
 
 module.exports = (api) => {
+  api.askingUserAboutUpdate = false
+
   api.promptUpdate = (mainWindow, userInitiated) => {
+    const config = api.loadLocalConfig();
+
+    if (api.askingUserAboutUpdate === true) return Promise.resolve(true)
+    api.askingUserAboutUpdate = true
+
     return new Promise((resolve, reject) => {
       updateAvailable().then(res => {
         api.log('Checking for app update....', 'update')
@@ -14,7 +21,7 @@ module.exports = (api) => {
         if (
           res.update_available &&
           (res.mandatory ||
-            api.appConfig.general.main.alwaysPromptUpdates ||
+            config.general.main.alwaysPromptUpdates ||
             userInitiated)
         ) {
           api.log(
@@ -64,17 +71,18 @@ module.exports = (api) => {
                   "update"
                 );
                 api.saveLocalAppConf({
-                  ...api.appConfig,
+                  ...config,
                   general: {
-                    ...api.appConfig.general,
+                    ...config.general,
                     main: {
-                      ...api.appConfig.general.main,
+                      ...config.general.main,
                       alwaysPromptUpdates: false,
                     },
                   },
                 });
               }
 
+              api.askingUserAboutUpdate = false
               resolve();
             }
           );
@@ -89,6 +97,7 @@ module.exports = (api) => {
                 buttons: ["OK"],
               },
               () => {
+                api.askingUserAboutUpdate = false
                 resolve();
               }
             );
@@ -98,12 +107,14 @@ module.exports = (api) => {
                 "update");
             } else api.log(`App is up to date! (v${version_json.version})`, "update");
             
+            api.askingUserAboutUpdate = false
             resolve();
           }
         }
       }).catch(e => {
         api.log('Update error! Failed to check for updates:', 'update')
         api.log(e, 'update')
+        api.askingUserAboutUpdate = false
         reject(e)
       })
     })
