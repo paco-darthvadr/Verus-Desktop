@@ -44,6 +44,7 @@
     "electron-rebuild": "^1.11.0"
   },
   "dependencies": {
+    "@electron/remote": "^1.1.0",
     "@ethersproject/signing-key": "^5.0.5",
     "agama-wallet-lib": "git+https://github.com/VerusCoin/agama-wallet-lib.git#dev",
     "arch": "^2.1.0",
