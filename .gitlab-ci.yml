@@ -7,9 +7,9 @@ stages:
 ########################################################################################################################
 variables:
   DOCKER_DRIVER: overlay2
-  DEFAULT_VERUSCOIN_BRANCH: dev
-  VERUS_VERSION: 0.7.3-9-rc3
-  VERUSCOIN_VERSION: 0.7.3-9-rc3
+  DEFAULT_VERUSCOIN_BRANCH: release
+  VERUS_VERSION: 0.7.3-9
+  VERUSCOIN_VERSION: 0.7.3-9
   KOMODO_VERSION: 0.7.0
   PIRATE_VERSION: 5.1.1-1
   BINARY_SOURCE: VerusCoin
