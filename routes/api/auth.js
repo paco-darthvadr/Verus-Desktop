@@ -32,6 +32,8 @@ module.exports = (api) => {
 
   api.setPost = (url, handler, forceEncryption = false) => {
     api.post(url, async (req, res, next) => {
+      res.type('json')
+
       if (api.appConfig.general.main.livelog) {
         api.writeLog(`POST, url: ${url}, forceEncryption: ${forceEncryption}`, 'api.http.request')
       }
@@ -40,15 +42,21 @@ module.exports = (api) => {
 
       try {
         let payload = null
-
-        if (
-          !api.checkToken(
-            req.body.validity_key,
-            req.body.path,
-            Number(req.body.time)
-          )
-        )
-          throw new Error("Incorrect API validity key");
+        
+        try {
+          if (
+            !api.checkToken(
+              req.body.validity_key,
+              req.body.path,
+              Number(req.body.time)
+            )
+          ) 
+            throw new Error("Incorrect API validity key");
+        } catch(e) {
+          res.status(401);
+          throw e
+        }
+        
         
         if (!encrypted) {
           payload = req.body.payload;
@@ -86,16 +94,23 @@ module.exports = (api) => {
 
   api.setGet = (url, handler) => {
     api.get(url, async (req, res, next) => {
-      try {  
-        if (
-          !api.checkToken(
-            req.query.validity_key,
-            req.query.path,
-            Number(req.query.time)
-          )
-        )
-          throw new Error("Incorrect API validity key");
+      res.type('json')
 
+      try {  
+        try {
+          if (
+            !api.checkToken(
+              req.query.validity_key,
+              req.query.path,
+              Number(req.query.time)
+            )
+          )
+            throw new Error("Incorrect API validity key");
+        } catch(e) {
+          res.status(401);
+          throw e
+        }
+        
         if (api.appConfig.general.main.livelog) {
           let req_id = randomBytes(8).toString('hex')
           
