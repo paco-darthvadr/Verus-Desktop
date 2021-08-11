@@ -151,7 +151,7 @@
   "resolutions": {
     "lodash": "^4.17.21",
     "js-yaml": "^3.13.1",
-    "tar": "^4.4.8",
+    "tar": "^4.4.15",
     "https-proxy-agent": "2.2.4",
     "mem": "4.0.0",
     "bin-links": "1.1.6",
@@ -167,6 +167,7 @@
     "hosted-git-info": "3.0.8",
     "ajv": "6.12.3",
     "ws": "7.4.6",
-    "normalize-url": "4.5.1"
+    "normalize-url": "4.5.1",
+    "path-parse": "1.0.7"
   }
 }
