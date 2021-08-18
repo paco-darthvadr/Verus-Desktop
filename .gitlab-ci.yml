@@ -7,9 +7,9 @@ stages:
 ########################################################################################################################
 variables:
   DOCKER_DRIVER: overlay2
-  DEFAULT_VERUSCOIN_BRANCH: dev
-  VERUS_VERSION: 0.7.4-rc5
-  VERUSCOIN_VERSION: 0.7.4-rc5
+  DEFAULT_VERUSCOIN_BRANCH: release
+  VERUS_VERSION: 0.7.4
+  VERUSCOIN_VERSION: 0.7.4
   KOMODO_VERSION: 0.7.0
   KOMODO_DOWNLOAD_URL: https://github.com/KomodoPlatform/komodo/releases/download
   PIRATE_VERSION: 5.2.0
