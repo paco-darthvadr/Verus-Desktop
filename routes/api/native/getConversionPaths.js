@@ -32,18 +32,18 @@ module.exports = (api) => {
           .then(async (paths) => {
             let convertables = {};
 
-            for (const path of paths) {
+            destination_iterator: for (const path of paths) {
               const currencyName = Object.keys(path)[0];
-              const system = (
-                await api.native.get_currency_definition(chain, path[currencyName].systemid)
-              )
+              const system = await api.native.get_currency_definition(
+                chain,
+                path[currencyName].systemid
+              );
               const displayName =
                 path[currencyName].systemid === path[currencyName].currencyid ||
-                path[currencyName].systemid ===
-                  "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq"
+                path[currencyName].systemid === "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq"
                   ? currencyName
                   : `${currencyName}.${system.name}`;
-              
+
               let pricingCurrencyState;
               let price;
 
@@ -51,34 +51,31 @@ module.exports = (api) => {
                 if (via.bestcurrencystate) {
                   pricingCurrencyState = via.bestcurrencystate;
                 } else {
-                  pricingCurrencyState = (
-                    await api.native.get_currency(chain, via.currencyid)
-                  ).bestcurrencystate;
+                  pricingCurrencyState = (await api.native.get_currency(chain, via.currencyid))
+                    .bestcurrencystate;
+                }
+
+                // If the pricingCurrency doesn't contain the destination
+                // in it's reserves, we can't use it for via
+                if (pricingCurrencyState.currencies[path[currencyName].currencyid] == null) {
+                  continue;
                 }
 
                 price =
                   1 /
-                  (pricingCurrencyState.currencies[source.currencyid]
-                    .lastconversionprice /
-                    pricingCurrencyState.currencies[
-                      path[currencyName].currencyid
-                    ].lastconversionprice);
+                  (pricingCurrencyState.currencies[root.currencyid].lastconversionprice /
+                    pricingCurrencyState.currencies[path[currencyName].currencyid]
+                      .lastconversionprice);
               } else {
                 if (path[currencyName].bestcurrencystate) {
                   pricingCurrencyState = path[currencyName].bestcurrencystate;
                 } else {
                   pricingCurrencyState = (
-                    await api.native.get_currency(
-                      chain,
-                      path[currencyName].currencyid
-                    )
+                    await api.native.get_currency(chain, path[currencyName].currencyid)
                   ).bestcurrencystate;
                 }
 
-                price =
-                  1 /
-                  pricingCurrencyState.currencies[source.currencyid]
-                    .lastconversionprice;
+                price = 1 / pricingCurrencyState.currencies[source.currencyid].lastconversionprice;
               }
 
               convertables[path[currencyName].currencyid] = {
@@ -88,15 +85,14 @@ module.exports = (api) => {
                   name: displayName,
                 },
                 exportto:
-                  (via == null &&
-                    path[currencyName].systemid === source.systemid) ||
+                  (via == null && path[currencyName].systemid === source.systemid) ||
                   (via != null && path[currencyName].systemid === root.systemid)
                     ? null
                     : via == null
                     ? path[currencyName].currencyid
-                    : (via.systemid === source.systemid
+                    : via.systemid === source.systemid
                     ? path[currencyName].currencyid
-                    : via.currencyid),
+                    : via.currencyid,
                 price,
               };
             }
