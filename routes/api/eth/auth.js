@@ -1,5 +1,3 @@
-const ethers = require('ethers');
-
 module.exports = (api) => {  
   api.setPost('/eth/auth', (req, res, next) => {
     let seed = req.body.seed;
@@ -8,10 +6,7 @@ module.exports = (api) => {
       api.seed = seed;
     }
 
-    const mnemonicWallet = api.eth._keys(seed, true);
-
-    api.eth.wallet = mnemonicWallet;
-    api.eth.connect = {};
+    api.eth.wallet = api.eth._keys(seed, true);
 
     const retObj = {
       msg: 'success',
@@ -29,13 +24,8 @@ module.exports = (api) => {
   });
 
   api.setPost('/eth/logout', (req, res, next) => {
-    api.eth.wallet = null;
-    api.eth.connect = null;
-    api.ethPriv = null;
-
-    for (let key in api.eth.coins) {
-      api.eth.coins[key] = {};
-    }
+    api.eth.wallet = null
+    api.eth.interface = null
 
     const retObj = {
       msg: 'success',

@@ -43,7 +43,7 @@ module.exports = (api) => {
 
         const retObj = {
           msg: 'error',
-          result: 'seed storage weak pin!',
+          result: 'Password is too weak, please try a stronger password',
         };
 
         res.send(JSON.stringify(retObj));
@@ -59,7 +59,7 @@ module.exports = (api) => {
 
                 const retObj = {
                   msg: 'error',
-                  result: 'error writing pin file',
+                  result: 'Error writing pin file',
                 };
 
                 res.send(JSON.stringify(retObj));

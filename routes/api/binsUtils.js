@@ -42,5 +42,26 @@ module.exports = (api) => {
     });
   }
 
+  api.isDaemonRunning = (daemonName) => {
+    return new Promise((resolve, reject) => {
+      let platform = os.platform();
+      let cmd = '';
+      switch (platform) {
+          case 'win32' : cmd = `tasklist`; break;
+          case 'darwin' : cmd = `ps -ax | grep ${daemonName}`; break;
+          case 'linux' : cmd = `ps -A`; break;
+          default: break;
+      }
+
+      exec(cmd, (err, stdout, stderr) => {
+        if (platform === 'darwin') {
+          resolve(stdout.toLowerCase().indexOf(`assets/bin/osx/${daemonName}`) > -1)
+        } else {
+          resolve(stdout.toLowerCase().indexOf(daemonName.toLowerCase()) > -1)
+        }
+      });
+    })      
+  }
+
   return api;
 };

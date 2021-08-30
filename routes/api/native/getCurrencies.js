@@ -2,25 +2,71 @@
 const Promise = require('bluebird');
 
 module.exports = (api) => {
-  api.native.get_all_currencies = (coin, includeExpired = false) => {
-    return new Promise((resolve, reject) => {
-      api.native.callDaemon(coin, 'listcurrencies', [includeExpired])
-      .then((allcurrencies) => {
-        //TODO: Change getcurrency instead of listcurrencies so they are the same
-        resolve(
-          allcurrencies.map((currency) => ({
-            parent_name: coin,
-            ...currency.currencydefinition,
-            bestheight: currency.bestheight,
-            lastconfirmedheight: currency.lastconfirmedheight,
-            bestcurrencystate: currency.bestcurrencystate
-          }))
-        );
-      })
-      .catch(err => {
-        reject(err)
-      })
+  api.native.get_all_currencies = async (coin, query = {}) => {
+    let allCurrencies = []
+
+    if (query.systemtype == null) {
+      const pbaasCurrencies = await api.native.callDaemon(coin, "listcurrencies", [{ ...query, systemtype: "pbaas" }])
+      allCurrencies = [
+        ...pbaasCurrencies,
+        ...(
+          await api.native.callDaemon(coin, "listcurrencies", [
+            { ...query, systemtype: "local" },
+          ])
+        ).filter(
+          (currency) =>
+            !pbaasCurrencies.some(
+              (pbaasCurrency) =>
+                pbaasCurrency.currencydefinition.currencyid ===
+                currency.currencydefinition.currencyid
+            )
+        ),
+      ];
+    } else {
+      allCurrencies = await api.native.callDaemon(coin, "listcurrencies", [query])
+    }
+
+    // Run through to cache
+    // TODO: Implement cache size limit
+    allCurrencies.map((currency) => {
+      const definition = currency.currencydefinition;
+
+      if (
+        !api.native.cache.currency_definition_cache.has(definition.currencyid)
+      ) {
+        api.native.cache.currency_definition_cache.set(definition.currencyid, definition)
+      }
     });
+
+    const currencyObjects = [];
+
+    for (currency of allCurrencies) {
+      const { systemid, name, currencyid, parent } = currency.currencydefinition;
+      const systemname = (
+        await api.native.get_currency_definition(coin, systemid)
+      ).name.toUpperCase();
+      const spotterid = (
+        await api.native.get_currency_definition(coin, coin)
+      ).currencyid
+
+      currencyObjects.push({
+        systemname,
+        spottername: coin,
+        spotterid,
+        ...currency.currencydefinition,
+        name:
+          (currencyid === systemid ||
+          parent === "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq")
+            ? name
+            : `${name}.${systemname}`,
+        bestheight: currency.bestheight,
+        lastconfirmedheight: currency.lastconfirmedheight,
+        bestcurrencystate: currency.bestcurrencystate,
+      });
+    }
+
+    //TODO: Change getcurrency instead of listcurrencies so they are the same
+    return currencyObjects
   };
 
   // Returns an object with key = currency name and value = currency object
@@ -42,7 +88,7 @@ module.exports = (api) => {
             fullCurrencyObj.currencyid != null &&
             fullCurrencyObj.name != null
           ) {
-            res.currencyData[currency] = fullCurrencyObj
+            res.currencyData[fullCurrencyObj.name] = fullCurrencyObj
             res.currencyNames[fullCurrencyObj.currencyid] = fullCurrencyObj.name
           }
         } catch(err) {
@@ -57,9 +103,9 @@ module.exports = (api) => {
 
   api.setPost('/native/get_all_currencies', (req, res, next) => {
     const coin = req.body.chainTicker;
-    const includeExpired = req.body.includeExpired;
+    const query = req.body.query;
 
-    api.native.get_all_currencies(coin, includeExpired)
+    api.native.get_all_currencies(coin, query)
     .then((currencies) => {
       const retObj = {
         msg: 'success',

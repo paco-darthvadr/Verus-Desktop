@@ -6,7 +6,13 @@ const {
 module.exports = (api) => {  
   api.eth._keys = (seed) => {
     seed = seedToPriv(seed, 'eth');
-    return etherKeys(seed, true);
+    const signer = etherKeys(seed, true)
+
+    return {
+      address: signer.signingKey.address,
+      pub: signer.signingKey.publicKey,
+      signer
+    }
   };
 
   return api;

@@ -27,7 +27,7 @@ module.exports = (api) => {
         totalOut += (output.scriptPubKey.reservetransfer.value + output.scriptPubKey.reservetransfer.fees)
         totalTransferFees += output.scriptPubKey.reservetransfer.fees
 
-        if (!currencyNotChainticker && await api.native.get_currency(chain, currency).name !== chainTicker) {
+        if (!currencyNotChainticker && await api.native.get_currency_definition(chain, currency).name !== chainTicker) {
           currencyNotChainticker = true
         }
 
@@ -65,7 +65,7 @@ module.exports = (api) => {
             totalOut += (output.scriptPubKey.reservetransfer.value + output.scriptPubKey.reservetransfer.fees)
             totalTransferFees += output.scriptPubKey.reservetransfer.fees
     
-            if (!currencyNotChainticker && await api.native.get_currency(chain, currency).name !== chainTicker) {
+            if (!currencyNotChainticker && await api.native.get_currency_definition(chain, currency).name !== chainTicker) {
               currencyNotChainticker = true
             }
     

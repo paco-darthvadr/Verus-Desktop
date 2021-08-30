@@ -118,7 +118,7 @@ module.exports = (api) => {
                   result: "error",
                   error: {
                     code: 404,
-                    message: api.coinsInitializing.includes(payload.chain)
+                    message: api.coinsInitializing[payload.chain]
                       ? `Initializing ${payload.chain} daemon...`
                       : `No running ${payload.chain} daemon found.`
                   }

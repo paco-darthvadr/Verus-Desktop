@@ -15,6 +15,7 @@ const bodyParser = require('body-parser');
 const Promise = require('bluebird');
 const { formatBytes } = require('agama-wallet-lib/src/utils');
 const { dialog } = require('electron')
+require('@electron/remote/main').initialize()
 
 global.USB_HOME_DIR = path.resolve(__dirname, './usb_home')
 global.HOME = os.platform() === "win32" ? process.env.APPDATA : process.env.HOME;
@@ -219,7 +220,7 @@ function createAppCloseWindow() {
 		dialog.showMessageBox(appCloseWindow, {
 			type: "warning",
 			title: "Be Careful!",
-			message: "WARNING! You are opening the developer tools menu. ONLY enter commands here if you know exactly what you are doing. If someone told you to copy+paste commands into here, you should probably ignore them, close dev tools, and stay safe.",
+			message: "WARNING! You are opening the developer tools menu. ONLY enter commands here if you know exactly what you are doing.\n\nNEVER copy+paste any commands given to you into here. No trustworthy support person will EVER ask you to do that.\n\nANY CODE COPY+PASTED INTO DEV TOOLS CAN CONTROL YOUR FUNDS.",
 			buttons: ["OK"],
 		})
 	});
@@ -502,6 +503,10 @@ app.on('web-contents-created', (event, contents) => {
     // to open this event's url in the default browser.
     event.preventDefault()
   })
+
+	contents.setWindowOpenHandler(() => {
+		return { action: "deny" }
+	})
 })
 
 function focusMain() {

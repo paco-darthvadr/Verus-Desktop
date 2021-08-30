@@ -1,6 +1,7 @@
 const passwdStrength = require('passwd-strength');
 const CryptoJS = require("crypto-js");
-var blake2b = require('blake2b')
+var blake2b = require('blake2b');
+const { randomBytes } = require('crypto');
 
 const decrypt = (data, key) => CryptoJS.AES.decrypt(data, key).toString(CryptoJS.enc.Utf8);
 const encrypt = (data, key) => CryptoJS.AES.encrypt(data, key).toString()
@@ -45,22 +46,33 @@ module.exports = (api) => {
     }
 
     api.post(url, async (req, res, next) => {
+      res.type('json')
+
+      if (api.appConfig.general.main.livelog) {
+        api.writeLog(`POST, url: ${url}, forceEncryption: ${forceEncryption}`, 'api.http.request')
+      }
+
       const encrypted = req.body.encrypted || forceEncryption
 
       try {
         let payload = null
         const builtin = req.body.builtin === 'true' || req.body.builtin === true
         const shieldKey = builtin ? api.BuiltinSecret : null
-
-        if (
-          !api.checkToken(
-            req.body.validity_key,
-            url.replace('/', ''),
-            Number(req.body.time),
-            { id: req.body.app_id, builtin }
-          )
-        )
-          throw new Error("Incorrect API validity key");
+        
+        try {
+          if (
+            !api.checkToken(
+              req.body.validity_key,
+              req.body.path,
+              Number(req.body.time),
+              { id: req.body.app_id, builtin }
+            )
+          ) 
+            throw new Error("Incorrect API validity key");
+        } catch(e) {
+          res.status(401);
+          throw e
+        }
         
         if (!encrypted) {
           payload = req.body.payload;
@@ -103,16 +115,38 @@ module.exports = (api) => {
     }
 
     api.get(url, async (req, res, next) => {
-      try {    
-        if (
-          !api.checkToken(
-            req.query.validity_key,
-            url.replace('/', ''),
-            Number(req.query.time),
-            { id: req.query.app_id, builtin: req.query.builtin === 'true' || req.query.builtin === true }
+      res.type('json')
+
+      try {  
+        try {
+          if (
+            !api.checkToken(
+              req.query.validity_key,
+              req.query.path,
+              Number(req.query.time)
+              { id: req.query.app_id, builtin: req.query.builtin === 'true' || req.query.builtin === true }
+            )
           )
-        )
-          throw new Error("Incorrect API validity key");
+            throw new Error("Incorrect API validity key");
+        } catch(e) {
+          res.status(401);
+          throw e
+        }
+        
+        if (api.appConfig.general.main.livelog) {
+          let req_id = randomBytes(8).toString('hex')
+          
+          handler(req, {
+            send: (jsonString) => {
+              api.writeLog(
+                JSON.stringify(JSON.parse(jsonString), null, 2),
+                `api.http.response ${req_id}`
+              );
+            }
+          }, next)
+          
+          api.writeLog(`GET, url: ${url}`, `api.http.request ${req_id}`)
+        }
         
         handler(req, res, next)
       } catch(e) {  

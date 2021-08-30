@@ -61,7 +61,8 @@ var getCoinObj = function getCoinObj(chainTicker) {
     arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
   var allCoinNames = {
     ..._coins.default.BTC,
-    ..._coins.default.ETH
+    ..._coins.default.ETH,
+    ..._coins.default.ERC20
   };
   var chainTickerUc = chainTicker.toUpperCase();
   var chainTickerLc = chainTickerUc.toLowerCase();
@@ -87,7 +88,9 @@ var getCoinObj = function getCoinObj(chainTicker) {
   if (_coinHelpers.default.explorerList[chainTickerUc])
     coinObj.options.explorer = _coinHelpers.default.explorerList[chainTickerUc]; // Determine available modes based on available coin data and libraries
 
-  if (_ethErc20ContractId.default[chainTickerUc] || chainTickerUc === "ETH") {
+  if (_ethErc20ContractId.default[chainTickerUc]) {
+    available_modes['erc20'] = true;
+  } else if (chainTickerUc === "ETH") {
     available_modes['eth'] = true;
   } else {
     if (

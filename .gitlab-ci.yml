@@ -8,9 +8,12 @@ stages:
 variables:
   DOCKER_DRIVER: overlay2
   DEFAULT_VERUSCOIN_BRANCH: release
-  VERUS_VERSION: 0.7.2-9
-  VERUSCOIN_VERSION: 0.7.2-8
-  KOMODO_VERSION: 0.6.1
+  VERUS_VERSION: 0.7.4
+  VERUSCOIN_VERSION: 0.7.4
+  KOMODO_VERSION: 0.7.0
+  KOMODO_DOWNLOAD_URL: https://github.com/KomodoPlatform/komodo/releases/download
+  PIRATE_VERSION: 5.2.0
+  PIRATE_DOWNLOAD_URL: https://github.com/PirateNetwork/pirate/releases/download
   BINARY_SOURCE: VerusCoin
   VERUS_APPIMAGE_X64: Verus-Desktop-v${VERUS_VERSION}-x86_64.AppImage
   VERUS_APPIMAGE_ARM64: Verus-Desktop-v${VERUS_VERSION}-arm64.AppImage
@@ -35,6 +38,10 @@ variables:
 build:linux:
   image: asherd/agama-builder
   stage: build
+  variables:
+    DOCKER_DRIVER: overlay2
+    KOMODO_CLI_PACKAGE: komodo_${KOMODO_VERSION}_linux.zip
+    PIRATE_CLI_PACKAGE: pirate-cli-ubuntu1804-v${PIRATE_VERSION}.zip
   before_script:
     - echo "$AUTH_KEY" > AUTH_KEY.json &&
       gcloud auth activate-service-account
@@ -54,13 +61,18 @@ build:linux:
     - tar -xzvf Verus-CLI-Linux-v${VERUSCOIN_VERSION}-x86_64.tar.gz --strip=1 --directory assets/bin/linux64/verusd
     - rm Verus-CLI-Linux-v${VERUSCOIN_VERSION}-x86_64.tar.gz
     - mkdir -p assets/bin/linux64/komodod
-    - wget https://github.com/KomodoPlatform/komodo/releases/download/${KOMODO_VERSION}/komodo_linux_${KOMODO_VERSION}.tar.gz
-    - tar -xzvf komodo_linux_${KOMODO_VERSION}.tar.gz --strip=1 --directory assets/bin/linux64/komodod
-    - rm komodo_linux_${KOMODO_VERSION}.tar.gz
+    - mkdir -p assets/bin/linux64/pirated
+    - wget ${KOMODO_DOWNLOAD_URL}/${KOMODO_VERSION}/${KOMODO_CLI_PACKAGE}
+    - unzip -p ${KOMODO_CLI_PACKAGE} | tar -xzvf - --strip=1 --directory assets/bin/linux64/komodod
+    - rm ${KOMODO_CLI_PACKAGE}
     - strip --strip-unneeded  assets/bin/linux64/komodod/komodod && strip --strip-unneeded  assets/bin/linux64/komodod/komodo-cli
     - gsutil cp $STAGING/VerusCoin/Zcash/zcashd-linux-x86_64.tar.gz .
     - tar -xzvf zcashd-linux-x86_64.tar.gz --directory assets/bin/linux64/
     - rm zcashd-linux-x86_64.tar.gz
+    - wget ${PIRATE_DOWNLOAD_URL}/v${PIRATE_VERSION}/${PIRATE_CLI_PACKAGE}
+    - unzip ${PIRATE_CLI_PACKAGE} -d assets/bin/linux64/pirated
+    - rm ${PIRATE_CLI_PACKAGE}
+    - sed -i "s/process.env.INFURA_PROJECT_ID/'${INFURA_PROJECT_ID}'/g" keys/infura.js
     - sed -i "s/process.env.ETHERSCAN_API_KEY/'${ETHERSCAN_KEY}'/g" keys/etherscan.js
     - yarn install
   script:
@@ -78,6 +90,9 @@ build:linux:
 build:linux:arm64:
   image: asherd/agama-builder
   stage: build
+  variables:
+    DOCKER_DRIVER: overlay2
+    PIRATE_CLI_PACKAGE: pirate-cli-aarch64-v${PIRATE_VERSION}.zip
   before_script:
     - echo "$AUTH_KEY" > AUTH_KEY.json &&
       gcloud auth activate-service-account
@@ -93,12 +108,17 @@ build:linux:arm64:
     - yarn run build
     - cd ../../..
     - mkdir -p assets/bin/linux64/verusd
+    - mkdir -p assets/bin/linux64/pirated
     - gsutil cp $STAGING/$VERUS_CLI_LINUX .
     - tar -xzvf Verus-CLI-Linux-v${VERUSCOIN_VERSION}-arm64.tar.gz --strip=1 --directory assets/bin/linux64/verusd
     - rm Verus-CLI-Linux-v${VERUSCOIN_VERSION}-arm64.tar.gz
     - gsutil cp $STAGING/VerusCoin/Zcash/zcashd-linux-arm64.tar.gz .
     - tar -xzvf zcashd-linux-arm64.tar.gz --directory assets/bin/linux64/
     - rm zcashd-linux-arm64.tar.gz
+    - wget ${PIRATE_DOWNLOAD_URL}/v${PIRATE_VERSION}/${PIRATE_CLI_PACKAGE}
+    - unzip ${PIRATE_CLI_PACKAGE} -d assets/bin/linux64/pirated
+    - rm ${PIRATE_CLI_PACKAGE}
+    - sed -i "s/process.env.INFURA_PROJECT_ID/'${INFURA_PROJECT_ID}'/g" keys/infura.js
     - sed -i "s/process.env.ETHERSCAN_API_KEY/'${ETHERSCAN_KEY}'/g" keys/etherscan.js
     - yarn install
   script:
@@ -119,6 +139,10 @@ build:linux:arm64:
 build:windows:
   stage: build
   image: asherd/agama-builder:windows
+  variables:
+    DOCKER_DRIVER: overlay2
+    KOMODO_CLI_PACKAGE: komodo_${KOMODO_VERSION}_windows.zip
+    PIRATE_CLI_PACKAGE: pirate-windows-v${PIRATE_VERSION}.zip
   before_script:
     - echo "$AUTH_KEY" > AUTH_KEY.json &&
       gcloud auth activate-service-account
@@ -134,19 +158,25 @@ build:windows:
     - yarn run build
     - cd ../../..
     - mkdir -p assets/bin/win64/komodod
-    - wget https://github.com/KomodoPlatform/komodo/releases/download/${KOMODO_VERSION}/komodo_windows_${KOMODO_VERSION}.zip
-    - unzip komodo_windows_${KOMODO_VERSION}.zip
+    - mkdir -p assets/bin/win64/pirated
+    - wget ${KOMODO_DOWNLOAD_URL}/${KOMODO_VERSION}/${KOMODO_CLI_PACKAGE}
+    - unzip ${KOMODO_CLI_PACKAGE}
+    - unzip win64.zip
     - mv win64/komodod.exe win64/komodo-cli.exe assets/bin/win64/komodod
-    - rm -rf win64
-    - rm komodo_windows_${KOMODO_VERSION}.zip
+    - strip --strip-unneeded  assets/bin/win64/komodod/komodod.exe && strip --strip-unneeded  assets/bin/win64/komodod/komodo-cli.exe
+    - rm -rf win64 win64.zip
+    - rm ${KOMODO_CLI_PACKAGE}
     - gsutil cp $STAGING/$VERUS_CLI_WINDOWS .
     - unzip -qq Verus-CLI-Windows-v${VERUSCOIN_VERSION}.zip -d assets/bin/win64
     - mv assets/bin/win64/verus-cli assets/bin/win64/verusd
-    - strip --strip-unneeded  assets/bin/win64/komodod/komodod.exe && strip --strip-unneeded  assets/bin/win64/komodod/komodo-cli.exe
     - rm Verus-CLI-Windows-v${VERUSCOIN_VERSION}.zip
     - gsutil cp $STAGING/VerusCoin/Zcash/zcashd-win.tar.gz .
     - tar -xzvf zcashd-win.tar.gz --directory assets/bin/win64/
     - rm zcashd-win.tar.gz
+    - wget ${PIRATE_DOWNLOAD_URL}/v${PIRATE_VERSION}/${PIRATE_CLI_PACKAGE}
+    - unzip ${PIRATE_CLI_PACKAGE} -d assets/bin/win64/pirated
+    - rm ${PIRATE_CLI_PACKAGE}
+    - sed -i "s/process.env.INFURA_PROJECT_ID/'${INFURA_PROJECT_ID}'/g" keys/infura.js
     - sed -i "s/process.env.ETHERSCAN_API_KEY/'${ETHERSCAN_KEY}'/g" keys/etherscan.js
     - yarn install
   script:
@@ -167,8 +197,15 @@ build:windows:
 ########################################################################################################################
 build:mac:
   stage: build
-  tags: ["Mojave"]
+  tags: ["Verus Desktop"]
+  variables:
+    KOMODO_CLI_PACKAGE: komodo_${KOMODO_VERSION}_macos.zip
+    PIRATE_CLI_PACKAGE: pirate-cli-MacOS-v${PIRATE_VERSION}.zip
   before_script:
+    - echo "$AUTH_KEY" > AUTH_KEY.json &&
+      gcloud auth activate-service-account
+      --key-file AUTH_KEY.json &&
+      rm AUTH_KEY.json
     - if [ -z "${UPSTREAM_CLI_BRANCH}" ]; then export
       VERUS_CLI_MACOS="${BINARY_SOURCE}/${DEFAULT_VERUSCOIN_BRANCH}/MacOS/Verus-CLI-MacOS-v${VERUSCOIN_VERSION}.tar.gz";
       POST_COMMENT="${POST_COMMENT}Using ${BINARY_SOURCE}/${DEFAULT_VERUSCOIN_BRANCH} binaries.";
@@ -179,16 +216,21 @@ build:mac:
     - yarn run build
     - cd ../../..
     - gsutil cp $STAGING/$VERUS_CLI_MACOS .
-    - wget https://github.com/KomodoPlatform/komodo/releases/download/${KOMODO_VERSION}/komodo_macos_${KOMODO_VERSION}.tar.gz
     - mkdir -p assets/bin/osx/verusd
     - mkdir -p assets/bin/osx/komodod
+    - mkdir -p assets/bin/osx/pirated
     - tar -xzf Verus-CLI-MacOS-v${VERUSCOIN_VERSION}.tar.gz --strip=1 --directory assets/bin/osx/verusd
-    - tar -xzvf komodo_macos_${KOMODO_VERSION}.tar.gz  --strip=1 --directory assets/bin/osx/komodod
-    - rm komodo_macos_${KOMODO_VERSION}.tar.gz
     - rm Verus-CLI-MacOS-v${VERUSCOIN_VERSION}.tar.gz
+    - wget ${KOMODO_DOWNLOAD_URL}/${KOMODO_VERSION}/${KOMODO_CLI_PACKAGE}
+    - unzip -p ${KOMODO_CLI_PACKAGE} | tar -xzvf - --strip=1 --directory assets/bin/osx/komodod
+    - rm ${KOMODO_CLI_PACKAGE}
     - gsutil cp $STAGING/VerusCoin/Zcash/zcashd-macos.tar.gz .
     - tar -xzvf zcashd-macos.tar.gz --directory assets/bin/osx/
     - rm zcashd-macos.tar.gz
+    - wget ${PIRATE_DOWNLOAD_URL}/v${PIRATE_VERSION}/${PIRATE_CLI_PACKAGE}
+    - unzip ${PIRATE_CLI_PACKAGE} -d assets/bin/osx/pirated
+    - rm ${PIRATE_CLI_PACKAGE}
+    - sed -i -e "s/process.env.INFURA_PROJECT_ID/'${INFURA_PROJECT_ID}'/g" keys/infura.js
     - sed -i -e "s/process.env.ETHERSCAN_API_KEY/'${ETHERSCAN_KEY}'/g" keys/etherscan.js
     - yarn install
   script:

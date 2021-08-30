@@ -23,7 +23,7 @@ module.exports = (api) => {
     privateaddress,
   ) => {
     let idJson = {
-      name,
+      name: name.split('@')[0].split('.')[0],
       primaryaddresses,
       minimumsignatures,
       contentmap: contentmap,
@@ -41,10 +41,10 @@ module.exports = (api) => {
         .callDaemon(
           coin,
           "getidentity",
-          [idJson.name]
+          [name]
         )
       .then(idObj => {
-        if (!idObj) throw new Error(`${idJson.name} ID not found.`)
+        if (!idObj) throw new Error(`${name} ID not found.`)
         idJson.parent = idObj.identity.parent
         idJson.identityaddress = idObj.identity.identityaddress
         idJson.version = idObj.identity.version
@@ -86,7 +86,7 @@ module.exports = (api) => {
     return new Promise((resolve, reject) => {
       resolve({
         chainTicker: coin,
-        name,
+        name: name.split('@')[0].split('.')[0],
         primaryaddresses,
         minimumsignatures,
         contentmap,

@@ -18,7 +18,7 @@ module.exports = (api) => {
     // TODO: Update for mainnet, change to accomodate all verusd coins
     const includeCurrencyBalances =
       api.appConfig.general.native.showAddressCurrencyBalances &&
-      coin === "VRSCTEST";
+      api.is_pbaas(coin);
 
     return new Promise((resolve, reject) => {
       let addressPromises = [
