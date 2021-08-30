@@ -116,7 +116,11 @@ module.exports = (api) => {
         pluginWindow.destroy()
       });
 
-      pluginWindow.loadFile(plugin.index);
+      if (api.appConfig.general.main.dev || process.argv.indexOf('devmode') > -1) {
+        pluginWindow.loadURL(`http://127.0.0.1:${plugin.devPort}`);
+      } else {
+        pluginWindow.loadFile(plugin.index);
+      }
     } catch (e) {
       api.log(`Error starting plugin with id ${id}.`, "startPlugin");
       api.log(e, "startPlugin");

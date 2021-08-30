@@ -114,25 +114,25 @@ module.exports = (api) => {
     }
   }
 
-  api.setPost('/plugin/install', async (req, res, next) => {
-    const { path } = req.body
+  // api.setPost('/plugin/install', async (req, res, next) => {
+  //   const { path } = req.body
    
-    try {
-      const retObj = {
-        msg: 'success',
-        result: await api.installPlugin(path),
-      };
+  //   try {
+  //     const retObj = {
+  //       msg: 'success',
+  //       result: await api.installPlugin(path),
+  //     };
 
-      res.send(JSON.stringify(retObj));
-    } catch (e) {
-      const retObj = {
-        msg: 'error',
-        result: e.message,
-      };
+  //     res.send(JSON.stringify(retObj));
+  //   } catch (e) {
+  //     const retObj = {
+  //       msg: 'error',
+  //       result: e.message,
+  //     };
 
-      res.send(JSON.stringify(retObj));
-    }
-  });
+  //     res.send(JSON.stringify(retObj));
+  //   }
+  // });
 
   return api;
 };

@@ -39,15 +39,15 @@ const appBasicInfo = {
 app.setName(appBasicInfo.name);
 app.setVersion(appBasicInfo.version);
 
-if (appConfig.general.main.uploadCrashReports) {
-	app.setPath('crashDumps', api.paths.crashesDir)
-	crashReporter.start({
-		productName: 'Dev-Testing',
-		companyName: 'devtesting',
-		submitURL: 'https://submit.backtrace.io/devtesting/f127b8ff9b6701ef2269f63233cc31792cf581843a804cfd0945103ee575d05b/minidump',
-		uploadToServer: true,
-	})
-}
+// if (appConfig.general.main.uploadCrashReports) {
+// 	app.setPath('crashDumps', api.paths.crashesDir)
+// 	crashReporter.start({
+// 		productName: 'Dev-Testing',
+// 		companyName: 'devtesting',
+// 		submitURL: 'https://submit.backtrace.io/devtesting/f127b8ff9b6701ef2269f63233cc31792cf581843a804cfd0945103ee575d05b/minidump',
+// 		uploadToServer: true,
+// 	})
+// }
 
 // parse argv
 let _argv = {};
@@ -307,13 +307,6 @@ function startApp() {
               `guiapp and sockets.io are listening on port ${appConfig.general.main.agamaPort}`,
               "init"
             );
-            // start sockets.io
-            io.set(
-              "origins",
-              appConfig.general.main.dev || process.argv.indexOf("devmode") > -1
-                ? "http://127.0.0.1:3000"
-                : null
-            ); // set origin
           });
 
           api.setIO(io); // pass sockets object to api router

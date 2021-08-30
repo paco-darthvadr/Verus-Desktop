@@ -9,6 +9,7 @@ const ReservedPluginTypes = {
 const BuiltinPlugins = {
   [ReservedPluginTypes.VERUS_DESKTOP_MAIN]: {
     name: "Verus Desktop",
+    devPort: 3000
   },
   [ReservedPluginTypes.VERUS_DESKTOP_AUTHENTICATOR]: {
     name: "Authenticator",
@@ -23,6 +24,7 @@ const BuiltinPlugins = {
       "builtin",
       "verus-desktop-authenticator"
     ),
+    devPort: 3001
   },
 };
 
