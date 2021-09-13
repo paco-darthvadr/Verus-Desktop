@@ -151,7 +151,7 @@
   "resolutions": {
     "lodash": "^4.17.21",
     "js-yaml": "^3.13.1",
-    "tar": "^4.4.15",
+    "tar": "^4.4.18",
     "https-proxy-agent": "2.2.4",
     "mem": "4.0.0",
     "bin-links": "1.1.6",
