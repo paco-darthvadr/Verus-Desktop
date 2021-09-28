@@ -223,16 +223,6 @@ module.exports = (api) => {
                     api.writeRpcPassword(confFile),
                     api.writeRpcUser(confFile),
                   ]);
-                } else if (coin === 'KMD') {
-                  return Promise.all([
-                    api.writeRpcPort(coin, confFile, fallbackPort),
-                    api.writeRpcPassword(confFile),
-                    api.writeRpcUser(confFile),
-                    api.writeSeedNode('kmd.komodoseeds.org', confFile),
-                    api.writeSeedNode('seeds1.kmd.sh', confFile),
-                    api.writeSeedNode('kmdseed.cipig.net', confFile),
-                    api.writeSeedNode('kmdseeds.lordofthechains.com', confFile),
-                  ]);
                 } else {
                   return Promise.all([
                     api.writeRpcPort(coin, confFile, fallbackPort),
