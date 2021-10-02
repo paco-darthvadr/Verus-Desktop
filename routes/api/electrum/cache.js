@@ -268,60 +268,24 @@ module.exports = (api) => {
           api.electrumCache[network].blockHeader = {};
         }
 
-        if (!api.electrumCache[network].blockHeader[height] ||
-            !Object.keys(api.electrumCache[network].blockHeader[height]).length) {
-          api.log(`electrum raw block ${height}`, 'spv.cache');
+        if (
+          !api.electrumCache[network].blockHeader[height] ||
+          !Object.keys(api.electrumCache[network].blockHeader[height]).length
+        ) {
+          api.log(`electrum raw block ${height}`, "spv.cache");
 
-          if (api.electrum.coinData[network.toLowerCase()].nspv) {
-            api.nspvRequest(
-              network.toLowerCase(),
-              'getinfo',
-              [height]
-            )
-            .then((nspvGetinfo) => {
-              api.log(JSON.stringify(nspvGetinfo), 'spv.cache.nspv.block');
+          ecl.blockchainBlockGetHeader(height).then((_rawtxJSON) => {
+            if (typeof _rawtxJSON === "string") {
+              _rawtxJSON = parseBlock(_rawtxJSON, btcnetworks[network] || btcnetworks.kmd);
 
-              if (nspvGetinfo &&
-                  nspvGetinfo.header) {
-                api.electrumCache[network].blockHeader[height] = {
-                  timestamp: nspvGetinfo.header.nTime,
-                  timereceived: nspvGetinfo.header.nTime,
-                  merkleRoot: nspvGetinfo.header.hashMerkleRoot,
-                  merkle_root: nspvGetinfo.header.hashMerkleRoot,
-                  prevHash: nspvGetinfo.header.hashPrevBlock,
-                  bits: nspvGetinfo.header.nBits,
-                };
-                resolve({
-                  timestamp: nspvGetinfo.header.nTime,
-                  timereceived: nspvGetinfo.header.nTime,
-                  merkleRoot: nspvGetinfo.header.hashMerkleRoot,
-                  merkle_root: nspvGetinfo.header.hashMerkleRoot,
-                  prevHash: nspvGetinfo.header.hashPrevBlock,
-                  bits: nspvGetinfo.header.nBits,
-                });
-              } else {
-                resolve();
+              if (_rawtxJSON.merkleRoot) {
+                _rawtxJSON.merkle_root = electrumMerkleRoot(_rawtxJSON);
               }
-            });
-          } else {
-            ecl.blockchainBlockGetHeader(height)
-            .then((_rawtxJSON) => {
-              if (typeof _rawtxJSON === 'string') {            
-                _rawtxJSON = parseBlock(_rawtxJSON, btcnetworks[network] || btcnetworks.kmd);
-
-                if (_rawtxJSON.merkleRoot) {
-                  _rawtxJSON.merkle_root = electrumMerkleRoot(_rawtxJSON);
-                }
-              }
-              api.electrumCache[network].blockHeader[height] = _rawtxJSON;
-              // api.log(api.electrumCache[network].blockHeader[height], 'spv.cache');
-              resolve(_rawtxJSON);
-            });
-          }
-        } else {
-          api.log(`electrum cached raw block ${height}`, 'spv.cache');
-          // api.log(api.electrumCache[network].blockHeader[height], 'spv.cache');
-          resolve(api.electrumCache[network].blockHeader[height]);
+            }
+            api.electrumCache[network].blockHeader[height] = _rawtxJSON;
+            // api.log(api.electrumCache[network].blockHeader[height], 'spv.cache');
+            resolve(_rawtxJSON);
+          });
         }
       }
     });

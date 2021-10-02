@@ -390,7 +390,6 @@ function createWindow(status) {
 						api.log('Closing Main Window...', 'quit');
 
             api.quitKomodod(appConfig.general.native.cliStopTimeout);
-            api.stopNSPVDaemon('all');
 
 						const result = 'Closing daemons: done';
 

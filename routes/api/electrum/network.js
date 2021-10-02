@@ -172,12 +172,8 @@ module.exports = (api) => {
         };
       }
 
-      if (api.electrumServers[network].proto === 'insight') {
-        return api.insightJSCore(api.electrumServers[network]);
-      } else {
-        const ecl = await api.eclManager.getServer(network, customElectrum);
-        return ecl;
-      }
+      const ecl = await api.eclManager.getServer(network, customElectrum);
+      return ecl;
     }
   }
 
