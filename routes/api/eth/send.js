@@ -31,7 +31,7 @@ module.exports = (api) => {
         from: fromAddress,
         value,
         chainId: api.eth.interface.network.id,
-        gasLimit: ethers.BigNumber.from(21000)
+        gasLimit: ethers.BigNumber.from(42000)
       });
     } catch(e) {  
       api.log(e.message, 'eth_preflight')    
