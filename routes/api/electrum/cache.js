@@ -266,7 +266,7 @@ module.exports = (api) => {
         }
         if (!api.electrumCache[network].blockHeader) {
           api.electrumCache[network].blockHeader = {};
-        }
+        }        
 
         if (
           !api.electrumCache[network].blockHeader[height] ||
@@ -286,6 +286,8 @@ module.exports = (api) => {
             // api.log(api.electrumCache[network].blockHeader[height], 'spv.cache');
             resolve(_rawtxJSON);
           });
+        } else {
+          resolve(api.electrumCache[network].blockHeader[height])
         }
       }
     });
