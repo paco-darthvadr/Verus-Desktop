@@ -200,7 +200,7 @@ module.exports = (api) => {
               });
               api.log(`zcash params downloaded`, 'native.zcashParams');
             }
-            api.log(`zcash params dl progress ${checkProgress() / 50}%`, 'native.zcashParams');
+            api.log(`zcash params dl progress ${checkProgress() / 5}%`, 'native.zcashParams');
           } else {
             api.io.emit('zcparams', {
               msg: {
@@ -223,7 +223,7 @@ module.exports = (api) => {
               });
               api.log(`zcash params downloaded`, 'native.zcashParams');
             }
-            api.log(`zcash params dl progress ${checkProgress() / 50}%`, 'native.zcashParams');
+            api.log(`zcash params dl progress ${checkProgress() / 5}%`, 'native.zcashParams');
             api.log(`file ${key} succesfully downloaded`, 'native.zcashParams');
           }
         });
@@ -249,7 +249,7 @@ module.exports = (api) => {
           });
           api.log(`zcash params downloaded`, 'native.zcashParams');
         }
-        api.log(`zcash params dl progress ${checkProgress() / 50}%`, 'native.zcashParams');
+        api.log(`zcash params dl progress ${checkProgress() / 5}%`, 'native.zcashParams');
         api.log('skip dl ' + key, 'native.zcashParams');
       }
     }

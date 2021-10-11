@@ -116,7 +116,6 @@ api = require('./api/electrum/parseTxAddresses.js')(api);
 api = require('./api/electrum/block.js')(api);
 api = require('./api/electrum/interest.js')(api);
 api = require('./api/electrum/listunspent.js')(api);
-api = require('./api/electrum/insight.js')(api);
 api = require('./api/electrum/cache.js')(api);
 api = require('./api/electrum/proxy.js')(api);
 api = require('./api/electrum/servers.js')(api);
@@ -129,7 +128,7 @@ api = require('./api/electrum/connectionManager.js')(api);
 api.initElectrumManager();
 
 // nspv
-api = require('./api/electrum/nspv.js')(api);
+//api = require('./api/electrum/nspv.js')(api);
 
 // native
 api = require('./api/native/addrBalance.js')(api);

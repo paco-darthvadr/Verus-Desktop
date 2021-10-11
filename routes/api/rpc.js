@@ -1,8 +1,5 @@
 const fs = require('fs-extra');
-const os = require('os');
-const exec = require('child_process').exec;
-const execFile = require('child_process').execFile;
-const request = require('request');
+const axios = require('axios')
 
 const RPC_CONF_UPDATE_TIMEOUT = 300000
 
@@ -56,7 +53,7 @@ module.exports = (api) => {
   }
 
   api.sendToCli = (payload) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       if (!payload) {  
         resolve(JSON.stringify({
           result: "error",
@@ -98,22 +95,21 @@ module.exports = (api) => {
               message: `${payload.chain} hasn't been activated yet, and its rpc config isnt loaded.`
             }))
           } else {
-            const options = {
-              url: `http://localhost:${api.rpcConf[payload.chain].port}`,
-              method: "POST",
-              auth: {
-                user: api.rpcConf[payload.chain].user,
-                pass: api.rpcConf[payload.chain].pass
-              },
-              body: JSON.stringify(_body)
-            };
-  
-            // send back body on both success and error
-            // this bit replicates iguana core's behaviour
-            request(options, (error, response, body) => {
-              if (body) {
-                resolve(body)
-              } else {
+            try {
+              const res = await axios.post(
+                `http://localhost:${api.rpcConf[payload.chain].port}`,
+                _body,
+                {
+                  auth: {
+                    username: api.rpcConf[payload.chain].user,
+                    password: api.rpcConf[payload.chain].pass,
+                  }
+                }
+              );
+
+              resolve(JSON.stringify(res.data))
+            } catch(e) {
+              if (e.code === 'ECONNREFUSED') {
                 const retObj = {
                   result: "error",
                   error: {
@@ -125,8 +121,20 @@ module.exports = (api) => {
                 };
   
                 resolve(JSON.stringify(retObj))
+              } else if (e.response != null) {
+                resolve(JSON.stringify(e.response.data))
+              } else {
+                const retObj = {
+                  result: "error",
+                  error: {
+                    code: 501,
+                    message: e.message
+                  }
+                };
+  
+                resolve(JSON.stringify(retObj))
               }
-            });
+            }
           }
         }
       }

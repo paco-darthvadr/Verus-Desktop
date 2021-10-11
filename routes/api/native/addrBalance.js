@@ -7,7 +7,7 @@ const RpcError = require("../utils/rpc/rpcError");
 module.exports = (api) => {      
   // Gets an address balance (z_getbalance), txCount and zTotalBalance are used 
   // to check if the cache needs to be cleared and re-built
-  api.native.get_addr_balance = async (coin, address, useCache, txCount = -1, zTotalBalance = -1) => {
+  api.native.get_addr_balance = async (coin, address, useCache, txCount = -1, zTotalBalance = -1, reserveBalances = {}) => {
     const cacheAddrBalanceResult = (result) => {
       let data = api.native.cache.addr_balance_cache[coin].get("data")
       data[address] = result
@@ -18,7 +18,7 @@ module.exports = (api) => {
     if (useCache) {
       if (
         api.native.cache.addr_balance_cache[coin] != null
-      ) {  
+      ) {
         if (txCount !== api.native.cache.addr_balance_cache[coin].get("tx_count")) {
           api.native.cache.addr_balance_cache[coin].set("tx_count", txCount)
           api.native.cache.addr_balance_cache[coin].del("data");
@@ -30,14 +30,46 @@ module.exports = (api) => {
             api.native.cache.addr_balance_cache[coin].del("data");
           }
         }
+
+        let reserveBalanceDifference = false
+        const reserveBalanceKeys = Object.keys(reserveBalances)
+        const cachedReserveBalances = api.native.cache.addr_balance_cache[coin].get('reserve_balances')
+        const cachedReserveBalanceKeys = Object.keys(cachedReserveBalances)
+
+        if (reserveBalanceKeys.length !== cachedReserveBalanceKeys.length) reserveBalanceDifference = true
+        else {
+          for (const key of reserveBalanceKeys) {
+            if (cachedReserveBalances[key] !== reserveBalances[key]) {
+              reserveBalanceDifference = true;
+              break;
+            }
+          }
+
+          if (!reserveBalanceDifference) {
+            for (const key of cachedReserveBalanceKeys) {
+              if (cachedReserveBalances[key] !== reserveBalances[key]) {
+                reserveBalanceDifference = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if (reserveBalanceDifference) {
+          api.native.cache.addr_balance_cache[coin].set("reserve_balances", reserveBalances)
+          if (api.native.cache.addr_balance_cache[coin].get("data") != null) {
+            api.native.cache.addr_balance_cache[coin].del("data");
+          }
+        }
       }
         
       if (api.native.cache.addr_balance_cache[coin] == null) {
         api.native.cache.addr_balance_cache[coin] = api.create_sub_cache(`native.cache.addr_balance_cache.${coin}`)
         api.native.cache.addr_balance_cache[coin].set("tx_count", -1)
         api.native.cache.addr_balance_cache[coin].set("total_balance", -1)
+        api.native.cache.addr_balance_cache[coin].set("reserve_balances", {})
         api.native.cache.addr_balance_cache[coin].set("data", {})
-      } else if (api.native.cache.addr_balance_cache[coin].get('data') == null) {
+      } else if (api.native.cache.addr_balance_cache[coin].get('data') == null) {        
         api.native.cache.addr_balance_cache[coin].set("data", {})
       }
   
@@ -57,8 +89,17 @@ module.exports = (api) => {
     try {
       if (useGetCurrencyBalance) {
         let balance = await api.native.get_currency_balances(coin, address)
-        if (balance[coin] == null) balance[coin] = 0
+        const balanceCoins = Object.keys(balance)
+        const nativeCoin = balanceCoins.find(x => {
+          return x.toLowerCase() === coin.toLowerCase()
+        })
 
+        if (nativeCoin != null) {
+          balance[coin] = balance[nativeCoin] != null ? balance[nativeCoin] : 0
+        
+          if (coin !== nativeCoin) delete balance[nativeCoin]
+        } else balance[coin] = 0
+        
         if (useCache) cacheAddrBalanceResult(balance)
         return balance
       } else {

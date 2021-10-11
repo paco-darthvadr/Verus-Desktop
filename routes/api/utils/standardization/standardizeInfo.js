@@ -1,31 +1,17 @@
-const request = require('request');
+const { requestJson } = require('../request/request');
 
 const standardizeZecInfo = (info) => {
-  return new Promise((resolve, reject) => {
-    const options = {
-      url: `https://api.zcha.in/v2/mainnet/network`,
-      method: 'GET',
-      timeout: 30000,
+  return new Promise(async (resolve, reject) => {
+    try {
+      const res = await requestJson(
+        "GET",
+        "https://api.zcha.in/v2/mainnet/network"
+      );
+
+      resolve({...info, longestchain: res.blockNumber})
+    } catch(e) {
+      reject(e)
     }
-
-    request(options, (error, response, body) => {
-      if (response &&
-        response.statusCode &&
-        response.statusCode === 200) {
-        try {
-          const _json = JSON.parse(body);
-
-          resolve({...info, longestchain: _json.blockNumber})
-        } catch (e) {
-          api.log('zcash info parse error', 'standardizeInfo');
-          api.log(e, 'fiat.prices');
-          reject(e)
-        }
-      } else {
-        api.log(`unable to request ${options.url}`, 'standardizeInfo');
-        reject(new Error(`Unable to request ${options.url}`))
-      }
-    });
   })
 }
 
