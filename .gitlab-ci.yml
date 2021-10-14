@@ -12,7 +12,7 @@ variables:
   VERUSCOIN_VERSION: 0.8.0
   KOMODO_VERSION: 0.7.1
   KOMODO_DOWNLOAD_URL: https://github.com/KomodoPlatform/komodo/releases/download
-  PIRATE_VERSION: 5.2.0
+  PIRATE_VERSION: 5.3.0
   PIRATE_DOWNLOAD_URL: https://github.com/PirateNetwork/pirate/releases/download
   BINARY_SOURCE: VerusCoin
   VERUS_APPIMAGE_X64: Verus-Desktop-v${VERUS_VERSION}-x86_64.AppImage
@@ -142,7 +142,7 @@ build:windows:
   variables:
     DOCKER_DRIVER: overlay2
     KOMODO_CLI_PACKAGE: komodo_${KOMODO_VERSION}_windows.zip
-    PIRATE_CLI_PACKAGE: pirate-windows-v${PIRATE_VERSION}.zip
+    PIRATE_CLI_PACKAGE: pirate-cli-windows-v${PIRATE_VERSION}.zip
   before_script:
     - echo "$AUTH_KEY" > AUTH_KEY.json &&
       gcloud auth activate-service-account
