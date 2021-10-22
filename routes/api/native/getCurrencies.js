@@ -43,7 +43,7 @@ module.exports = (api) => {
     for (currency of allCurrencies) {
       const { systemid, name, currencyid, parent } = currency.currencydefinition;
       const systemname = (
-        await api.native.get_currency_definition(coin, systemid)
+        await api.native.get_currency_definition(coin, parent)
       ).name.toUpperCase();
       const spotterid = (
         await api.native.get_currency_definition(coin, coin)
