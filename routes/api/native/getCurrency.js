@@ -1,7 +1,7 @@
 module.exports = (api) => {
   // The only difference between this and get_currency is that this cannot
   // be used to derive non-static properties of a currency like bestcurrencystate
-  api.native.get_currency_definition = async (chain, currencyid) => {
+  api.native.get_currency_definition = async (chain, currencyid = "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq") => {
     if (api.native.cache.currency_definition_cache.has(currencyid)) {
       return api.native.cache.currency_definition_cache.get(currencyid)
     } else {
@@ -13,7 +13,7 @@ module.exports = (api) => {
         definition.parent !== "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq"
       ) {
         name = `${name}.${
-          (await api.native.get_currency_definition(chain, definition.systemid))
+          (await api.native.get_currency_definition(chain, definition.parent))
             .name
         }`;
       }
@@ -28,10 +28,10 @@ module.exports = (api) => {
     }
   }
 
-  api.native.get_currency = async (chain, currencyid) => {
+  api.native.get_currency = async (chain, currencyid = "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq") => {
     try {
       const currencyObject = await api.native.callDaemon(chain, 'getcurrency', [currencyid])
-      const parent = await api.native.get_currency_definition(chain, currencyObject.systemid)
+      const parent = await api.native.get_currency_definition(chain, currencyObject.parent)
       const spotter = await api.native.get_currency_definition(chain, chain)
 
       const processedCurrencyObject = {
@@ -40,8 +40,8 @@ module.exports = (api) => {
         spottername: chain,
         spotterid: spotter.currencyid,
         name:
-          currencyObject.systemid !== currencyObject.currencyid &&
-          currencyObject.parent !== "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq"
+          (currencyObject.systemid !== currencyObject.currencyid &&
+          currencyObject.parent !== "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq")
             ? `${currencyObject.name}.${parent.name}`
             : currencyObject.name,
       };
@@ -57,12 +57,12 @@ module.exports = (api) => {
   };
 
   api.setPost('/native/get_currency', async (req, res, next) => {
-    const { chainTicker, name, systemid } = req.body
+    const { chainTicker, name } = req.body
 
     try {
       const retObj = {
         msg: 'success',
-        result:  await api.native.get_currency(chainTicker, name, systemid),
+        result:  await api.native.get_currency(chainTicker, name),
       };
   
       res.send(JSON.stringify(retObj));  
