@@ -57,13 +57,7 @@ module.exports = (api) => {
     let toCurrency
     let mint = false
 
-    let isSendCurrency =
-      currencyParams != null &&
-      currencyParams.currency != null &&
-      (currencyParams.currency != chainTicker ||
-        (currencyParams.currency === chainTicker &&
-          currencyParams.convertto != null &&
-          currencyParams.convertto !== currencyParams.currency));
+    let isSendCurrency = currencyParams != null && currencyParams.currency != null;
 
     //TODO: Change for sendcurrency to account for 0.25% fee
     let fee = isSendCurrency ? 0.0003 : 0.0001
