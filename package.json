@@ -78,7 +78,8 @@
     "socket.io": "3.1.1",
     "systeminformation": "5.6.11",
     "verus-wallet-endpoints": "https://github.com/michaeltout/verus-wallet-endpoints.git",
-    "wif": "2.0.6"
+    "wif": "2.0.6",
+    "xmldom": "0.6.0"
   },
   "optionalDependencies": {
     "osx-temperature-sensor": "1.0.4"

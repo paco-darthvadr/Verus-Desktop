@@ -13,31 +13,40 @@ async function formatResponse(call, returnFull) {
   }
 };
 
-function requestJson(method, url, body = {}, options = {}, returnFull = false) {
+function requestContentType(contentType, method, url, body = {}, options = {}, returnFull = false) {
   return formatResponse(() => {
     switch (method) {
-      case 'GET':
+      case "GET":
         return axios.get(url, {
           ...options,
           headers:
             options.headers != null
-              ? { ...options.headers, "Content-Type": "application/json" }
-              : { "Content-Type": "application/json" },
+              ? { ...options.headers, "Content-Type": contentType }
+              : { "Content-Type": contentType },
         });
-      case 'POST':
+      case "POST":
         return axios.post(url, body, {
           ...options,
           headers:
             options.headers != null
-              ? { ...options.headers, "Content-Type": "application/json" }
-              : { "Content-Type": "application/json" },
+              ? { ...options.headers, "Content-Type": contentType }
+              : { "Content-Type": contentType },
         });
       default:
-        throw new Error(method + " is not a valid method type.")
+        throw new Error(method + " is not a valid method type.");
     }
-  }, returnFull)
+  }, returnFull);
+}
+
+function requestJson(method, url, body = {}, options = {}, returnFull = false) {
+  return requestContentType("application/json", method, url, body, options, returnFull)
+}
+
+function requestXml(method, url, body = {}, options = {}, returnFull = false) {
+  return requestContentType("application/xml", method, url, body, options, returnFull)
 }
 
 module.exports = {
-  requestJson
+  requestJson,
+  requestXml
 }
