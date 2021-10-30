@@ -1,9 +1,6 @@
 module.exports = (api) => {
   api.setPost('/electrum/remove_coin', (req, res) => {
     const _chain = req.body.chainTicker;
-
-    api.stopNSPVDaemon(_chain.toLowerCase());
-
     delete api.electrum.coinData[_chain.toLowerCase()];
     
     if (Object.keys(api.electrum.coinData).length === 0) {

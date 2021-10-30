@@ -1,6 +1,6 @@
 
 const Promise = require('bluebird');
-const { IS_FRACTIONAL } = require('../utils/constants/currency_flags');
+const { IS_FRACTIONAL_FLAG, IS_GATEWAY_FLAG } = require('../utils/constants/currency_flags');
 const checkFlag = require('../utils/flags');
 
 module.exports = (api) => {    
@@ -21,7 +21,7 @@ module.exports = (api) => {
           typeof src === "string"
             ? await api.native.get_currency(chain, src)
             : src;
-        const fractionalSource = checkFlag(source.options, IS_FRACTIONAL);
+        const fractionalSource = checkFlag(source.options, IS_FRACTIONAL_FLAG);
 
         api.native
           .callDaemon(
@@ -34,15 +34,15 @@ module.exports = (api) => {
 
             destination_iterator: for (const path of paths) {
               const currencyName = Object.keys(path)[0];
-              const system = await api.native.get_currency_definition(
+              const parent = await api.native.get_currency_definition(
                 chain,
-                path[currencyName].systemid
+                path[currencyName].parent
               );
               const displayName =
                 path[currencyName].systemid === path[currencyName].currencyid ||
-                path[currencyName].systemid === "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq"
+                path[currencyName].parent === "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq"
                   ? currencyName
-                  : `${currencyName}.${system.name}`;
+                  : `${currencyName}.${parent.name}`;
 
               let pricingCurrencyState;
               let price;
@@ -78,22 +78,26 @@ module.exports = (api) => {
                 price = 1 / pricingCurrencyState.currencies[source.currencyid].lastconversionprice;
               }
 
+              const gateway = checkFlag(path[currencyName].options, IS_GATEWAY_FLAG)
+
               convertables[path[currencyName].currencyid] = {
                 via,
                 destination: {
                   ...path[currencyName],
                   name: displayName,
                 },
-                exportto:
-                  (via == null && path[currencyName].systemid === source.systemid) ||
-                  (via != null && path[currencyName].systemid === root.systemid)
-                    ? null
-                    : via == null
-                    ? path[currencyName].currencyid
-                    : via.systemid === source.systemid
-                    ? path[currencyName].currencyid
-                    : via.currencyid,
+                exportto: gateway
+                  ? path[currencyName].currencyid
+                  : (via == null && path[currencyName].systemid === source.systemid) ||
+                    (via != null && path[currencyName].systemid === root.systemid)
+                  ? null
+                  : via == null
+                  ? path[currencyName].currencyid
+                  : via.systemid === source.systemid
+                  ? path[currencyName].currencyid
+                  : via.currencyid,
                 price,
+                gateway
               };
             }
 
@@ -142,20 +146,23 @@ module.exports = (api) => {
                     reserve
                   )
 
+                  const gateway = checkFlag(_destination.options, IS_GATEWAY_FLAG)
+
                   convertables[reserve] = {
                     via,
                     destination: _destination,
-                    exportto:
-                      (via == null &&
-                        _destination.systemid === source.systemid) ||
-                      (via != null && _destination.systemid === root.systemid)
-                        ? null
-                        : via == null
-                        ? _destination.currencyid
-                        : (via.systemid === source.systemid
-                        ? _destination.currencyid
-                        : via.currencyid),
+                    exportto: gateway
+                      ? _destination.currencyid
+                      : (via == null && _destination.systemid === source.systemid) ||
+                        (via != null && _destination.systemid === root.systemid)
+                      ? null
+                      : via == null
+                      ? _destination.currencyid
+                      : via.systemid === source.systemid
+                      ? _destination.currencyid
+                      : via.currencyid,
                     price,
+                    gateway
                   };
                 }
               }
@@ -166,7 +173,7 @@ module.exports = (api) => {
                 if (
                   checkFlag(
                     convertables[key].destination.options,
-                    IS_FRACTIONAL
+                    IS_FRACTIONAL_FLAG
                   ) &&
                   !ignoreCurrencies.includes(key)
                 ) {

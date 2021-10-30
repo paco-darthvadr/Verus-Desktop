@@ -10,7 +10,7 @@ module.exports = (api) => {
     }
   }
 
-  api.addElectrumCoin = async(coin, customServers = [], tags = [], txFee, enableNspv) => {
+  api.addElectrumCoin = async(coin, customServers = [], tags = [], txFee) => {
     coin = coin.toLowerCase();
     
     if (customServers.length > 0 && txFee != null && !isNaN(txFee) && api.electrumServers[coin] == null) {
@@ -26,39 +26,19 @@ module.exports = (api) => {
     let randomServer;
     let servers = api.electrumServers[coin] ? api.electrumServers[coin].serverList : []
     
-    if (enableNspv &&
-        api.nspvPorts[coin.toUpperCase()]) {
-      api.log(`start ${coin.toUpperCase()} in NSPV at port ${api.nspvPorts[coin.toUpperCase()]}`, 'spv.coin');
-      
-      const nspv = api.startNSPVDaemon(coin);
+    // pick a random server to communicate with
+    if (servers &&
+        servers.length > 0) {
+      const _randomServerId = getRandomIntInclusive(0, servers.length - 1);
+      const _randomServer = servers[_randomServerId];
+      const _serverDetails = _randomServer.split(':');
 
-      randomServer = {
-        ip: 'localhost',
-        port: api.nspvPorts[coin.toUpperCase()],
-        proto: 'http',
-      };
-      servers = 'none';
-      api.nspvProcesses[coin] = {
-        process: nspv,
-        pid: nspv.pid,
-      };
-      
-      api.log(`${coin.toUpperCase()} NSPV daemon PID ${nspv.pid}`, 'spv.coin');
-    } else {
-      // pick a random server to communicate with
-      if (servers &&
-          servers.length > 0) {
-        const _randomServerId = getRandomIntInclusive(0, servers.length - 1);
-        const _randomServer = servers[_randomServerId];
-        const _serverDetails = _randomServer.split(':');
-
-        if (_serverDetails.length === 3) {
-          randomServer = {
-            ip: _serverDetails[0],
-            port: _serverDetails[1],
-            proto: _serverDetails[2],
-          };
-        }
+      if (_serverDetails.length === 3) {
+        randomServer = {
+          ip: _serverDetails[0],
+          port: _serverDetails[1],
+          proto: _serverDetails[2],
+        };
       }
     }
     
@@ -73,12 +53,8 @@ module.exports = (api) => {
       txfee: coin === 'btc' ? 'calculated' : api.electrumServers[coin] ? api.electrumServers[coin].txfee : 0,
     };
 
-    if (enableNspv) {
-      api.electrum.coinData[coin].nspv = true;
-    } else {
-      // wait for spv connection to be established
-      const ecl = await api.ecl(coin);
-    }
+    // wait for spv connection to be established
+    const ecl = await api.ecl(coin);
 
     if (randomServer) {
       api.log(`random ${coin} electrum server ${randomServer.ip}:${randomServer.port}`, 'spv.coin');

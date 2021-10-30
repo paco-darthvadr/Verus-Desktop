@@ -122,9 +122,7 @@ module.exports = (api) => {
     res.send(JSON.stringify(retObj));
   });
 
-  api.setPost('/electrum/logout', (req, res, next) => {
-    api.stopNSPVDaemon('all');
-    
+  api.setPost('/electrum/logout', (req, res, next) => {    
     api.seed = null;
     api.electrum = {
       ...api.electrum,

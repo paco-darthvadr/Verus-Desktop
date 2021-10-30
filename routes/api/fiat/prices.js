@@ -1,5 +1,7 @@
 const Promise = require('bluebird');
-const request = require('request');
+const { requestJson, requestXml } = require('../utils/request/request')
+const { DOMParser } = require('xmldom');
+const { getCoinObj } = require('../../coinDataTranslated');
 
 module.exports = (api) => {
   api.fiat.supportedCurrencies = [
@@ -37,49 +39,113 @@ module.exports = (api) => {
     'USD'
   ]
 
+  api.fiat.coinpaprika_coin_ids = {
+    ["WBTC"]: "wbtc-wrapped-bitcoin",
+    ["VRSC"]: "vrsc-verus-coin"
+  }
+
+  api.fiat.get_fiatrates = () => {
+    return new Promise(async (resolve, reject) => {
+      const url = `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml`
+
+      try {
+        const response = await requestXml(
+          "GET",
+          url
+        );
+  
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(response, "text/xml");
+        let exchangeRates = {}
+
+        x = xmlDoc.getElementsByTagName('Cube');
+        for (i = 0; i < x.length; i++) {
+          const currency = x[i].getAttribute('currency')
+          const rate = x[i].getAttribute('rate')
+
+          if (
+            currency != null &&
+            /^[a-zA-Z]+$/.test(currency) &&
+            rate != null &&
+            !isNaN(Number(rate))
+          ) {
+            exchangeRates[currency] = Number(rate)
+          }
+        }
+
+        exchangeRates['EUR'] = 1
+
+        for (const currencyTicker in exchangeRates) {
+          if (currencyTicker !== 'USD') {
+            if (
+              exchangeRates["USD"] == null ||
+              exchangeRates["USD"] == 0
+            ) {
+              exchangeRates[currencyTicker] = null;
+            } else {
+              exchangeRates[currencyTicker] =
+                exchangeRates[currencyTicker] / exchangeRates["USD"];
+            }
+          }
+        }
+
+        exchangeRates['USD'] = 1
+
+        resolve({ msg: "success", result: exchangeRates });
+      } catch(e) {
+        api.log(`fiat price error: unable to request ${url}`, 'fiat.prices');
+        reject(new Error(`Unable to request ${url}`))
+      }
+    })
+  }
+
   /**
    * Fetches price for specified cryptocurrency (uppercase ticker) from atomic explorer 
    * in specified currency. If no currency specified, fetches price in all available currencies.
    */
-  api.fiat.get_fiatprice = (coin, currency = null) => {
-    return new Promise((resolve, reject) => {  
-      const options = {
-        url: `https://www.atomicexplorer.com/api/mm/prices/v2?currency=${currency != null ? currency : api.fiat.supportedCurrencies.join()}&coins=${coin}&pricechange=true`,
-        method: 'GET',
-        timeout: 120000,
-      };
-  
-      request(options, (error, response, body) => {
-        if (response &&
-          response.statusCode &&
-          response.statusCode === 200) {
-          try {
-            const _json = JSON.parse(body);
+  api.fiat.get_fiatprice = (coin) => {
+    return new Promise(async (resolve, reject) => {  
+      const coinObj = getCoinObj(coin);
+      const param = api.fiat.coinpaprika_coin_ids[coin]
+        ? api.fiat.coinpaprika_coin_ids[coin]
+        : coin.toLowerCase() + "-" + coinObj.name.replace(/ /g, "-").toLowerCase();
+      const url = `https://api.coinpaprika.com/v1/coins/${param}/ohlcv/latest`
 
-            if (_json.result && _json.msg === 'success') {
-              if (!_json.result.hasOwnProperty(coin)) {
-                reject(new Error(`No fiat value found for ${coin}.`))
-              } else if (currency != null && !_json.result[coin].hasOwnProperty(currency)) {
-                reject(new Error(`Fiat currency ${currency} not supported by atomic explorer.`))
-              } else {
-                resolve({
-                  msg: _json.msg,
-                  result: _json.result[coin]
-                });
-              }
-            } else {
-              reject(new Error(_json.result))
-            }
-          } catch (e) {
-            api.log('atomic explorer price parse error', 'fiat.prices');
-            api.log(e, 'fiat.prices');
-            reject(e)
-          }
+      try {
+        const fiatRates = await api.fiat.get_fiatrates()
+
+        const res = await requestJson(
+          "GET",
+          url
+        );
+  
+        if (res.error || !res || !res[0] || !res[0].close) {
+          reject(new Error(`Failed to get price for ${coin} through CoinPaprika API. ${url}`))
         } else {
-          api.log(`atomic explorer price error: unable to request ${options.url}`, 'fiat.prices');
-          reject(new Error(`Unable to request ${options.url}`))
+          const priceCloseUsd = res[0].close;
+
+          let priceCloseAllCurrencies = { 'USD': priceCloseUsd }
+
+          if (fiatRates.msg === 'success') {
+            Object.keys(fiatRates.result).map(fiatCurrency => {
+              if (priceCloseAllCurrencies[fiatCurrency] == null) {
+                // Multiply rate of coin in dollars by rate of dollars to all fiat currencies
+                priceCloseAllCurrencies[fiatCurrency] =
+                  priceCloseUsd * fiatRates.result[fiatCurrency];
+              }
+            })
+          } 
+
+          resolve({
+            msg: "success",
+            result: priceCloseAllCurrencies
+          });
         }
-      });
+      } catch(e) {
+        api.log(`coinpaprika price error: unable to request ${url}`, 'fiat.prices');
+        api.log(e, 'fiat.prices');
+        reject(e)
+      }
     });
   }
 

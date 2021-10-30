@@ -47,7 +47,7 @@ module.exports = (api) => {
           const addressesByAccount = jsonResults[1];
           const totalBalance = jsonResults[2];
           const walletInfo = jsonResults[3];
-          const { txcount } = walletInfo
+          const { txcount, reserve_balance } = walletInfo
           const privateAddrListResult =
             jsonResults.length > 4 ? jsonResults[4] : [];
 
@@ -57,7 +57,6 @@ module.exports = (api) => {
               const address = addressArr[0]
 
               if (!pubAddrsSeen.includes(address)) {
-                //let balanceObj = ;
                 let balance = addressArr[1]
 
                 // Addresses that start with an 'R' and dont include an account field are labeled
@@ -97,7 +96,14 @@ module.exports = (api) => {
 
           if (includeCurrencyBalances) {
             for (const address in addressGroupingsParsed) {
-              let balances = await api.native.get_addr_balance(coin, address, true, txcount, Number(totalBalance.total))
+              let balances = await api.native.get_addr_balance(
+                coin,
+                address,
+                true,
+                txcount,
+                Number(totalBalance.total),
+                reserve_balance
+              );
 
               addressGroupingsParsed[address] = {
                 tag: addressGroupingsParsed[address].tag,
@@ -140,7 +146,8 @@ module.exports = (api) => {
                     address,
                     true,
                     txcount,
-                    Number(totalBalance.total)
+                    Number(totalBalance.total),
+                    reserve_balance
                   );
                 } catch(e) {
                   api.log('Failed to fetch balance for ' + address, 'get_addresses');

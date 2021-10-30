@@ -255,35 +255,6 @@ const _electrumServersExtend = {
   sdc: {
     txfee: 10000,
   },
-  // insight
-  aby: {
-    address: 'http://explorer.artbyte.me/api/',
-    proto: 'insight',
-    insightRawApi: false,
-    txfee: 100000,
-    serverList: 'none',
-  },
-  mac: { // cloudfare captcha :(
-    address: 'https://explorer.machinecoin.org/api/',
-    proto: 'insight',
-    insightRawApi: false,
-    txfee: 100000,
-    serverList: 'none',
-  },
-  vot: {
-    address: 'http://explorer.votecoin.site/insight-api-zcash/',
-    proto: 'insight',
-    insightRawApi: false,
-    txfee: 10000,
-    serverList: 'none',
-  },
-  bdl: {
-    address: 'https://explorer.bitdeal.co.in/api/',
-    proto: 'insight',
-    insightRawApi: false,
-    txfee: 10000,
-    serverList: 'none',
-  },
 };
 
 let electrumServers = Object.assign({}, _electrumServers, _electrumServersExtend);

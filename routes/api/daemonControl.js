@@ -115,10 +115,31 @@ module.exports = (api) => {
     })
   }
 
-  api.WriteAddNode = (address, confFile, port) => {
+  api.writeAddNode = (address, confFile, port) => {
+    let node
+    if (port) {
+      node = `${address}:${port}`
+    } else {
+      node = `${address}`
+    }
     return new Promise((resolve, reject) => {
-      api.log(`creating rpcpassword for ${confFile}...`, "native.process");
-      fs.appendFile(confFile, `\naddnode=${address}:${port}`)
+      api.log(`set addnode ${port} for ${confFile}...`, "native.process");
+      fs.appendFile(confFile, `\naddnode=${node}`)
+          .then(resolve)
+          .catch(e => reject(e))
+    })
+  }
+
+  api.writeSeedNode = (address, confFile, port) => {
+    let node
+    if (port) {
+      node = `${address}:${port}`
+    } else {
+      node = `${address}`
+    }
+    return new Promise((resolve, reject) => {
+      api.log(`set seednode ${node} for ${confFile}...`, "native.process");
+      fs.appendFile(confFile,  `\nseednode=${node}`)
           .then(resolve)
           .catch(e => reject(e))
     })
@@ -185,7 +206,7 @@ module.exports = (api) => {
               `${confFile} doesnt exist, creating new conf file...`,
               "native.process"
             );
-  
+
             return fs
               .writeFile(confFile, "", {
                 mode: 0o600
@@ -201,10 +222,6 @@ module.exports = (api) => {
                     api.writeRpcPort(coin, confFile, fallbackPort),
                     api.writeRpcPassword(confFile),
                     api.writeRpcUser(confFile),
-                    api.WriteAddNode('168.119.27.242', confFile, '18183'),
-                    api.WriteAddNode('5.9.224.250', confFile, '18183'),
-                    api.WriteAddNode('95.216.104.210', confFile, '18183'),
-                    api.WriteAddNode('135.181.68.2', confFile, '18183')
                   ]);
                 } else {
                   return Promise.all([
@@ -225,7 +242,7 @@ module.exports = (api) => {
 
             resolve()
           }
-          
+
         })
         .catch(e => {
           api.log(

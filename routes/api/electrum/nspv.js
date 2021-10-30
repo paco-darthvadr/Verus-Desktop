@@ -1,5 +1,5 @@
 const Promise = require('bluebird');
-const request = require('request');
+const request = function (a, b) { return null }
 const { spawn } = require('child_process');
 // TODO: read ports from coins file
 const { toSats } = require('agama-wallet-lib/src/utils');
