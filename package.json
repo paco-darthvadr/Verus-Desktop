@@ -101,7 +101,7 @@
       "!gui/EasyDEX/react/src${/*}",
       "!gui/EasyDEX/react/www${/*}"
     ],
-    "includePdb": true,
+    "includePdb": false,
     "asar": false,
     "mac": {
       "artifactName": "${productName}-v${version}.${ext}",
