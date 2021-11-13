@@ -25,7 +25,7 @@ module.exports = (api) => {
       const pluginWindow = new BrowserWindow({
         width,
         height,
-        frame: true,
+        frame: false,
         icon: plugin.logo,
         show: false,
         title: plugin.name,

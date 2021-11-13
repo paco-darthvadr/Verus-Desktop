@@ -101,6 +101,7 @@ api = require('./api/plugin/install')(api);
 api = require('./api/plugin/start')(api);
 api = require('./api/plugin/stop')(api);
 api = require('./api/plugin/builtin/authenticator')(api);
+api = require('./api/plugin/builtin/loginconsentui')(api);
 api = require('./api/focus')(api);
 
 api.createAgamaDirs();
@@ -192,6 +193,9 @@ api = require('./api/native/generate.js')(api);
 api = require('./api/native/coinSupply.js')(api);
 api = require('./api/native/blockSubsidy.js')(api);
 api = require('./api/native/shieldcoinbase.js')(api);
+api = require('./api/native/verusid/verusid.js')(api);
+api = require('./api/native/verusid/login/verifyRequest.js')(api);
+api = require('./api/native/verusid/login/signRequest.js')(api);
 
 // general network calls
 api.networkFees = {}
