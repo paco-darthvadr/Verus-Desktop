@@ -195,7 +195,7 @@ api = require('./api/native/blockSubsidy.js')(api);
 api = require('./api/native/shieldcoinbase.js')(api);
 api = require('./api/native/verusid/verusid.js')(api);
 api = require('./api/native/verusid/login/verifyRequest.js')(api);
-api = require('./api/native/verusid/login/signRequest.js')(api);
+api = require('./api/native/verusid/login/signResponse.js')(api);
 
 // general network calls
 api.networkFees = {}

@@ -1,35 +1,39 @@
-const crypto = require('crypto')
+import { REQUEST_VDXF_KEY, VDXFObject, VerusIDSignature, VerusIDSignatureInterface } from "../vdxf";
+import { Challenge, ChallengeInterface } from "./Challenge";
 
-export class Request {
-  uuid: string;
-  timestamp: number;
-  service_id_address: string;
+export interface RequestInterface {
+  chain_id: string;
+  signing_id: string;
+  signature: VerusIDSignatureInterface;
+  challenge: ChallengeInterface;
+}
 
-  constructor(uuid: string, timestamp: number, service_id_address: string) {
-    this.uuid = uuid;
-    this.timestamp = timestamp;
-    this.service_id_address = service_id_address;
+export class Request extends VDXFObject {
+  chain_id: string;
+  signing_id: string;
+  signature: VerusIDSignature;
+  challenge: Challenge;
+
+  constructor(request: RequestInterface) {
+    super(REQUEST_VDXF_KEY);
+
+    this.chain_id = request.chain_id;
+    this.signing_id = request.signing_id;
+    this.signature = new VerusIDSignature(request.signature);
+    this.challenge = new Challenge(request.challenge);
   }
 
-  isValid() {
-    return this.uuid != null && this.timestamp != null && this.service_id_address != null;
+  getSignedData() {
+    return this.challenge.toString();
   }
 
-  hash() {
-    return crypto
-      .createHash("sha256")
-      .update(this.uuid)
-      .update(this.timestamp.toString())
-      .update(this.service_id_address)
-      .digest()
-      .toString('hex')
-  }
-
-  toJson() {
+  stringable() {
     return {
-      uuid: this.uuid,
-      timestamp: this.timestamp,
-      service_id_address: this.service_id_address
-    }
+      vdxfkey: this.vdxfkey,
+      chain_id: this.chain_id,
+      signing_id: this.signing_id,
+      signature: this.signature.stringable(),
+      challenge: this.challenge.stringable(),
+    };
   }
 }

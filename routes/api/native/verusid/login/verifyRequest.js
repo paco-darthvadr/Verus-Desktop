@@ -1,45 +1,31 @@
-const { Challenge } = require("../../../utils/login/Challenge");
+const { Request } = require("../../../utils/login/Request");
 
 module.exports = (api) => {
   /**
-   * Verifies a login request, and returns { verified: true|false } based on
-   * signature checks
-   * @param {String} chain The chain to verify the login request on
-   * @param {String} challenge { uuid: String, timestamp: Number, user_id_address: String }
-   * @param {String} sourceId The ID making the login request, that signed the challenge
-   * @param {String} signature SHA256(uuid + timestamp + user_id_address) signed by sourceId
+   * Verifies a login request
+   * @param {Request} Request
    */
-  api.native.verusid.login.verify_request = async (chain, challenge, sourceId, signature) => {
-    const { uuid, timestamp, user_id_address } = challenge;
-    const loginChallenge = new Challenge(uuid, timestamp, user_id_address);
-
-    if (!loginChallenge.isValid()) {
-      return { verified: false, message: "Invalid challenge" };
-    }
+  api.native.verusid.login.verify_request = async (request) => {
+    const loginConsentRequest = new Request(request);
 
     const verified = await api.native.verify_message(
-      chain,
-      sourceId,
-      loginChallenge.hash(),
-      signature
+      loginConsentRequest.chain_id,
+      loginConsentRequest.signing_id,
+      loginConsentRequest.getSignedData(),
+      loginConsentRequest.signature.signature
     );
 
     return verified ? { verified } : { verified, message: "Failed to verify signature" };
   };
 
   api.setPost("/native/verusid/login/verify_request", async (req, res, next) => {
-    const { chain, challenge, source_id, signature } = req.body;
+    const { request } = req.body;
 
     try {
       res.send(
         JSON.stringify({
           msg: "success",
-          result: await api.native.verusid.login.verify_request(
-            chain,
-            challenge,
-            source_id,
-            signature
-          ),
+          result: await api.native.verusid.login.verify_request(request),
         })
       );
     } catch (e) {

@@ -15,31 +15,33 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Request = void 0;
+exports.Response = void 0;
+var Decision_1 = require("./Decision");
 var vdxf_1 = require("../vdxf");
-var Challenge_1 = require("./Challenge");
-var Request = /** @class */ (function (_super) {
-    __extends(Request, _super);
-    function Request(request) {
-        var _this = _super.call(this, vdxf_1.REQUEST_VDXF_KEY) || this;
-        _this.chain_id = request.chain_id;
-        _this.signing_id = request.signing_id;
-        _this.signature = new vdxf_1.VerusIDSignature(request.signature);
-        _this.challenge = new Challenge_1.Challenge(request.challenge);
+var Response = /** @class */ (function (_super) {
+    __extends(Response, _super);
+    function Response(response) {
+        var _this = _super.call(this, vdxf_1.RESPONSE_VDXF_KEY) || this;
+        _this.chain_id = response.chain_id;
+        _this.signing_id = response.signing_id;
+        _this.decision = new Decision_1.Decision(response.decision);
+        if (response.signature) {
+            _this.signature = new vdxf_1.VerusIDSignature(response.signature);
+        }
         return _this;
     }
-    Request.prototype.getSignedData = function () {
-        return this.challenge.toString();
+    Response.prototype.getSignedData = function () {
+        return this.decision.toString();
     };
-    Request.prototype.stringable = function () {
+    Response.prototype.stringable = function () {
         return {
             vdxfkey: this.vdxfkey,
             chain_id: this.chain_id,
+            signature: this.signature,
             signing_id: this.signing_id,
-            signature: this.signature.stringable(),
-            challenge: this.challenge.stringable(),
+            decision: this.decision.stringable()
         };
     };
-    return Request;
+    return Response;
 }(vdxf_1.VDXFObject));
-exports.Request = Request;
+exports.Response = Response;

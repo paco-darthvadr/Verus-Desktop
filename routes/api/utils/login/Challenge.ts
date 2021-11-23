@@ -1,35 +1,83 @@
-const crypto = require('crypto')
+import { Client, ClientInterface } from "./Client";
+import { CHALLENGE_VDXF_KEY, VDXFObject } from "../vdxf";
 
-export class Challenge {
+export interface ChallengeInterface {
   uuid: string;
-  timestamp: number;
-  user_id_address: string;
+  requested_scope?: Array<string> | null;
+  requested_access_token_audience?: Array<string> | null;
+  skip?: boolean;
+  subject?: string;
+  oidc_context?:
+    | {
+        acr_values: Array<string>;
+        display: string;
+        id_token_hint_claims: { [key: string]: any };
+        login_hint: string;
+        ui_locales: Array<string>;
+      }
+    | {};
+  request_url?: string;
+  login_challenge?: string;
+  login_session_id?: string;
+  acr?: string;
+  session_id?: string;
+  client: ClientInterface;
+}
 
-  constructor(uuid: string, timestamp: number, user_id_address: string) {
-    this.uuid = uuid;
-    this.timestamp = timestamp;
-    this.user_id_address = user_id_address;
+export class Challenge extends VDXFObject {
+  uuid: string = "";
+  client: Client;
+  requested_scope?: Array<string> | null;
+  requested_access_token_audience?: Array<string> | null;
+  skip?: boolean;
+  subject?: string;
+  oidc_context?:
+    | {
+        acr_values: Array<string>;
+        display: string;
+        id_token_hint_claims: { [key: string]: any };
+        login_hint: string;
+        ui_locales: Array<string>;
+      }
+    | {};
+  request_url?: string;
+  login_challenge?: string;
+  login_session_id?: string;
+  acr?: string;
+  session_id?: string;
+
+  constructor(challenge: ChallengeInterface) {
+    super(CHALLENGE_VDXF_KEY)
+
+    this.uuid = challenge.uuid;
+    this.requested_scope = challenge.requested_scope;
+    this.requested_access_token_audience = challenge.requested_access_token_audience;
+    this.skip = challenge.skip;
+    this.subject = challenge.subject;
+    this.oidc_context = challenge.oidc_context;
+    this.request_url = challenge.request_url;
+    this.login_challenge = challenge.login_challenge;
+    this.login_session_id = challenge.login_session_id;
+    this.acr = challenge.acr;
+    this.session_id = challenge.session_id;
+    this.client = new Client(challenge.client);
   }
 
-  isValid() {
-    return this.uuid != null && this.timestamp != null && this.user_id_address != null;
-  }
-
-  hash() {
-    return crypto
-      .createHash("sha256")
-      .update(this.uuid)
-      .update(this.timestamp.toString())
-      .update(this.user_id_address)
-      .digest()
-      .toString('hex')
-  }
-
-  toJson() {
+  stringable() {
     return {
+      vdxfkey: this.vdxfkey,
       uuid: this.uuid,
-      timestamp: this.timestamp,
-      user_id_address: this.user_id_address
-    }
+      client: this.client.stringable(),
+      requested_scope: this.requested_scope,
+      requested_access_token_audience: this.requested_access_token_audience,
+      skip: this.skip,
+      subject: this.subject,
+      oidc_context: this.oidc_context,
+      request_url: this.request_url,
+      login_challenge: this.login_challenge,
+      login_session_id: this.login_session_id,
+      acr: this.acr,
+      session_id: this.session_id,
+    };
   }
 }
