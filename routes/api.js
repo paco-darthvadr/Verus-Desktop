@@ -163,6 +163,10 @@ api = require('./api/native/generate.js')(api);
 api = require('./api/native/coinSupply.js')(api);
 api = require('./api/native/blockSubsidy.js')(api);
 api = require('./api/native/shieldcoinbase.js')(api);
+api = require('./api/native/makeoffer')(api);
+api = require('./api/native/getoffers')(api);
+api = require('./api/native/closeoffers')(api);
+api = require('./api/native/takeoffer')(api);
 
 // general network calls
 api.networkFees = {}

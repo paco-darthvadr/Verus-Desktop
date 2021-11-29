@@ -109,7 +109,7 @@ module.exports = (api) => {
       const param = api.fiat.coinpaprika_coin_ids[coin]
         ? api.fiat.coinpaprika_coin_ids[coin]
         : coin.toLowerCase() + "-" + coinObj.name.replace(/ /g, "-").toLowerCase();
-      const url = `https://api.coinpaprika.com/v1/coins/${param}/ohlcv/latest`
+      const url = `https://api.coinpaprika.com/v1/coins/${param}/ohlcv/today`
 
       try {
         const fiatRates = await api.fiat.get_fiatrates()

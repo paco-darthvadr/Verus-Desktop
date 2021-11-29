@@ -1,7 +1,8 @@
 const Promise = require('bluebird');
+const { GetOffersRequest } = require('verus-typescript-primitives');
 
 module.exports = (api) => {    
-  api.native.get_identities = (coin, includeCanSpend = true, includeCanSign = false, includeWatchOnly = false) => {
+  api.native.get_identities = (coin, includeCanSpend = true, includeCanSign = false, includeWatchOnly = false, includeOffers = false) => {
     const promiseArr = [
       api.native.callDaemon(coin, 'listidentities', [includeCanSpend, includeCanSign, includeWatchOnly]),
       api.native.callDaemon(coin, "z_gettotalbalance", [])
@@ -159,6 +160,22 @@ module.exports = (api) => {
                   recoveryId.identity.identityaddress !==
                   formattedIds[i].identity.identityaddress;
               } else formattedIds[i].canrecover = false;
+
+              if (includeOffers) {
+                try {
+                  formattedIds[i].offers = (await api.native.getoffers(
+                    new GetOffersRequest(
+                      coin,
+                      formattedIds[i].identity.identityaddress,
+                      false,
+                      false
+                    )
+                  ))
+                } catch(e) {
+                  api.log(`Failed to get offers for ${formattedIds[i].identity.name}`, 'get_identities');
+                  api.log(e, 'get_identities');
+                }
+              }
             } catch (e) {
               throw e;
             }
@@ -174,9 +191,10 @@ module.exports = (api) => {
   };
 
   api.setPost('/native/get_identities', (req, res, next) => {    
-    const { chainTicker, includeCanSpend, includeCanSign, includeWatchOnly } = req.body
+    const { chainTicker, includeCanSpend, includeCanSign, includeWatchOnly, includeOffers } =
+      req.body;
 
-    api.native.get_identities(chainTicker, includeCanSpend, includeCanSign, includeWatchOnly)
+    api.native.get_identities(chainTicker, includeCanSpend, includeCanSign, includeWatchOnly, includeOffers)
     .then((identities) => {
       const retObj = {
         msg: 'success',
@@ -213,6 +231,15 @@ module.exports = (api) => {
               )
             ).name
           }`;
+        }
+
+        try {
+          identity.offers = await api.native.getoffers(
+            new GetOffersRequest(coin, identity.identity.identityaddress, false, false)
+          );
+        } catch (e) {
+          api.log(`Failed to get offers for ${identity.identity.name}`, "get_identities");
+          api.log(e, "get_identities");
         }
 
         resolve(identity)

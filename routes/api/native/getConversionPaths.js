@@ -171,11 +171,9 @@ module.exports = (api) => {
             if (includeVia) {
               for (const key in convertables) {                
                 if (
-                  checkFlag(
-                    convertables[key].destination.options,
-                    IS_FRACTIONAL_FLAG
-                  ) &&
-                  !ignoreCurrencies.includes(key)
+                  checkFlag(convertables[key].destination.options, IS_FRACTIONAL_FLAG) &&
+                  !ignoreCurrencies.includes(key) &&
+                  convertables[key].destination.currencies.includes(source.currencyid)
                 ) {
                   convertables = {
                     ...convertables,

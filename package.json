@@ -1,7 +1,7 @@
 {
   "name": "verus-desktop",
   "productName": "Verus-Desktop",
-  "version": "0.9.0-1",
+  "version": "0.9.0-2",
   "description": "Verus Desktop Wallet App",
   "main": "main.js",
   "scripts": {
@@ -77,6 +77,7 @@
     "sha256": "0.2.0",
     "socket.io": "3.1.1",
     "systeminformation": "5.6.11",
+    "verus-typescript-primitives": "https://github.com/michaeltout/verus-typescript-primitives.git",
     "verus-wallet-endpoints": "https://github.com/michaeltout/verus-wallet-endpoints.git",
     "wif": "2.0.6",
     "xmldom": "0.6.0"
