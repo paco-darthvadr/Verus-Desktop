@@ -42,10 +42,13 @@ module.exports = (api) => {
                   await Promise.all(
                     Object.keys(response.result[offercategory][index].offer[key]).map(
                       async (currencyid) => {
-                        const { name } = await api.native.get_currency_definition(
-                          request.chain,
-                          currencyid
-                        );
+                        const name =
+                          currencyid === "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV"
+                            ? "VRSC"
+                            : currencyid === "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq"
+                            ? "VRSCTEST"
+                            : (await api.native.get_currency_definition(request.chain, currencyid))
+                                .name;
 
                         if (name !== currencyid) {
                           response.result[offercategory][index].offer[key][name] =
