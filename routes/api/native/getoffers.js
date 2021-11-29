@@ -17,14 +17,14 @@ module.exports = (api) => {
             response.result[offercategory][index].cantake = true
             response.result[offercategory][index].canclose = false
 
-            if (ownOffers.find(x => x.txid === txid) != null) {
+            if (ownOffers != null && ownOffers.find(x => x.txid === txid) != null) {
               response.result[offercategory][index].canclose = true
             }
 
             await Promise.all(
               Object.keys(response.result[offercategory][index].offer).map(async (key) => {
                 if (key === "accept" && response.result[offercategory][index].offer[key].name != null) {
-                  if (ownIdentities.find(
+                  if (ownIdentities == null || ownIdentities.find(
                     (x) =>
                       x.identity.identityaddress ===
                         response.result[offercategory][index].offer[key].identityid &&
