@@ -1,12 +1,19 @@
 const { GetOffersRequest, GetOffersResponse } = require("verus-typescript-primitives");
 
 module.exports = (api) => {  
-  api.native.getoffers = async (request) => {
+  api.native.getoffers = async (request, formattedIdentities, openOffers) => {
     const response = new GetOffersResponse(await api.native.callDaemon(...request.prepare()));
 
     // Remove when offer ownership becomes part of getoffers
-    const ownOffers = await api.native.callDaemon(request.chain, 'listopenoffers', [])
-    const ownIdentities = await api.native.get_identities(request.chain)
+    const ownOffers =
+      openOffers == null
+        ? await api.native.callDaemon(request.chain, "listopenoffers", [])
+        : openOffers;
+
+    const ownIdentities =
+      formattedIdentities == null
+        ? await api.native.get_identities(request.chain)
+        : formattedIdentities;
 
     //Replace i-addresses with currency names
     await Promise.all(
