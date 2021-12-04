@@ -167,6 +167,7 @@ api = require('./api/native/makeoffer')(api);
 api = require('./api/native/getoffers')(api);
 api = require('./api/native/closeoffers')(api);
 api = require('./api/native/takeoffer')(api);
+api = require('./api/native/setidentitytimelock')(api);
 
 // general network calls
 api.networkFees = {}

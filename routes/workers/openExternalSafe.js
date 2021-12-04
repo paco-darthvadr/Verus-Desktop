@@ -1,6 +1,7 @@
 const allowedOrigins = [
   // Non-Explorer Origins
   "wiki.verus.io",
+  "docs.verus.io",
   "verus.io",
   "discord.gg",
   "github.com",
