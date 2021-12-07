@@ -5,13 +5,6 @@ module.exports = (api) => {
   api.loginConsentUi = {}
 
   api.loginConsentUi.request = async (
-    chainId,
-    signer,
-    signature,
-    timestamp,
-    challenge,
-    redirectUrl,
-    onBehalfOf,
     request,
     originInfo
   ) => {
@@ -27,13 +20,6 @@ module.exports = (api) => {
             pushMessage(
               pluginWindow,
               {
-                chain_id: chainId,
-                signing_id: signer,
-                signature: signature,
-                timestamp: timestamp,
-                challenge: challenge,
-                redirect_url: redirectUrl,
-                on_behalf_of: onBehalfOf,
                 request: request,
                 origin_app_info: originInfo,
               },
@@ -50,21 +36,13 @@ module.exports = (api) => {
   };
 
   api.setPost('/plugin/builtin/verus_login_consent_ui/request', async (req, res, next) => {
-    const { chainId, signer, signature, timestamp, challenge, redirectUrl, onBehalfOf, request } =
-      req.body;
+    const { request } = req.body;
     const { app_id, builtin } = req.api_header
    
     try {
       const retObj = {
         msg: "success",
         result: await api.loginConsentUi.request(
-          chainId,
-          signer,
-          signature,
-          timestamp,
-          challenge,
-          redirectUrl,
-          onBehalfOf,
           request,
           {
             id: app_id,
