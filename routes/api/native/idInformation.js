@@ -1,7 +1,8 @@
 const Promise = require('bluebird');
+const { GetOffersRequest } = require('verus-typescript-primitives');
 
 module.exports = (api) => {    
-  api.native.get_identities = (coin, includeCanSpend = true, includeCanSign = false, includeWatchOnly = false) => {
+  api.native.get_identities = (coin, includeCanSpend = true, includeCanSign = false, includeWatchOnly = false, includeOffers = false) => {
     const promiseArr = [
       api.native.callDaemon(coin, 'listidentities', [includeCanSpend, includeCanSign, includeWatchOnly]),
       api.native.callDaemon(coin, "z_gettotalbalance", [])
@@ -21,6 +22,7 @@ module.exports = (api) => {
           let txcount = null
           let reserve_balance = null
           let useCache = true
+          let openOffers = {}
 
           try {
             const walletinfo = await api.native.callDaemon(coin, "getwalletinfo", [])
@@ -31,136 +33,159 @@ module.exports = (api) => {
             api.log('Not using address balance cache:', 'get_identities')
             api.log(e, 'get_identities')
           }
+
+          try {
+            openOffers = await api.native.callDaemon(coin, "listopenoffers", [])
+          } catch (e) {
+            api.log('Failed to fetch open offers:', 'get_identities')
+            api.log(e, 'get_identities')
+          }
           
           for (let i = 0; i < formattedIds.length; i++) {
-            try {
-              const iAddr = identities[i].identity.identityaddress
-              const zAddr = identities[i].identity.privateaddress
-              let zBalance = null
-              let iBalances = {}
+            const iAddr = identities[i].identity.identityaddress
+            const zAddr = identities[i].identity.privateaddress
+            let zBalance = null
+            let iBalances = {}
 
-              iBalances = await api.native.get_addr_balance(
-                coin,
-                iAddr,
-                useCache,
-                txcount,
-                totalBalance,
-                reserve_balance
-              );
-              const tBalance = iBalances[coin]
-              
-              if (zAddr != null) {
-                try {
-                  zBalance = Number(
-                    await api.native.get_addr_balance(
-                      coin,
-                      zAddr,
-                      useCache,
-                      txcount,
-                      totalBalance,
-                      reserve_balance
-                    )
-                  );
-                } catch (e) {
-                  api.log(e, "get_identities");
-                }
+            iBalances = await api.native.get_addr_balance(
+              coin,
+              iAddr,
+              useCache,
+              txcount,
+              totalBalance,
+              reserve_balance
+            );
+            const tBalance = iBalances[coin]
+            
+            if (zAddr != null) {
+              try {
+                zBalance = Number(
+                  await api.native.get_addr_balance(
+                    coin,
+                    zAddr,
+                    useCache,
+                    txcount,
+                    totalBalance,
+                    reserve_balance
+                  )
+                );
+              } catch (e) {
+                api.log(e, "get_identities");
               }
-              
-              formattedIds[i].balances = {
-                native: {
-                  public: {
-                    confirmed: tBalance,
-                    unconfirmed: null,
-                    immature: null
-                  },
-                  private: {
-                    confirmed: zBalance
-                  }
+            }
+            
+            formattedIds[i].balances = {
+              native: {
+                public: {
+                  confirmed: tBalance,
+                  unconfirmed: null,
+                  immature: null
                 },
-                reserve: {...iBalances, [coin]: null}
-              }
+                private: {
+                  confirmed: zBalance
+                }
+              },
+              reserve: {...iBalances, [coin]: null}
+            }
 
-              formattedIds[i].addresses = {
-                public: [{
-                  address: iAddr,
-                  balances: {
-                    native: tBalance,
-                    reserve: {...iBalances, [coin]: null}
-                  },
-                  tag: "identity"
-                }],
-                private: zAddr == null ? [] : [{
-                  address: zAddr,
-                  balances: {
-                    native: zBalance,
-                    reserve: {}
-                  },
-                  tag: "sapling"
-                }]
-              }
+            formattedIds[i].addresses = {
+              public: [{
+                address: iAddr,
+                balances: {
+                  native: tBalance,
+                  reserve: {...iBalances, [coin]: null}
+                },
+                tag: "identity"
+              }],
+              private: zAddr == null ? [] : [{
+                address: zAddr,
+                balances: {
+                  native: zBalance,
+                  reserve: {}
+                },
+                tag: "sapling"
+              }]
+            }
 
-              const recoveryId = identities.find(
+            const recoveryId = identities.find(
+              (listIdentityObject) => {
+                return (
+                  listIdentityObject.identity.identityaddress ===
+                  formattedIds[i].identity.recoveryauthority
+                );
+              }
+            );
+
+            formattedIds[i].canwriterecovery = recoveryId != null && recoveryId.status === 'active'
+            formattedIds[i].canwriterevocation = formattedIds[i].canwriterecovery
+
+            if (
+              formattedIds[i].identity.parent !==
+                "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV" &&
+              formattedIds[i].identity.parent !==
+                "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq" && 
+              formattedIds[i].identity.parent !==
+                "i3UXS5QPRQGNRDDqVnyWTnmFCTHDbzmsYk"
+            ) {
+              try {
+                formattedIds[i].identity.name = `${
+                  formattedIds[i].identity.name
+                }.${
+                  (
+                    await api.native.get_currency_definition(
+                      coin,
+                      formattedIds[i].identity.parent
+                    )
+                  ).name
+                }`;
+              } catch(e) {
+                api.log('Failed to get parent for ' + formattedIds[i].identity.name, 'get_identities')
+                api.log(e, 'get_identities')
+              }
+            }
+
+            if (formattedIds[i].status === 'active') {
+              formattedIds[i].canrevoke = identities.some(
                 (listIdentityObject) => {
                   return (
+                    listIdentityObject.identity.identityaddress !==
+                      formattedIds[i].identity.identityaddress &&
                     listIdentityObject.identity.identityaddress ===
-                    formattedIds[i].identity.recoveryauthority
+                    formattedIds[i].identity.revocationauthority && 
+                    listIdentityObject.status === 'active'
                   );
                 }
               );
+            } else formattedIds[i].canrevoke = false
 
-              formattedIds[i].canwriterecovery = recoveryId != null && recoveryId.status === 'active'
-              formattedIds[i].canwriterevocation = formattedIds[i].canwriterecovery
+            if (
+              formattedIds[i].status === "revoked" &&
+              recoveryId != null &&
+              recoveryId.status === "active"
+            ) {
+              formattedIds[i].canrecover =
+                recoveryId.identity.identityaddress !==
+                formattedIds[i].identity.identityaddress;
+            } else formattedIds[i].canrecover = false;
+          }
 
-              if (
-                formattedIds[i].identity.parent !==
-                  "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV" &&
-                formattedIds[i].identity.parent !==
-                  "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq" && 
-                formattedIds[i].identity.parent !==
-                  "i3UXS5QPRQGNRDDqVnyWTnmFCTHDbzmsYk"
-              ) {
-                try {
-                  formattedIds[i].identity.name = `${
-                    formattedIds[i].identity.name
-                  }.${
-                    (
-                      await api.native.get_currency_definition(
-                        coin,
-                        formattedIds[i].identity.parent
-                      )
-                    ).name
-                  }`;
-                } catch(e) {
-                  api.log('Failed to get parent for ' + formattedIds[i].identity.name, 'get_identities')
-                  api.log(e, 'get_identities')
-                }
+          if (includeOffers) {
+            for (let i = 0; i < formattedIds.length; i++) {
+              try {
+                formattedIds[i].offers = (await api.native.getoffers(
+                  new GetOffersRequest(
+                    coin,
+                    formattedIds[i].identity.identityaddress,
+                    false,
+                    false
+                  ),
+                  formattedIds,
+                  openOffers
+                ))
+              } catch(e) {
+                api.log(`Failed to get offers for ${formattedIds[i].identity.name}`, 'get_identities');
+                api.log(e, 'get_identities');
               }
-
-              if (formattedIds[i].status === 'active') {
-                formattedIds[i].canrevoke = identities.some(
-                  (listIdentityObject) => {
-                    return (
-                      listIdentityObject.identity.identityaddress !==
-                        formattedIds[i].identity.identityaddress &&
-                      listIdentityObject.identity.identityaddress ===
-                      formattedIds[i].identity.revocationauthority && 
-                      listIdentityObject.status === 'active'
-                    );
-                  }
-                );
-              } else formattedIds[i].canrevoke = false
-
-              if (
-                formattedIds[i].status === "revoked" &&
-                recoveryId != null &&
-                recoveryId.status === "active"
-              ) {
-                formattedIds[i].canrecover =
-                  recoveryId.identity.identityaddress !==
-                  formattedIds[i].identity.identityaddress;
-              } else formattedIds[i].canrecover = false;
-            } catch (e) {
-              throw e;
             }
           }
 
@@ -174,9 +199,10 @@ module.exports = (api) => {
   };
 
   api.setPost('/native/get_identities', (req, res, next) => {    
-    const { chainTicker, includeCanSpend, includeCanSign, includeWatchOnly } = req.body
+    const { chainTicker, includeCanSpend, includeCanSign, includeWatchOnly, includeOffers } =
+      req.body;
 
-    api.native.get_identities(chainTicker, includeCanSpend, includeCanSign, includeWatchOnly)
+    api.native.get_identities(chainTicker, includeCanSpend, includeCanSign, includeWatchOnly, includeOffers)
     .then((identities) => {
       const retObj = {
         msg: 'success',
@@ -213,6 +239,15 @@ module.exports = (api) => {
               )
             ).name
           }`;
+        }
+
+        try {
+          identity.offers = await api.native.getoffers(
+            new GetOffersRequest(coin, identity.identity.identityaddress, false, false)
+          );
+        } catch (e) {
+          api.log(`Failed to get offers for ${identity.identity.name}`, "get_identity");
+          api.log(e, "get_identity");
         }
 
         resolve(identity)

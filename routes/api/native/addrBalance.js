@@ -3,6 +3,8 @@ const {
   RPC_INVALID_ADDRESS_OR_KEY
 } = require("../utils/rpc/rpcStatusCodes");
 const RpcError = require("../utils/rpc/rpcError");
+const { SATOSHIS } = require('../utils/constants/math');
+const { BigNumber } = require('ethers');
 
 module.exports = (api) => {      
   // Gets an address balance (z_getbalance), txCount and zTotalBalance are used 
@@ -82,38 +84,53 @@ module.exports = (api) => {
       }
     }
 
-    const useGetCurrencyBalance =
-      api.is_pbaas(coin) &&
-      !(address[0] === "z" && address[address.length - 1] !== "@");
+    const isZAddr = address[0] === "z" && address[address.length - 1] !== "@"
+    const useGetCurrencyBalance = api.is_pbaas(coin) && !isZAddr;
 
     try {
       if (useGetCurrencyBalance) {
-        let balance = await api.native.get_currency_balances(coin, address)
-        const balanceCoins = Object.keys(balance)
-        const nativeCoin = balanceCoins.find(x => {
-          return x.toLowerCase() === coin.toLowerCase()
-        })
+        // getcurrencybalance
+        let balance = await api.native.get_currency_balances(coin, address);
+        const balanceCoins = Object.keys(balance);
+        const nativeCoin = balanceCoins.find((x) => {
+          return x.toLowerCase() === coin.toLowerCase();
+        });
 
         if (nativeCoin != null) {
-          balance[coin] = balance[nativeCoin] != null ? balance[nativeCoin] : 0
-        
-          if (coin !== nativeCoin) delete balance[nativeCoin]
-        } else balance[coin] = 0
-        
-        if (useCache) cacheAddrBalanceResult(balance)
-        return balance
-      } else {
-        const balanceResult = await api.native.callDaemon(coin, "z_getbalance", [address])
-        const balance = {
-          [coin]: balanceResult == null ? 0 : Number(balanceResult)
-        }
+          balance[coin] = balance[nativeCoin] != null ? balance[nativeCoin] : 0;
 
-        if (useCache) cacheAddrBalanceResult(balance)
-        return balance
+          if (coin !== nativeCoin) delete balance[nativeCoin];
+        } else balance[coin] = 0;
+
+        if (useCache) cacheAddrBalanceResult(balance);
+        return balance;
+      } else if (api.is_vrsc(coin) && !isZAddr) {
+        // getaddressbalance
+        const balanceResult = await api.native.callDaemon(coin, "getaddressbalance", [
+          { addresses: [address] },
+        ]);
+        const balance = {
+          [coin]:
+            balanceResult == null
+              ? 0
+              : BigNumber.from(balanceResult.balance).div(BigNumber.from(SATOSHIS)).toNumber(),
+        };
+
+        if (useCache) cacheAddrBalanceResult(balance);
+        return balance;
+      } else {
+        // z_getbalance
+        const balanceResult = await api.native.callDaemon(coin, "z_getbalance", [address]);
+        const balance = {
+          [coin]: balanceResult == null ? 0 : Number(balanceResult),
+        };
+
+        if (useCache) cacheAddrBalanceResult(balance);
+        return balance;
       }
     } catch(e) {
       if (e.code === RPC_INVALID_ADDRESS_OR_KEY) cacheAddrBalanceResult(e)
-          
+
       throw e
     }
   };

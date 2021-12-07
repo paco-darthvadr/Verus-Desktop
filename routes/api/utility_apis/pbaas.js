@@ -10,5 +10,9 @@ module.exports = (api) => {
     );
   };
 
+  api.is_vrsc = (chainTicker) => {
+    return (chainTicker === "VRSC");
+  };
+
   return api;
 };
