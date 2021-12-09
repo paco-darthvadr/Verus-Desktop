@@ -1,12 +1,12 @@
-const { Request } = require("../../../utils/login/Request");
+const { LoginConsentRequest } = require("verus-typescript-primitives")
 
 module.exports = (api) => {
   /**
    * Verifies a login request
-   * @param {Request} Request
+   * @param {LoginConsentRequest} Request
    */
   api.native.verusid.login.verify_request = async (request) => {
-    const loginConsentRequest = new Request(request);
+    const loginConsentRequest = new LoginConsentRequest(request);
 
     const verified = await api.native.verify_message(
       loginConsentRequest.chain_id,

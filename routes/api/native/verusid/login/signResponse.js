@@ -1,9 +1,8 @@
-const { Response } = require("../../../utils/login/Response");
-const { VerusIDSignature } = require("../../../utils/vdxf");
+const { VerusIDSignature, LoginConsentResponse } = require("verus-typescript-primitives")
 
 module.exports = (api) => {
   api.native.verusid.login.sign_response = async (response) => {
-    const loginResponse = new Response(response)
+    const loginResponse = new LoginConsentResponse(response)
 
     const verificatonCheck = await api.native.verusid.login.verify_request(
       loginResponse.decision.request
