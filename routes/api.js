@@ -222,6 +222,7 @@ api = require('./api/appInfo.js')(api);
 api = require('./api/conf.js')(api);
 api = require('./api/daemonControl.js')(api);
 api = require('./api/system.js')(api);
+api = require('./api/dlhandler.js')(api);
 
 // Utility APIs
 api = require('./api/utility_apis/csvExport.js')(api);

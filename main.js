@@ -1,5 +1,4 @@
 const electron = require('electron');
-const { crashReporter } = require('electron')
 const {
 	Menu,
 } = require('electron');
@@ -22,8 +21,11 @@ global.HOME = os.platform() === "win32" ? process.env.APPDATA : process.env.HOME
 
 // GUI APP settings and starting gui on address http://120.0.0.1:17777
 let api = require('./routes/api');
+const openurlhandler = require('./routes/deeplink/openurlhandler');
+
 api.clearWriteLog()
 const { MasterSecret, BuiltinSecret } = require('./routes/preloads/keys');
+const setuplink = require('./routes/deeplink/setuplink');
 
 const guiapp = express();
 
@@ -38,16 +40,6 @@ const appBasicInfo = {
 
 app.setName(appBasicInfo.name);
 app.setVersion(appBasicInfo.version);
-
-// if (appConfig.general.main.uploadCrashReports) {
-// 	app.setPath('crashDumps', api.paths.crashesDir)
-// 	crashReporter.start({
-// 		productName: 'Dev-Testing',
-// 		companyName: 'devtesting',
-// 		submitURL: 'https://submit.backtrace.io/devtesting/f127b8ff9b6701ef2269f63233cc31792cf581843a804cfd0945103ee575d05b/minidump',
-// 		uploadToServer: true,
-// 	})
-// }
 
 // parse argv
 let _argv = {};
@@ -276,15 +268,14 @@ function appExit() {
 		.then(QuitApp);
 	}
 
-	let _appClosingInterval;
-
 	if (!Object.keys(api.startedDaemonRegistry).length ||
 			!appConfig.general.native.stopNativeDaemonsOnQuit) {
 		closeApp();
 	} else {
 		createAppCloseWindow();
 		api.quitKomodod(appConfig.general.native.cliStopTimeout);
-		_appClosingInterval = setInterval(() => {
+		
+		setInterval(() => {
 			if (!Object.keys(api.startedDaemonRegistry).length) {
 				closeApp();
 			}
@@ -504,12 +495,21 @@ app.on('web-contents-created', (event, contents) => {
 function focusMain() {
 	if (mainWindow == null) {
     createMainWindow()
-  } else mainWindow.show()
+  } else {
+		if (mainWindow.isMinimized()) mainWindow.restore()
+		mainWindow.show()
+		mainWindow.focus()
+	}
 }
 
 api.setupFocusApis(focusMain)
 
 app.on('activate', focusMain)
+app.on('second-instance', focusMain)
+
+// Deep linking
+setuplink(app)
+app.on("open-url", (event, url) => openurlhandler(event, url, api.dlhandler));
 
 // Emitted when all windows have been closed and the application will quit.
 // Calling event.preventDefault() will prevent the default behaviour, which is terminating the application.
