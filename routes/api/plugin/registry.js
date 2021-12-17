@@ -59,7 +59,7 @@ module.exports = (api) => {
       return {
         ...api.plugins[category][id],
         logo: builtin ? null : path.join(api.plugins[category][id].path, "logo.png"),
-        index: api.plugins[category][id].path == null ? null : path.join(api.plugins[category][id].path, "plugin", "index.html"),
+        index: api.plugins[category][id].path == null ? null : path.join(api.plugins[category][id].path, "index.html"),
         info: builtin ? null : JSON.parse(await fs.readFile(path.join(api.plugins[category][id].path, "info.txt"), 'utf8'))
       }
     } catch(e) {
