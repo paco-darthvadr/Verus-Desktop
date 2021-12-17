@@ -27,7 +27,7 @@ module.exports = (api) => {
     );
 
     loginResponse.signature = new VerusIDSignature(
-      { signature: userSignature },
+      { signature: userSignature.signature },
       LOGIN_CONSENT_RESPONSE_SIG_VDXF_KEY
     );
 
