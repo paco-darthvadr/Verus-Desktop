@@ -31,6 +31,7 @@ if (!hasLock) {
   api.clearWriteLog();
   const { MasterSecret, BuiltinSecret } = require("./routes/preloads/keys");
   const setuplink = require("./routes/deeplink/setuplink");
+  const removelink = require('./routes/deeplink/removelink');
 
   const guiapp = express();
 
@@ -527,7 +528,14 @@ if (!hasLock) {
   app.on("second-instance", focusMain);
 
   // Deep linking
-  setuplink(app);
+  if (appConfig.general.main.enableDeeplink) {
+    api.log("setting up deeplink", "init");
+    setuplink(app);
+  } else {
+    api.log("removing deeplink", "init");
+    removelink(app)
+  }
+ 
   app.on("open-url", (event, url) => openurlhandler(event, url, api.dlhandler));
 
   // Emitted when all windows have been closed and the application will quit.
