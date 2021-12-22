@@ -17,7 +17,7 @@ module.exports = (api) => {
     }
 
     const subject = loginResponse.decision.request.challenge.subject;
-    if (subject != null && loginResponse.data.signing_id !== subject)
+    if (subject != null && loginResponse.signing_id !== subject)
       throw new Error("Cannot sign request for different user.");
 
     const userSignature = await api.native.sign_message(
