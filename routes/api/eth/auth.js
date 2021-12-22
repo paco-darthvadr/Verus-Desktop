@@ -19,7 +19,7 @@ module.exports = (api) => {
   api.setGet('/eth/check_auth', (req, res, next) => {
     res.send(JSON.stringify({
       msg: 'success',
-      result: api.eth.wallet != null && api.eth.wallet.signingKey != null,
+      result: api.eth.wallet != null && api.eth.wallet.signer != null && api.eth.wallet.signer.signingKey != null,
     }));
   });
 
