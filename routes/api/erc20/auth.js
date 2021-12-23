@@ -16,10 +16,10 @@ module.exports = (api) => {
     res.send(JSON.stringify(retObj));
   }, true);
 
-  api.setGet('/erc20/check_auth', (req, res, next) => {    
+  api.setGet('/erc20/check_auth', (req, res, next) => {
     res.send(JSON.stringify({
       msg: 'success',
-      result: api.erc20.wallet != null
+      result: api.erc20.wallet != null && api.erc20.wallet.signer != null && api.erc20.wallet.signer.signingKey != null,
     }));
   });
 
