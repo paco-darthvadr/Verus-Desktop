@@ -522,10 +522,18 @@ if (!hasLock) {
     }
   }
 
+  function handleSecondInstance(event, argv, cwd) {
+    focusMain();
+
+    if (process.platform == "win32") {
+      openurlhandler(null, argv.slice(1).toString().split(",")[2], api.dlhandler);
+    }
+  }
+
   api.setupFocusApis(focusMain);
 
   app.on("activate", focusMain);
-  app.on("second-instance", focusMain);
+  app.on("second-instance", handleSecondInstance);
 
   // Deep linking
   if (appConfig.general.main.enableDeeplink) {
