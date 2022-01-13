@@ -526,7 +526,8 @@ if (!hasLock) {
     focusMain();
 
     if (process.platform == "win32") {
-      openurlhandler(null, argv.slice(1).toString().split(",")[2], api.dlhandler);
+      const argIndex = (appConfig.general.main.dev || process.argv.indexOf("devmode") > -1) ? 2 : 1;
+      openurlhandler(null, argv.slice(1).toString().split(",")[argIndex], api.dlhandler);
     }
   }
 
