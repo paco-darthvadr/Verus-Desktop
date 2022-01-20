@@ -39,7 +39,7 @@ if (!hasLock) {
   const { appConfig } = api;
 
   const appBasicInfo = {
-    name: "Verus Desktop",
+    name: "ILN Desktop",
     mode: "standard",
     version: version.version,
   };
